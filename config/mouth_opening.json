@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "width_mm": 45.0,
+  "height_mm": 80.0,
+  "center_mm": [0.0, 10.0, 45.0]
+}

@@ -1,0 +1,42 @@
+<mujoco model="dental_static_component">
+  <compiler angle="degree"/>
+
+  <asset>
+    <include file="mouth_opening_assets.xml"/>
+    <mesh name="chair_mesh" file="new/simplified dental chair.stl"
+      scale="0.001 0.001 0.001"/>
+    <mesh name="mandibular_mesh" file="2026615-gch/2026615-gch-mandibular-mujoco.obj"
+      scale="0.001 0.001 0.001"/>
+    <mesh name="maxillary_mesh" file="2026615-gch/2026615-gch-maxillary-mujoco.obj"
+      scale="0.001 0.001 0.001"/>
+    <texture name="mandibular_color" type="2d"
+      file="2026615-gch/2026615-gch-mandibular-mujoco.png"/>
+    <texture name="maxillary_color" type="2d"
+      file="2026615-gch/2026615-gch-maxillary-mujoco.png"/>
+    <material name="mandibular_material" texture="mandibular_color"/>
+    <material name="maxillary_material" texture="maxillary_color"/>
+  </asset>
+
+  <worldbody>
+    <body name="static_root">
+      <body name="dental_chair" pos="0 0 1.41124" euler="180 0 0">
+        <geom name="dental_chair_visual" type="mesh" mesh="chair_mesh"
+          rgba="0.55 0.72 0.82 1" contype="0" conaffinity="0"/>
+      </body>
+      <!-- Turn both jaws around their shared bite centre (scan Y = 10 mm).
+           The original pose put maxillary below mandibular in world Z. -->
+      <body name="teeth_root" pos="0.303957707326 -1.315007576439 1.248000638011"
+        quat="-0.049374446982 0.020527299993 0.435547442843 0.898576217676">
+        <include file="mouth_opening_body.xml"/>
+        <body name="mandibular">
+          <geom name="mandibular_visual" type="mesh" mesh="mandibular_mesh"
+            material="mandibular_material" rgba="1 1 1 1" contype="1" conaffinity="1"/>
+        </body>
+        <body name="maxillary">
+          <geom name="maxillary_visual" type="mesh" mesh="maxillary_mesh"
+            material="maxillary_material" rgba="1 1 1 1" contype="1" conaffinity="1"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

@@ -1,0 +1,18 @@
+[
+  {
+    "jaw": "mandibular",
+    "source": "C:\\Users\\Administrator\\Desktop\\视觉+力觉\\stl-ply-obj\\outputs\\gingival_lines\\mandibular\\gingival_line_points.csv",
+    "destination": "assets\\perception\\mandibular\\gingival_line_points.csv",
+    "sha256": "3dbeae0bfed513568628c72546a0545bd49d10c42c9160a39a8f6432c8fa2fc1",
+    "frame": "oral_scan",
+    "unit": "mm"
+  },
+  {
+    "jaw": "maxillary",
+    "source": "C:\\Users\\Administrator\\Desktop\\视觉+力觉\\stl-ply-obj\\outputs\\gingival_lines\\maxillary\\gingival_line_points.csv",
+    "destination": "assets\\perception\\maxillary\\gingival_line_points.csv",
+    "sha256": "fb725c511b9aa292616d3ffdda7a46ff7c0584e349549380d5857f20663afde8",
+    "frame": "oral_scan",
+    "unit": "mm"
+  }
+]
