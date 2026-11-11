@@ -40,6 +40,8 @@ class PerceptionResult:
     extraction_dir: Path | None = None
     topology_path: Path | None = None
     tooth_segmentation_dir: Path | None = None
+    regional_paths_manifest: Path | None = None
+    continuous_region_paths: dict[str, Path] = field(default_factory=dict)
     registration_transform: np.ndarray | None = None
     registration_error_mm: float | None = None
     source_fingerprints: dict[str, str] = field(default_factory=dict)
@@ -73,6 +75,9 @@ class PerceptionResult:
             topology_path=Path(payload["topology_path"]) if payload.get("topology_path") else None,
             tooth_segmentation_dir=(Path(payload["tooth_segmentation_dir"])
                                     if payload.get("tooth_segmentation_dir") else None),
+            regional_paths_manifest=(Path(payload['regional_paths_manifest'])
+                                     if payload.get('regional_paths_manifest') else None),
+            continuous_region_paths={key: Path(value) for key, value in payload.get('continuous_region_paths', {}).items()},
             registration_transform=np.asarray(transform, dtype=float) if transform is not None else None,
             registration_error_mm=payload.get("registration_error_mm"),
             source_fingerprints=dict(payload.get("source_fingerprints", {})),

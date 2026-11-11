@@ -1,0 +1,19 @@
+{
+  "jaw": "mandibular",
+  "region": "outer_front",
+  "planning_mode": "simple",
+  "check_mode": "full",
+  "pose_angles_deg": [6.37, 13.26, -0.4],
+  "jaw_opening_deg": 20.0,
+  "offset_mm": 1.8,
+  "speed_mm_s": 1.0,
+  "transfer_speed_mm_s": 150.0,
+  "joint_step_rad": 1.0,
+  "max_orientation_step_deg": 30.0,
+  "sweep_trim_mm": 1.0,
+  "pose_spacing_mm": 0.25,
+  "orientation_audit": "strict",
+  "registration_method": "automatic",
+  "config": "config/global_camera_registration.json",
+  "headless": false
+}

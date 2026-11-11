@@ -7,23 +7,69 @@ import unittest
 import mujoco
 import numpy as np
 
-from pipeline.mouth import (MouthOpening, MouthSettings, ROOT, load_settings,
-                             save_settings, face_geometry)
+from pipeline.oral import (MouthOpening, MouthSettings, ROOT,
+                           load_mouth_settings as load_settings,
+                           save_mouth_settings as save_settings, face_geometry,
+                           mouth_overrides as with_overrides)
 from pipeline.simulation import create_simulation
 
 
 class MouthOpeningTests(unittest.TestCase):
     def test_settings_roundtrip_and_invalid_sizes(self):
-        settings = MouthSettings(width_mm=60., height_mm=50., center_mm=[2., 12., 50.])
+        settings = MouthSettings(width_mm=60., height_mm=50., center_mm=[2., 12., 50.], distance_mm=20.)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)/'mouth.json'
             save_settings(settings, path)
             self.assertEqual(load_settings(path), settings)
         for field, value in (('width_mm', 0.), ('height_mm', float('nan')),
                              ('width_mm', 111.), ('height_mm', 131.),
+                             ('distance_mm', -1.), ('distance_mm', float('inf')),
+                             ('distance_mm', True),
                              ('center_mm', [0., float('inf'), 45.])):
             with self.subTest(field=field, value=value), self.assertRaises(ValueError):
                 replace(settings, **{field: value})
+
+    def test_distance_is_measured_from_actual_frontmost_jaw_in_rotated_scene(self):
+        settings = MouthSettings(width_mm=70., height_mm=45., distance_mm=20.)
+        model, data = create_simulation(mouth_settings=settings)
+        mouth = MouthOpening(model)
+        root = data.body('dental_teeth_root')
+        rotation = root.xmat.reshape(3, 3)
+        actual_fronts = []
+        for jaw in ('mandibular', 'maxillary'):
+            geom_id = model.geom('dental_'+jaw+'_visual').id
+            mesh_id = int(model.geom_dataid[geom_id])
+            start, count = int(model.mesh_vertadr[mesh_id]), int(model.mesh_vertnum[mesh_id])
+            vertices = model.mesh_vert[start:start+count].astype(float)
+            world = vertices @ data.geom_xmat[geom_id].reshape(3, 3).T + data.geom_xpos[geom_id]
+            actual_fronts.append(((world-root.xpos) @ rotation)[:, 2].max())
+        front_m = max(actual_fronts)
+        plane_m = ((data.body('dental_mouth_opening').xpos-root.xpos) @ rotation)[2]
+        self.assertAlmostEqual((plane_m-front_m)*1000., 20., places=8)
+        initial_plane = data.body('dental_mouth_opening').xpos.copy()
+        initial_vertices = model.mesh_vert.copy()
+        initial_jaws = [data.geom_xpos[model.geom('dental_'+jaw+'_visual').id].copy()
+                        for jaw in ('mandibular', 'maxillary')]
+        mouth.update(replace(settings, distance_mm=35.), data)
+        np.testing.assert_allclose(data.body('dental_mouth_opening').xpos-initial_plane,
+                                   rotation[:, 2]*.015, atol=1e-10)
+        np.testing.assert_array_equal(model.mesh_vert, initial_vertices)
+        for jaw, original in zip(('mandibular', 'maxillary'), initial_jaws):
+            np.testing.assert_array_equal(data.geom_xpos[model.geom('dental_'+jaw+'_visual').id], original)
+
+    def test_distance_overrides_and_legacy_absolute_position(self):
+        settings = MouthSettings(distance_mm=20.)
+        self.assertEqual(with_overrides(settings, distance_mm=30.).distance_mm, 30.)
+        legacy = with_overrides(settings, forward_mm=50.)
+        self.assertIsNone(legacy.distance_mm)
+        self.assertEqual(legacy.center_mm[2], 50.)
+        with self.assertRaises(ValueError):
+            with_overrides(settings, distance_mm=20., forward_mm=50.)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'old.json'
+            path.write_text('{"width_mm": 70, "height_mm": 45, "center_mm": [0, 10, 45]}',
+                            encoding='utf-8')
+            self.assertIsNone(load_settings(path).distance_mm)
 
     def test_runtime_updates_respect_compiler_frame_and_preserve_robot(self):
         model, data = create_simulation()
@@ -49,8 +95,8 @@ class MouthOpeningTests(unittest.TestCase):
     def test_actual_segmentation_sees_hole_and_independent_width_height_changes(self):
         # A coloured target behind the mask makes filled holes and stale GPU
         # geometry observable, independently of the dental scan's own gaps.
-        assets = (ROOT/'models'/'mouth_opening_assets.xml').as_posix()
-        body = (ROOT/'models'/'mouth_opening_body.xml').as_posix()
+        assets = (ROOT/'assets'/'simulation'/'mouth_opening_assets.xml').as_posix()
+        body = (ROOT/'assets'/'simulation'/'mouth_opening_body.xml').as_posix()
         xml = f'''<mujoco><visual><global offwidth="320" offheight="320"/></visual>
         <asset><include file="{assets}"/></asset><worldbody>
         <camera name="front" pos="0 .01 .25" fovy="45"/>

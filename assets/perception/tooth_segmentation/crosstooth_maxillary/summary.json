@@ -1,0 +1,142 @@
+{
+  "input": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\models\\2026615-gch\\2026615-gch病例-maxillary.ply",
+  "input_sha256": "553295f278ab7198740abf549c8d22a0b231a3e5322b679d162fbe9527fafd19",
+  "checkpoint": "C:\\Users\\Administrator\\Desktop\\CrossTooth_CVPR2025-main\\models\\PTv1\\point_best_model.pth",
+  "checkpoint_sha256": "a03d521dfbf9f77d9077a470e123f66255245b3589ccd6af82972102c027baf9",
+  "scope": "released point-only checkpoint; no retraining; no multimodal fusion",
+  "backend": "portable_pointops",
+  "python": "3.11.9",
+  "torch": "2.7.1+cu128",
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 5060 Ti",
+  "seed": 1,
+  "rotation": "none",
+  "sample_method": "global random original face centers",
+  "sample_count": 16000,
+  "vertices": 117581,
+  "faces": 230824,
+  "inference_seconds": 1.2097207000006165,
+  "gum_faces": 104212,
+  "class_face_counts": [
+    104212,
+    8411,
+    6129,
+    7316,
+    8750,
+    8569,
+    13573,
+    12342,
+    0,
+    7937,
+    6787,
+    6797,
+    7991,
+    7958,
+    12763,
+    11289,
+    0
+  ],
+  "raw_class_face_counts": [
+    104212,
+    8411,
+    6129,
+    7316,
+    8750,
+    8569,
+    13573,
+    12342,
+    0,
+    7937,
+    6787,
+    6797,
+    7991,
+    7958,
+    12763,
+    11289,
+    0,
+    0,
+    0
+  ],
+  "mean_max_probability": 0.9214925169944763,
+  "boundary_edges": 4938,
+  "boundary_vertices": 4749,
+  "boundary_length_input_units": 1062.385814430388,
+  "polyline_count": 299,
+  "closed_polyline_count": 162,
+  "per_tooth": {
+    "1": {
+      "faces": 8411,
+      "boundary_edges": 354,
+      "boundary_length_input_units": 72.05539458849879
+    },
+    "2": {
+      "faces": 6129,
+      "boundary_edges": 217,
+      "boundary_length_input_units": 42.258882678219656
+    },
+    "3": {
+      "faces": 7316,
+      "boundary_edges": 279,
+      "boundary_length_input_units": 58.0496163115475
+    },
+    "4": {
+      "faces": 8750,
+      "boundary_edges": 311,
+      "boundary_length_input_units": 63.91714136050385
+    },
+    "5": {
+      "faces": 8569,
+      "boundary_edges": 306,
+      "boundary_length_input_units": 65.5778363225684
+    },
+    "6": {
+      "faces": 13573,
+      "boundary_edges": 528,
+      "boundary_length_input_units": 116.3556821287419
+    },
+    "7": {
+      "faces": 12342,
+      "boundary_edges": 531,
+      "boundary_length_input_units": 126.71887287445763
+    },
+    "9": {
+      "faces": 7937,
+      "boundary_edges": 446,
+      "boundary_length_input_units": 85.19584158074025
+    },
+    "10": {
+      "faces": 6787,
+      "boundary_edges": 269,
+      "boundary_length_input_units": 50.75938788379669
+    },
+    "11": {
+      "faces": 6797,
+      "boundary_edges": 274,
+      "boundary_length_input_units": 57.02408854373891
+    },
+    "12": {
+      "faces": 7991,
+      "boundary_edges": 286,
+      "boundary_length_input_units": 59.895123917567275
+    },
+    "13": {
+      "faces": 7958,
+      "boundary_edges": 262,
+      "boundary_length_input_units": 60.88109369285601
+    },
+    "14": {
+      "faces": 12763,
+      "boundary_edges": 455,
+      "boundary_length_input_units": 101.54388859752527
+    },
+    "15": {
+      "faces": 11289,
+      "boundary_edges": 420,
+      "boundary_length_input_units": 102.15296394962587
+    }
+  },
+  "coordinates": "Original input coordinates; units inherited from input, not verified",
+  "quality": "Candidate interfaces only. No ground truth; accuracy/IoU not measured.",
+  "sampling_limit": "Selective downsample executable/source is absent; random sampling is an adaptation.",
+  "checkpoint_strict_load": true
+}

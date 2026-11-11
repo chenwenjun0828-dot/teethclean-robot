@@ -1,0 +1,7 @@
+{
+  "plan": "outputs/planning/outer_front",
+  "out": "outputs/planning/outer_front_90s",
+  "duration": 90.0,
+  "trace_speed_mm_s": 1.0,
+  "transfer_speed_mm_s": 150.0
+}

@@ -1,6 +1,0 @@
-dental_chair_download：网站中下载的牙科椅模型
-dental_chair_qwl：洁牙机器人系统等比例简化模型
-dental_model：标准牙模的扫描模型（JFF扫描）
-dental_model_base：简易牙模的牙椅安装模型
-UR3：协作机器人UR3E的模型
-洁牙器：末端夹持器、洁牙头

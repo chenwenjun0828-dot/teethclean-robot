@@ -14,6 +14,7 @@ from perception.registration.main import main
 from perception.registration.registration_math import transform_points
 from perception.registration.registration_workflow import register_capture, resolve_registration_method
 from pipeline.run import run_pipeline
+from planning.config import SweepOptions
 from tests.test_global_registration import asymmetric_cloud
 
 
@@ -150,37 +151,43 @@ class AutomaticRegistrationTests(unittest.TestCase):
 
 
 class AutomaticPipelineTests(unittest.TestCase):
-    def test_default_automatic_pipeline_completes_with_45_degree_orientation_filter(self):
+    def test_automatic_pipeline_hands_registered_scene_to_regional_planning(self):
         with tempfile.TemporaryDirectory() as tmp, \
                 patch('perception.registration.registration_workflow.pick_landmark_pairs',
-                      side_effect=AssertionError('automatic mode opened the picker')):
+                      side_effect=AssertionError('automatic mode opened the picker')), \
+                patch('pipeline.run.run_tracking', return_value={'status': 'completed',
+                      'duration_s': 1., 'coverage_fraction': .4}) as tracking:
             root = Path(tmp)/'filtered'
             report = run_pipeline(output_dir=root, registration_method='automatic',
                                   headless=True, speed_mm_s=20.)
             self.assertEqual(report['status'], 'completed')
-            tracking = json.loads((root/'tracking/tracking_report.json').read_text(encoding='utf-8'))
-            selection = tracking['orientation_filter']
-            self.assertEqual(selection['max_step_deg'], 45.)
-            self.assertGreater(selection['skipped_orientation_count'], 0)
-            tcp = np.load(root/'tracking/T_world_tcp.npy')
-            tooth = np.load(root/'tracking/T_world_tooth.npy')
-            raw = np.load(root/'tracking/requested_T_world_tcp.npy')
-            kept = selection['retained_sample_indices']
-            np.testing.assert_array_equal(tcp[:, :3, 3], raw[:, :3, 3])
-            np.testing.assert_array_equal(tcp[kept, :3, :3], tooth[kept, :3, :3])
-            self.assertEqual(len(tcp), selection['source_samples'])
-            self.assertGreater(tracking['motion_ik_samples'], len(tcp))
-            self.assertLess(tracking['trace_max_mm'], 2.)
-            self.assertLess(tracking['trace_rotation_max_deg'], 1.)
+            self.assertEqual(report['planning_mode'], 'simple')
+            self.assertEqual(tracking.call_args.kwargs['planning_mode'], 'simple')
+            self.assertEqual(tracking.call_args.kwargs['fixed_roll_deg'], 0.)
+            self.assertEqual(tracking.call_args.args[5], 'mesh')
+            self.assertIsNone(tracking.call_args.kwargs['max_orientation_step_deg'])
+            self.assertEqual(len(tracking.call_args.kwargs['model_data']), 2)
+            self.assertTrue((root/'registration/T_camera_scan_estimated.npy').is_file())
 
-    def test_automatic_pipeline_exports_targets_and_rejects_unreachable_tooth_pose(self):
+    def test_automatic_pipeline_preserves_registration_and_stops_if_planning_rejects(self):
         with tempfile.TemporaryDirectory() as tmp, \
                 patch('perception.registration.registration_workflow.pick_landmark_pairs',
-                      side_effect=AssertionError('automatic mode opened the picker')):
+                      side_effect=AssertionError('automatic mode opened the picker')), \
+                patch('pipeline.tracking.plan', return_value=(None, None,
+                      {'execution_ready': False, 'status': 'no_executable_regional_stroke'}, None)) as planner, \
+                patch('pipeline.tracking.execute') as execute:
             root = Path(tmp) / 'run'
-            with self.assertRaisesRegex(ValueError, 'IK target unreachable'):
+            with self.assertRaisesRegex(ValueError, 'No executable outer_front-region'):
                 run_pipeline(output_dir=root, registration_method='automatic',
                              headless=True, speed_mm_s=20., max_orientation_step_deg=None)
+            motion_config = planner.call_args.args[2]
+            self.assertEqual(motion_config.speed_mm_s, 20.)
+            from planning.config import Config
+            self.assertEqual(motion_config.joint_speed_rad_s, Config().joint_speed_rad_s)
+            self.assertEqual(motion_config.joint_accel_rad_s2, Config().joint_accel_rad_s2)
+            self.assertEqual(motion_config.orientation_speed_deg_s, Config().orientation_speed_deg_s)
+            self.assertEqual(motion_config.transfer_speed_mm_s, 150.)
+            self.assertIsInstance(planner.call_args.kwargs['sweep_options'], SweepOptions)
             report = json.loads((root / 'pipeline_report.json').read_text(encoding='utf-8'))
             self.assertEqual(report['status'], 'failed')
             self.assertEqual(report['registration_method'], 'automatic')
@@ -197,12 +204,8 @@ class AutomaticPipelineTests(unittest.TestCase):
             self.assertLess(np.linalg.norm(estimate[:3, 3] - truth[:3, 3]), .5)
             cosine = np.clip((np.trace(estimate[:3, :3] @ truth[:3, :3].T) - 1)/2, -1, 1)
             self.assertLess(np.degrees(np.arccos(cosine)), .5)
-            tcp = np.load(root / 'tracking/T_world_tcp.npy')
-            tooth = np.load(root / 'tracking/T_world_tooth.npy')
-            np.testing.assert_allclose(tcp, tooth, atol=1e-12)
-            tracking = json.loads((root / 'tracking/tracking_report.json').read_text(encoding='utf-8'))
-            self.assertEqual(tracking['simulated_time_s'], 0.)
-            self.assertFalse((root / 'tracking/joint_waypoints_rad.csv').exists())
+            execute.assert_not_called()
+            self.assertFalse((root / 'tracking/trajectory.npz').exists())
             # Exercise config-based method selection separately from the explicit override.
             second = register_capture(root / 'capture', root / 'registration_config.json',
                                       'mandibular', root / 'registration_from_config')

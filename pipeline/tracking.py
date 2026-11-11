@@ -1,235 +1,221 @@
-"""Run actuator-based gingival TCP tracking, with optional headless evidence."""
-from __future__ import annotations
-
-from datetime import datetime
-import json
+"""Adapt frozen perception results to regional motion planning and control."""
 from pathlib import Path
-import time
-
-import mujoco
+import json
+from time import perf_counter
+from planning.infrastructure.io import Inputs, ROOT, dump, fingerprint
+from planning.config import (Config, SweepOptions, continuous_path_kind, resolve_pose_angles,
+                             resolve_simple_angles, CHECK_MODES, GEOMETRY_ONLY)
+from planning.motion_planning.fixed_path import TIMING_METHOD
+from planning.pipeline import run as plan
+from planning.motion_planning.contract import load_sweep_reference, validate_sweep_contract
+from perception.gingival_line import load_registered_paths
+from perception.frames import camera_world_transform_m
+from control.position import execute
 import numpy as np
-from scipy.spatial.transform import Rotation
-
-from perception.gingival_line import load_registered_paths, path_length, polyline_distances
-from planning.validation import configure_collision_mode
-from planning.trajectory import (registered_tracking_targets, plan_tooth_aligned_tracking,
-                                 filter_tooth_orientation_targets)
-from planning.ik import rotation_error
-from control.position import GingivalTCPController, step_checked
-from pipeline.simulation import PROJECT_ROOT, DENTAL_MODEL_PATH, add_trajectory_line, draw_tcp_axes
-
-def draw_paths(scene, bundle, plan, actual, data=None):
-    for chain in bundle.chains:
-        # Keep every edge: decimating vertices would draw shortcuts at sharp turns.
-        for a, b in zip(chain[:-1], chain[1:]):
-            add_trajectory_line(scene, a, b, (0.8, 0.15, 0.5, 0.55), 1.)
-    for a, b in zip(plan.path[:-1], plan.path[1:]):
-        add_trajectory_line(scene, a, b, (0., 0.85, 1., 1.), 3.)
-    if len(actual) > 1:
-        sampled = np.asarray(actual)[::max(1, len(actual)//500)]
-        for a, b in zip(sampled[:-1], sampled[1:]):
-            add_trajectory_line(scene, a, b, (1., 0.45, 0., 1.), 2.)
-    if data is not None:
-        draw_tcp_axes(scene, data, plan.site_id)
 
 
-def set_camera(camera, plan):
-    camera.type = mujoco.mjtCamera.mjCAMERA_FREE
-    camera.lookat[:] = np.mean(plan.path, axis=0)
-    camera.distance = 0.24
-    camera.azimuth = 100
-    camera.elevation = -20
+DEFAULT_JOINT_STEP_RAD = .3
+GEOMETRY_ONLY_STATUS = 'geometry_only_verified'
 
 
-def preview(renderer, data, bundle, plan, actual):
-    camera = mujoco.MjvCamera()
-    set_camera(camera, plan)
-    option = mujoco.MjvOption()
-    # The chair is static scenery with no collision, and would hide the close-up.
-    renderer.update_scene(data, camera=camera, scene_option=option)
-    # Rendering only: remove the chair from this close-up without changing model properties.
-    chair_id = plan.model.geom('dental_dental_chair_visual').id
-    for geom in renderer.scene.geoms[:renderer.scene.ngeom]:
-        if geom.objtype == mujoco.mjtObj.mjOBJ_GEOM and geom.objid == chair_id:
-            geom.rgba[3] = 0
-    draw_paths(renderer.scene, bundle, plan, actual, data)
-    return renderer.render().copy()
-
-
-def run_tracking(registration_dir, jaw='mandibular', path_index=0,
-                 offset_mm=0., speed_mm_s=4., collision_mode='geometry', headless=False,
-                 output_dir=None, topology_path=None, record_gif=False,
-                 model_data=None, max_orientation_step_deg=45.):
-    if jaw not in ('mandibular', 'maxillary'):
-        raise ValueError('Jaw must be mandibular or maxillary')
-    if model_data is None:
-        raise ValueError('Tracking requires the capture scene model and data')
+def run_tracking(registration_dir, jaw='mandibular', path_index=0, offset_mm=1.5,
+                 speed_mm_s=15., collision_mode='mesh', headless=False, output_dir=None,
+                 topology_path=None, record_gif=False, model_data=None,
+                 max_orientation_step_deg=None, prediction_dir=None,
+                 fixed_roll_deg=None, joint_step_rad=DEFAULT_JOINT_STEP_RAD,
+                 tilt_deg=15., tilt_azimuth_deg=0., region='outer_front', pose_angles_deg=None,
+                 sweep_trim_mm=1., duration_s=None, jaw_opening_deg=None,
+                 pose_spacing_mm=Config().pose_spacing_mm, speed_profile='local',
+                 orientation_audit='strict', transfer_speed_mm_s=150., planning_mode='simple',
+                 simple_angles_deg=(-75., -33.), check_mode='full', perception_result=None):
+    if duration_s is not None and (isinstance(duration_s, bool)
+            or not np.isfinite(duration_s) or duration_s <= 0):
+        raise ValueError('duration_s must be positive and finite')
+    if check_mode not in CHECK_MODES:
+        raise ValueError('check_mode must be full or geometry_only')
+    tilt_deg, tilt_azimuth_deg, fixed_roll_deg = resolve_pose_angles(
+        pose_angles_deg, tilt_deg=tilt_deg, tilt_azimuth_deg=tilt_azimuth_deg,
+        fixed_roll_deg=fixed_roll_deg)
+    options = SweepOptions(fixed_roll_deg=fixed_roll_deg, trim_mm=sweep_trim_mm)
+    if max_orientation_step_deg is None:
+        max_orientation_step_deg = Config().max_orientation_step_deg
+    simple_angles_deg = resolve_simple_angles(simple_angles_deg)
+    cfg = Config(standoff_mm=offset_mm, speed_mm_s=speed_mm_s, joint_step_rad=joint_step_rad,
+                 planning_mode=planning_mode, check_mode=check_mode,
+                 simple_angle_deg=simple_angles_deg[0], simple_angle2_deg=simple_angles_deg[1],
+                 pose_spacing_mm=pose_spacing_mm,
+                 speed_profile=speed_profile, orientation_audit=orientation_audit,
+                 tilt_deg=tilt_deg, tilt_azimuth_deg=tilt_azimuth_deg, region=region,
+                 max_orientation_step_deg=max_orientation_step_deg,
+                 joint_speed_rad_s=2.2 if duration_s is not None else Config().joint_speed_rad_s,
+                 joint_accel_rad_s2=12. if duration_s is not None else Config().joint_accel_rad_s2,
+                 orientation_speed_deg_s=200. if duration_s is not None else Config().orientation_speed_deg_s,
+                 transfer_speed_mm_s=transfer_speed_mm_s)
+    if model_data is None or output_dir is None:
+        raise ValueError('Tracking requires the capture scene and an output directory')
+    if path_index != 0:
+        raise ValueError('Select one of the six canonical regions with region; path-index is retired')
+    if collision_mode != 'mesh':
+        raise ValueError('Use collision-mode mesh: the rebuilt planner checks actual tooth meshes')
+    if record_gif:
+        raise ValueError('GIF export is retired; use the planning viewer for the new trajectory')
+    tracking_started = perf_counter()
+    registration_dir = Path(registration_dir)
+    registration = json.loads((registration_dir/'registration_report.json').read_text(encoding='utf-8-sig'))
+    inputs = Inputs.defaults(jaw)
+    inputs.scan = Path(registration['config'][jaw+'_mesh'])
+    if not inputs.scan.is_absolute(): inputs.scan = ROOT/inputs.scan
+    inputs.topology = Path(topology_path) if topology_path else Path(registration['config'][jaw+'_line']).parent/'gingival_line_segments.obj'
+    if not inputs.topology.is_absolute(): inputs.topology = ROOT/inputs.topology
+    if prediction_dir is not None: inputs.prediction = Path(prediction_dir)
+    from perception.regions import PreparedRegion
+    if isinstance(perception_result, PreparedRegion):
+        prepared = perception_result
+    elif perception_result is not None:
+        name = region
+        if name not in perception_result.regions:
+            raise ValueError(f'Perception did not produce region {region}')
+        prepared = perception_result.regions[name]
+    else:
+        manifest_path = registration_dir.parent/'regions'/'perception_regions.json'
+        if not manifest_path.is_file():
+            raise ValueError('Tracking requires perception regional output; rerun perception first')
+        manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+        name = region
+        if name not in manifest['regions']:
+            raise ValueError(f'Perception did not produce region {region}')
+        prepared = PreparedRegion.load(manifest['regions'][name])
+    prepared.validate(region)
+    if prepared.inputs.jaw != jaw or fingerprint(prepared.inputs.scan)['sha256'] != fingerprint(inputs.scan)['sha256']:
+        raise ValueError('Tracking registration and perception source scan differ')
+    bundle = load_registered_paths(registration_dir, jaw, inputs.topology)
     model, data = model_data
-    bundle = load_registered_paths(Path(registration_dir), jaw, topology_path)
-    output_dir = Path(output_dir) if output_dir else PROJECT_ROOT/'outputs/pipeline_tracking'/datetime.now().strftime('%Y%m%d_%H%M%S_%f')
-    if output_dir.exists() and (not output_dir.is_dir() or any(output_dir.iterdir())):
-        raise FileExistsError(f'Output directory must be empty: {output_dir}')
-    output_dir.mkdir(parents=True, exist_ok=True)
-    report = {
-        'status': 'planning', 'simulation_only': True, 'hardware_execution_allowed': False,
-        'jaw': jaw, 'path_index': path_index, 'path_source': 'registered',
-        'jaw_scene_pose': 'capture',
-        'registration_dir': str(bundle.registration_dir) if bundle.registration_dir else None,
-        'coordinate_mapping': 'estimated scan-to-camera registration and saved camera pose',
-        'T_world_scan_m': bundle.world_from_scan.tolist(),
-        'source_sampling_mm': bundle.sampling_spacing_m*1000.,
-        'topology_path': str(bundle.topology_path), 'collision_mode': collision_mode,
-        'dental_collision_enabled': collision_mode == 'strict',
-        'offset_mm': float(offset_mm) if np.isfinite(offset_mm) else None,
-        'speed_limit_mm_s': float(speed_mm_s) if np.isfinite(speed_mm_s) else None,
-        'tool_pose': ('tooth_aligned_filtered' if max_orientation_step_deg is not None
-                      else 'tooth_aligned'), 'fixed_orientation': False,
-        'retained_tcp_tooth_relative_rotation': np.eye(3).tolist(),
-        'offset_direction': 'per_point_tooth_positive_z',
-        'scene': str(DENTAL_MODEL_PATH), 'mujoco_version': mujoco.__version__,
-    }
-    rows, actual, frames, trace_angles = [], [], [], []
-    maximum_joint_speed = 0.
-    renderer = None
-    active_viewer = None
-    plan = None
-    try:
-        configure_collision_mode(model, collision_mode)
-        mujoco.mj_forward(model, data)
-        targets = registered_tracking_targets(model, data, bundle, path_index, offset_mm)
-        np.save(output_dir/'requested_T_world_tcp.npy', targets.tcp.transforms)
-        if max_orientation_step_deg is not None:
-            targets = filter_tooth_orientation_targets(targets, max_orientation_step_deg)
-            selection = targets.report['orientation_filter']
-            report['orientation_filter'] = selection
-            kept = set(selection['retained_sample_indices'])
-            skipped = {row['sample_index']: row for row in selection['skipped_samples']}
-            np.savetxt(output_dir/'orientation_selection.csv',
-                       [[i, int(i in kept), skipped[i]['angle_deg'] if i in skipped else 0.]
-                        for i in range(len(targets.tcp.origins))], delimiter=',',
-                       header='sample_index,retained_tooth_orientation,rejected_angle_deg', comments='')
-        # Preserve reviewable geometric targets even if IK/preflight rejects execution.
-        report.update(orientation_world=targets.tcp.rotations.tolist(),
-                      tooth_frame_geometry=targets.report, trace_waypoints=len(targets.tcp.origins))
-        np.save(output_dir/'target_rotations_world.npy', targets.tcp.rotations)
-        np.save(output_dir/'T_world_tcp.npy', targets.tcp.transforms)
-        np.save(output_dir/'T_world_tooth.npy', targets.tooth.transforms)
-        np.savetxt(output_dir/'target_path_world_m.csv', targets.tcp.origins, delimiter=',',
-                   header='x_m,y_m,z_m', comments='')
-        np.savetxt(output_dir/'target_poses_world_m_rad.csv',
-                   np.column_stack((targets.tcp.origins,
-                                    Rotation.from_matrix(targets.tcp.rotations).as_euler('xyz'))),
-                   delimiter=',', header='x_m,y_m,z_m,roll_rad,pitch_rad,yaw_rad', comments='')
-        plan = plan_tooth_aligned_tracking(model, data, targets, speed_mm_s)
-        controller = GingivalTCPController(model, plan)
-        report.update(path_length_mm=path_length(plan.path)*1000., duration_s=plan.duration,
-                      original_chain_length_mm=path_length(bundle.chains[path_index])*1000.,
-                      continuous_chains=len(bundle.chains), trace_start_s=plan.trace_start,
-                      trace_end_s=plan.trace_end, motion_ik_samples=len(plan.command_q))
-        np.savetxt(output_dir/'joint_waypoints_rad.csv',
-                   np.vstack((plan.home_q, plan.approach_q, plan.command_q, plan.retreat_q)),
-                   delimiter=',', header='q1,q2,q3,q4,q5,q6', comments='')
-        np.savetxt(output_dir/'trace_joint_commands.csv',
-                   np.column_stack((plan.command_arc, plan.command_q)), delimiter=',',
-                   header='arc_m,q1,q2,q3,q4,q5,q6', comments='')
-        print(f'{jaw}: continuous path {path_index}, length {path_length(plan.path)*1000:.2f} mm, '
-              f'offset {offset_mm:.1f} mm, max speed {speed_mm_s:.1f} mm/s.')
-        print(f'Collision mode: {collision_mode}. Simulation duration: {plan.duration:.1f} s.')
-        if collision_mode == 'geometry':
-            print('GEOMETRY PLAYBACK: jaw convex collision proxies are disabled; this run does not validate contact.')
-        print('Cyan: target TCP path; orange: actual TCP trace; pink: registered source curves.')
-        renderer = mujoco.Renderer(model, height=600, width=800)
-        if not headless:
-            from mujoco import viewer
-            active_viewer = viewer.launch_passive(model, data)
-            with active_viewer.lock():
-                set_camera(active_viewer.cam, plan)
-                # Hide only the chair in the viewer. This model is local to this run.
-                model.geom_rgba[model.geom('dental_dental_chair_visual').id, 3] = 0
-        steps = max(1, round(0.02/model.opt.timestep))
-        period = steps*model.opt.timestep
-        next_frame = 0.
-        preview_saved = False
-        while data.time < plan.duration+0.5:
-            wall_started = time.perf_counter()
-            if active_viewer is not None and not active_viewer.is_running():
-                report['status'] = 'interrupted'
-                break
-            controller.update(data)
-            step_checked(model, data, steps)
-            target, q, phase = plan.sample(data.time)
-            position = data.site_xpos[plan.site_id].copy()
-            error_mm = float(np.linalg.norm(position-target)*1000.)
-            maximum_joint_speed = max(maximum_joint_speed, float(np.max(np.abs(data.qvel))))
-            orientation_error = None
-            if phase == 'trace':
-                actual.append(position)
-                actual_rotation = data.site_xmat[plan.site_id].reshape(3, 3)
-                desired_rotation = plan.sample_rotation(data.time)
-                orientation_error = float(np.rad2deg(np.linalg.norm(rotation_error(
-                    desired_rotation, actual_rotation))))
-                trace_angles.append(orientation_error)
-            rows.append([data.time, *target, *position, error_mm, phase, orientation_error])
-            if record_gif and data.time >= next_frame:
-                from PIL import Image
-                frames.append(Image.fromarray(preview(renderer, data, bundle, plan, actual)).resize((640, 480)))
-                next_frame += (plan.duration+0.5)/48
-            if not preview_saved and data.time >= plan.trace_start+plan.trace_duration*0.6:
-                from PIL import Image
-                Image.fromarray(preview(renderer, data, bundle, plan, actual)).save(output_dir/'tracking_preview.png')
-                preview_saved = True
-            if active_viewer is not None:
-                with active_viewer.lock():
-                    active_viewer.user_scn.ngeom = 0
-                    draw_paths(active_viewer.user_scn, bundle, plan, actual, data)
-                active_viewer.sync()
-                time.sleep(max(0., period-(time.perf_counter()-wall_started)))
-        else:
-            report['status'] = 'completed'
-        if not preview_saved:
-            from PIL import Image
-            Image.fromarray(preview(renderer, data, bundle, plan, actual)).save(output_dir/'tracking_preview.png')
-        trace_errors = np.array([row[7] for row in rows if row[8] == 'trace'])
-        if len(trace_errors):
-            report.update(trace_rms_mm=float(np.sqrt(np.mean(trace_errors**2))),
-                          trace_max_mm=float(trace_errors.max()), trace_samples=len(trace_errors),
-                          trace_rotation_max_deg=max(trace_angles),
-                          trace_rotation_rms_deg=float(np.sqrt(np.mean(np.square(trace_angles)))))
-            # Distance to the original registered topology includes any requested offset.
-            line_distances_mm = 1000*polyline_distances(np.asarray(actual), bundle.chains[path_index])
-            report.update(original_line_distance_rms_mm=float(np.sqrt(np.mean(line_distances_mm**2))),
-                          original_line_distance_max_mm=float(line_distances_mm.max()))
-            if report['status'] == 'completed' and (report['trace_rms_mm'] > 1. or report['trace_max_mm'] > 2.):
-                raise RuntimeError('Trace exceeds acceptance limits: RMS 1 mm / maximum 2 mm')
-            if report['status'] == 'completed' and report['trace_rotation_max_deg'] > 1.:
-                raise RuntimeError('Trace orientation exceeds acceptance limit: maximum 1 degree')
-        report['simulated_time_s'] = float(data.time)
-        report['maximum_joint_speed_rad_s'] = maximum_joint_speed
-        report['robot_contacts_detected'] = 0
-        if frames:
-            frames[0].save(output_dir/'tracking.gif', save_all=True, append_images=frames[1:], duration=160, loop=0)
-    except (ValueError, RuntimeError, FileNotFoundError) as error:
-        report['status'] = 'failed'
-        report['error'] = str(error)
-        report['simulated_time_s'] = float(data.time)
-        raise
-    finally:
-        if active_viewer is not None:
-            active_viewer.close()
-        if renderer is not None:
-            renderer.close()
-        import csv
-        with (output_dir/'tcp_tracking.csv').open('w', newline='', encoding='utf-8') as handle:
-            writer = csv.writer(handle)
-            writer.writerow(['time_s', 'target_x_m', 'target_y_m', 'target_z_m',
-                             'actual_x_m', 'actual_y_m', 'actual_z_m', 'error_mm', 'phase',
-                             'orientation_error_deg'])
-            writer.writerows(rows)
-        (output_dir/'tracking_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False), encoding='utf-8')
-    print(f"{report['status']}: trace RMS {report.get('trace_rms_mm', float('nan')):.3f} mm, "
-          f"max {report.get('trace_max_mm', float('nan')):.3f} mm, "
-          f"rotation max {report.get('trace_rotation_max_deg', float('nan')):.3f} deg. "
-          f"Results: {output_dir.resolve()}")
-    return report
-
-
+    if not np.allclose(camera_world_transform_m(data, bundle.camera_name), bundle.world_from_camera, atol=1e-6):
+        raise ValueError('Camera moved since capture; a new registration is required')
+    setup_wall_time_s = perf_counter() - tracking_started
+    planning_started = perf_counter()
+    output_dir = Path(output_dir)
+    planning_dir = output_dir
+    geometry_only = check_mode == GEOMETRY_ONLY
+    print(f'Planning mode: {planning_mode}; region: {region}; check mode: {check_mode}', flush=True)
+    if geometry_only:
+        print('Collision checking disabled: this run verifies pose and path geometry only '
+              'and produces no executable plan', flush=True)
+    if planning_mode == 'simple':
+        print(f'Regional fixed Z-angle/Y-azimuth/X-flip: {[cfg.tilt_deg, cfg.tilt_azimuth_deg, fixed_roll_deg]}; '
+              'collision corrections bounded to +/-5 degrees per angle', flush=True)
+    else:
+        print(f'Fixed gravity-Z angle: {cfg.tilt_deg:g} degrees; fixed Y azimuth: {cfg.tilt_azimuth_deg:g} degrees', flush=True)
+    print(f'IK orientation step limit: {cfg.max_orientation_step_deg:g} degrees; '
+          f'region endpoint trim: {options.trim_mm:g} mm', flush=True)
+    if planning_mode == 'continuous' and fixed_roll_deg is not None:
+        print(f'Tool +X flip: {fixed_roll_deg:g} degrees', flush=True)
+    # Explicit duration requests use the same simulation profile as the standalone planner.
+    _, trajectory, report, scene = plan(
+        prepared, planning_dir, cfg,
+        world_from_scan=bundle.world_from_scan, model_data=model_data,
+        sweep_options=options, jaw_opening_deg=jaw_opening_deg, duration_s=duration_s)
+    planning_wall_time_s = perf_counter() - planning_started
+    if geometry_only:
+        # No clearance was measured and no dynamics run happened, so only a
+        # completed geometry-only verification may continue.
+        if trajectory is None or report.get('status') != GEOMETRY_ONLY_STATUS:
+            reasons = dict.fromkeys(attempt['reason'] for attempt in report.get('attempts', [])
+                                    if attempt.get('reason'))
+            detail = (report.get('error') or report.get('failure')
+                      or '; '.join(reasons) or report.get('status'))
+            raise ValueError(f'No reachable {region}-region {planning_mode} geometry-only plan: {detail}')
+    elif trajectory is None or not report.get('execution_ready'):
+        reasons = dict.fromkeys(attempt['reason'] for attempt in report.get('attempts', [])
+                                if attempt.get('reason'))
+        detail = (report.get('error') or report.get('failure')
+                  or '; '.join(reasons) or report.get('status'))
+        raise ValueError(f'No executable {region}-region {planning_mode} plan: {detail}')
+    if report.get('path_kind') != continuous_path_kind(region):
+        raise ValueError('Continuous planning returned a different path kind')
+    if report.get('planning_mode', 'continuous') != planning_mode:
+        raise ValueError('Planning returned a different planning mode')
+    if report.get('check_mode', 'full') != check_mode:
+        raise ValueError('Planning returned a different collision check mode')
+    continuity = validate_sweep_contract(
+        trajectory, report, load_sweep_reference(planning_dir, report))
+    original_duration_s = trajectory.duration
+    if geometry_only:
+        result = {'status': GEOMETRY_ONLY_STATUS, 'simulation_only': True, 'execution_ready': False,
+                  'check_mode': check_mode, 'collision_checking_enabled': False,
+                  'clearance_measured': False, 'dental_collision_validated': False,
+                  'dynamics_verified': False, 'duration_s': trajectory.duration,
+                  'max_rotation_error_deg': None, 'max_position_error_mm': None,
+                  'minimum_actual_clearance_mm': None,
+                  'trajectory_file': report.get('trajectory_file'),
+                  'note': 'Pose and path geometry verified without collision checking; '
+                          'replan with check_mode=full before execution'}
+        result.update(coverage_fraction=report['coverage_fraction'],
+                      trace_rotation_max_deg=None,
+                      planning_mode=planning_mode,
+                      region=region,
+                      pose_angles_deg=[cfg.tilt_deg, cfg.tilt_azimuth_deg, fixed_roll_deg],
+                      regional_orientation=report.get('regional_orientation'),
+                      joint_step_rad=joint_step_rad,
+                      pose_spacing_mm=cfg.pose_spacing_mm,
+                      max_orientation_step_deg=cfg.max_orientation_step_deg,
+                      sweep_trim_mm=options.trim_mm,
+                      standoff_mm=cfg.standoff_mm,
+                      target_duration_s=duration_s, original_duration_s=original_duration_s,
+                      source_plan_dir=str(planning_dir.resolve()),
+                      execution_plan_dir=None,
+                      retiming_wall_time_s=0.,
+                      tilt_deg=cfg.tilt_deg, tilt_azimuth_deg=cfg.tilt_azimuth_deg,
+                      path_kind=report['path_kind'],
+                      continuity=continuity,
+                      planning_status=report.get('status'),
+                      planning_wall_time_s=planning_wall_time_s,
+                      planning_substage_times_s=report.get('timings_wall_s', {}),
+                      motion_audit=report.get('motion_audit'),
+                      trace_audit=report.get('trace_audit'),
+                      tracking_setup_wall_time_s=setup_wall_time_s,
+                      execution_wall_time_s=0.,
+                      tracking_wall_time_s=perf_counter()-tracking_started)
+        dump(Path(output_dir)/'tracking_report.json', result)
+        return result
+    retiming_wall_time_s = 0.
+    if duration_s is not None:
+        if (not report.get('fast_dynamics_verified') or abs(trajectory.duration-duration_s) > 1e-6):
+            raise ValueError('Target-duration trajectory has not passed execution validation')
+    _, _, checker = scene
+    execution_started = perf_counter()
+    if headless and report.get('timing_method') == TIMING_METHOD and report.get('fast_dynamics_verified'):
+        result = dict(report['fast_execution_summary'])
+        print('Using the completed headless dynamics run; no second simulation is needed', flush=True)
+    else:
+        result = execute(model, data, trajectory, checker, output_dir, headless=headless)
+    execution_wall_time_s = perf_counter() - execution_started
+    if (output_dir/'execution_report.json').is_file():
+        report['execution_report_file'] = fingerprint(output_dir/'execution_report.json')
+        dump(output_dir/'planning_report.json', report)
+    result.update(coverage_fraction=report['coverage_fraction'], dental_collision_validated=result['status']=='completed',
+                  trace_rotation_max_deg=result['max_rotation_error_deg'],
+                  planning_mode=planning_mode,
+                  region=region,
+                  pose_angles_deg=[cfg.tilt_deg, cfg.tilt_azimuth_deg, fixed_roll_deg],
+                  regional_orientation=report.get('regional_orientation'),
+                  joint_step_rad=joint_step_rad,
+                  pose_spacing_mm=cfg.pose_spacing_mm,
+                  max_orientation_step_deg=cfg.max_orientation_step_deg,
+                  sweep_trim_mm=options.trim_mm,
+                  standoff_mm=cfg.standoff_mm,
+                  target_duration_s=duration_s, original_duration_s=original_duration_s,
+                  source_plan_dir=str(planning_dir.resolve()),
+                  execution_plan_dir=str(output_dir.resolve()),
+                  retiming_wall_time_s=retiming_wall_time_s,
+                  tilt_deg=cfg.tilt_deg, tilt_azimuth_deg=cfg.tilt_azimuth_deg,
+                  path_kind=report['path_kind'],
+                  continuity=continuity,
+                  planning_status=report.get('status'),
+                  planning_wall_time_s=planning_wall_time_s,
+                  planning_substage_times_s=report.get('timings_wall_s', {}),
+                  tracking_setup_wall_time_s=setup_wall_time_s,
+                  execution_wall_time_s=execution_wall_time_s,
+                  tracking_wall_time_s=perf_counter()-tracking_started)
+    dump(Path(output_dir)/'tracking_report.json', result)
+    return result

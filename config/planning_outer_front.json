@@ -1,0 +1,18 @@
+{
+  "perception_result": "outputs/tutorial/manual/regions/outer_front",
+  "region": "outer_front",
+  "planning_mode": "simple",
+  "check_mode": "full",
+  "pose_angles_deg": [6.37, 13.26, -0.4],
+  "jaw_opening_deg": 20.0,
+  "standoff_mm": 1.8,
+  "pose_spacing_mm": 0.25,
+  "joint_step_rad": 1.0,
+  "max_orientation_step_deg": 30.0,
+  "speed_mm_s": 1.0,
+  "transfer_speed_mm_s": 150.0,
+  "orientation_audit": "strict",
+  "headless": true,
+  "execute": false,
+  "out": "outputs/planning/outer_front"
+}

@@ -1,3 +1,6 @@
+# Full simulation pipeline, tested on Windows x64 / CPython 3.11.9.
+# Includes runtime dependencies; real-camera and animation extras are separate.
+# TOPPRA 0.6.3 builds from source on Windows; see README for C++ prerequisites.
 absl-py==2.5.0
 annotated-types==0.8.0
 asttokens==3.0.2
@@ -12,7 +15,9 @@ comm==0.2.3
 ConfigArgParse==1.7.7
 contourpy==1.3.3
 cycler==0.12.1
+Cython==3.3.1
 dash==4.4.1
+ecos==2.0.14
 etils==1.14.0
 executing==2.2.1
 fastjsonschema==2.22.2
@@ -36,7 +41,7 @@ jupyter_core==5.9.1
 jupyterlab_widgets==3.0.17
 kiwisolver==1.5.1
 MarkupSafe==3.0.3
-matplotlib==3.11.2
+matplotlib==3.10.3
 matplotlib-inline==0.2.2
 mujoco==3.14.0
 narwhals==2.26.0
@@ -49,7 +54,7 @@ packaging==26.3
 parso==0.8.7
 pillow==12.3.0
 platformdirs==4.11.15
-plotly==7.1.0
+plotly==6.1.2
 prompt_toolkit==3.0.53
 psutil==7.2.2
 pure_eval==0.2.4
@@ -59,14 +64,18 @@ Pygments==2.21.0
 PyOpenGL==3.1.10
 pyparsing==3.3.3
 python-dateutil==2.9.0.post0
+python-fcl==0.7.0.11
 referencing==0.37.0
 requests==2.34.2
 retrying==1.4.2
 rpds-py==2026.6.3
 scikit-learn==1.9.1
+scipy==1.15.3
+setuptools==65.5.0
 six==1.17.0
 stack-data==0.6.3
 threadpoolctl==3.7.0
+toppra==0.6.3
 traitlets==5.16.1
 typing-inspection==0.4.4
 typing_extensions==4.16.0

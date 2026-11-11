@@ -1,0 +1,56 @@
+:root { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; color: #24282d; background: #f4f6f6; font-size: 14px; letter-spacing: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+header { height: 60px; display: flex; align-items: center; gap: 14px; padding: 0 20px; background: white; border-bottom: 1px solid #d8dfe0; }
+h1 { font-size: 20px; font-weight: 600; margin: 0; }
+.status { font-size: 12px; color: #54716b; }
+.toolbar { display: flex; gap: 6px; margin-left: auto; }
+button, input, select { font: inherit; }
+button { cursor: pointer; color: inherit; background: transparent; border: 1px solid #cdd5d7; border-radius: 4px; min-width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; }
+button:hover { background: #eaf0ef; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #187e71; outline-offset: 2px; }
+button:disabled { opacity: .45; cursor: wait; }
+button svg { width: 17px; height: 17px; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 310px; height: calc(100dvh - 60px); }
+#viewport { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: #edf1f2; }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+aside { background: #fff; border-left: 1px solid #d8dfe0; padding: 22px 20px; overflow: auto; }
+.field { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+select { min-width: 0; width: 158px; background: white; border: 1px solid #cdd5d7; padding: 7px 8px; border-radius: 4px; }
+fieldset { padding: 0; margin: 22px 0; border: 0; }
+legend { font-size: 12px; color: #606c70; margin-bottom: 8px; }
+.mode div { display: flex; border: 1px solid #cdd5d7; border-radius: 4px; overflow: hidden; }
+.mode button { border: none; border-radius: 0; flex: 1; }
+.mode button[aria-pressed="true"] { background: #e1efeb; color: #176d5b; }
+.slider-field { display: grid; grid-template-columns: minmax(0, 1fr) 82px; align-items: center; gap: 10px 12px; margin-bottom: 22px; }
+.slider-field label { font-size: 13px; line-height: 1.6; }
+.slider-field label span { color: #7b8589; margin-left: 3px; }
+input[type="number"] { width: 82px; height: 32px; border: 1px solid #cdd5d7; border-radius: 4px; padding: 4px 5px; text-align: right; font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; margin: 0; grid-column: 1 / -1; height: 16px; accent-color: #177861; }
+input[type="checkbox"] { accent-color: #177861; margin: 0 7px 0 0; width: 14px; height: 14px; flex-shrink: 0; }
+.pick-row { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 16px; }
+.pick-row label, .toggles label { display: flex; align-items: center; font-size: 13px; }
+.toggles { display: flex; flex-wrap: wrap; gap: 14px; border-top: 1px solid #e4e8e9; padding-top: 16px; }
+dl { border-top: 1px solid #e4e8e9; padding-top: 16px; margin: 18px 0 0; font-size: 12px; }
+dl div { margin-bottom: 14px; }
+dt { color: #677579; margin-bottom: 5px; }
+dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; line-height: 1.6; }
+.legend { position: absolute; left: 18px; top: 18px; display: flex; gap: 12px; font-size: 11px; z-index: 1; pointer-events: none; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend b { width: 8px; height: 8px; display: inline-block; border-radius: 1px; }
+.x { background: #da4545; } .y { background: #32844b; } .z { background: #397acf; } .path { background: #009eaa; }
+#loading { position: absolute; inset: 0; display: grid; place-content: center; color: #617374; background: #edf1f2; z-index: 2; }
+#loading[hidden] { display: none; }
+#scene-status { position: absolute; bottom: 16px; left: 18px; right: 18px; color: #5b6a6d; font-size: 12px; pointer-events: none; }
+#error { margin-top: 16px; padding: 10px 0; color: #a42c32; line-height: 1.6; overflow-wrap: anywhere; }
+@media (max-width: 720px) {
+  header { height: 54px; padding: 0 12px; gap: 9px; }
+  h1 { font-size: 17px; } .status { font-size: 11px; }
+  .toolbar { gap: 4px; } .toolbar button { width: 30px; height: 32px; min-width: 30px; }
+  main { display: flex; flex-direction: column; height: auto; }
+  #viewport { height: 46dvh; min-height: 290px; flex-shrink: 0; }
+  aside { border-left: 0; border-top: 1px solid #d8dfe0; padding: 18px 20px; overflow: visible; }
+  .legend { top: 12px; left: 12px; gap: 10px; }
+  .field { margin-bottom: 12px; } select { width: 58%; }
+  .slider-field { margin-bottom: 18px; } fieldset { margin: 18px 0; }
+}

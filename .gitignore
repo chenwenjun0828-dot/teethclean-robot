@@ -12,6 +12,7 @@ outputs/
 # Editor, test, and operating system caches
 .vscode/
 .idea/
+/design/session-*/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -26,4 +27,4 @@ Thumbs.db
 !.env.example
 !.env.template
 
-# Keep models/**/*.obj: these are required mesh assets, not compiler output.
+# Keep assets/**/*.obj: these are required mesh assets, not compiler output.

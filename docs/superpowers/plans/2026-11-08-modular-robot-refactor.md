@@ -139,7 +139,7 @@
 
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -q
-.\.venv\Scripts\python.exe -m unittest discover -s planning -q
+.\.venv\Scripts\python.exe -m unittest planning.test_architecture planning.test_planning planning.test_motion_modes planning.test_sweep planning.test_roll_policy planning.test_retime -q
 .\.venv\Scripts\python.exe -m perception.registration --help
 .\.venv\Scripts\python.exe -m perception.gingival_extraction --help
 .\.venv\Scripts\python.exe -m planning --help
@@ -147,3 +147,11 @@
 .\.venv\Scripts\python.exe -m control.force --help
 .\.venv\Scripts\python.exe -m pipeline.run --help
 ```
+
+## 实施结果
+
+- `planning2/` 已迁移并删除，正式入口统一为 `planning/`；旧基础能力集中在 `planning/infrastructure/`。
+- 感知、规划、控制和 pipeline 均已补齐 README、ARCHITECTURE、契约或阶段入口；control 提供 mock、MuJoCo 和真机传输边界。
+- `models/` 已合并到 `assets/simulation`、`assets/source_cad` 和 `assets/perception`，资产清单当前包含 122 个文件，路径均为英文。
+- `pipeline.run --no-output` 已用自动配准和无界面完整烟测通过，临时目录在流程结束后删除；`--dry-run` 只校验配置和输入。
+- 验证结果：`tests` 全量 134 项通过；planning 专项 46 项通过；`git diff --check` 和 Python 编译检查通过。

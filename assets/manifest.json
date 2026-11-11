@@ -1,10 +1,1131 @@
 {
   "schema_version": 1,
-  "generated_at": null,
+  "generated_at": "2026-11-11T05:39:56.328446+00:00",
   "asset_roots": [
     "simulation",
     "source_cad",
     "perception"
   ],
-  "files": []
+  "files": [
+    {
+      "path": "simulation/dental_chair.stl",
+      "category": "simulation",
+      "logical_name": "dental_chair",
+      "format": "stl",
+      "sha256": "2f3fff1a0fee683dfe307a6220ff238d89969b503fa6e3b1c92fd984888c0d3c",
+      "size_bytes": 42684
+    },
+    {
+      "path": "simulation/dental_static_component.xml",
+      "category": "simulation",
+      "logical_name": "dental_static_component",
+      "format": "xml",
+      "sha256": "8cfa761358fc04811afd2b9411148971fa8edf9a583ed96f951a85598190e107",
+      "size_bytes": 1809
+    },
+    {
+      "path": "simulation/mouth_opening_assets.xml",
+      "category": "simulation",
+      "logical_name": "mouth_opening_assets",
+      "format": "xml",
+      "sha256": "4778fa05b269d5c4126028e463687b88b2cbcd64a62786e591bebcfd712b6a41",
+      "size_bytes": 30143
+    },
+    {
+      "path": "simulation/mouth_opening_body.xml",
+      "category": "simulation",
+      "logical_name": "mouth_opening_body",
+      "format": "xml",
+      "sha256": "5972b4b16efb10eb3f90ef233b47c50f85706c10da0819d093280d58e11c7115",
+      "size_bytes": 26385
+    },
+    {
+      "path": "simulation/README.md",
+      "category": "simulation",
+      "logical_name": "README",
+      "format": "md",
+      "sha256": "987448eabf201d44399599710abfbde5e8e7ce8b8c6e7096aa52c962930b6438",
+      "size_bytes": 829
+    },
+    {
+      "path": "simulation/robot/assets/base_0.obj",
+      "category": "simulation",
+      "logical_name": "base_0",
+      "format": "obj",
+      "sha256": "9a3b21f1524baef6af8a52d7af90b6e94b79f7e3c2b04a0f6581f74d22291b0b",
+      "size_bytes": 556543
+    },
+    {
+      "path": "simulation/robot/assets/base_1.obj",
+      "category": "simulation",
+      "logical_name": "base_1",
+      "format": "obj",
+      "sha256": "cf7d54691a2c1eeda280955ebd6bd83c2dbecfc46fb53c10198f05d107511b50",
+      "size_bytes": 638415
+    },
+    {
+      "path": "simulation/robot/assets/end_scaler.stl",
+      "category": "simulation",
+      "logical_name": "end_scaler",
+      "format": "stl",
+      "sha256": "52cbccc852412a486c87da0cd4faf786e3a19c6c5dd1d5b63901c0eabef9b89b",
+      "size_bytes": 407584
+    },
+    {
+      "path": "simulation/robot/assets/end_scaler_color.STL",
+      "category": "simulation",
+      "logical_name": "end_scaler_color",
+      "format": "stl",
+      "sha256": "def6458b9b201897ea4722e769ca4c916054e0646d0626da83d8421ced7bfdb3",
+      "size_bytes": 992684
+    },
+    {
+      "path": "simulation/robot/assets/force_sensor.stl",
+      "category": "simulation",
+      "logical_name": "force_sensor",
+      "format": "stl",
+      "sha256": "8c3dc24fcab13f8b4e1f468405879fb54a370e305154359c904ab8619b0b92b4",
+      "size_bytes": 834084
+    },
+    {
+      "path": "simulation/robot/assets/forearm_0.obj",
+      "category": "simulation",
+      "logical_name": "forearm_0",
+      "format": "obj",
+      "sha256": "64c049a55149c2ab355594d52302b53d3e34da3677ceaa1917c427cde7743146",
+      "size_bytes": 1691648
+    },
+    {
+      "path": "simulation/robot/assets/forearm_1.obj",
+      "category": "simulation",
+      "logical_name": "forearm_1",
+      "format": "obj",
+      "sha256": "a96fe203015cf532b193f414cd01268c7c36795e51a837dd33afd122334f81f2",
+      "size_bytes": 76202
+    },
+    {
+      "path": "simulation/robot/assets/forearm_2.obj",
+      "category": "simulation",
+      "logical_name": "forearm_2",
+      "format": "obj",
+      "sha256": "05b436505fc595aeab26675590c2b56b88a65b2d52d6352096fed9f07cb4c4ca",
+      "size_bytes": 932534
+    },
+    {
+      "path": "simulation/robot/assets/forearm_3.obj",
+      "category": "simulation",
+      "logical_name": "forearm_3",
+      "format": "obj",
+      "sha256": "fa31af19cfad7a765b62e8a2d5931cb014b88de84195a7850b4e5ee902112e9a",
+      "size_bytes": 1095775
+    },
+    {
+      "path": "simulation/robot/assets/shoulder_0.obj",
+      "category": "simulation",
+      "logical_name": "shoulder_0",
+      "format": "obj",
+      "sha256": "477387a7e7312782a6040484a3c2c2fcee33f40109f419076e31b6f6e1692c68",
+      "size_bytes": 2947794
+    },
+    {
+      "path": "simulation/robot/assets/shoulder_1.obj",
+      "category": "simulation",
+      "logical_name": "shoulder_1",
+      "format": "obj",
+      "sha256": "8537bba02804640ddf6e260f79fe66e895b3229ed3d44298a95e8e027eb5d435",
+      "size_bytes": 569646
+    },
+    {
+      "path": "simulation/robot/assets/shoulder_2.obj",
+      "category": "simulation",
+      "logical_name": "shoulder_2",
+      "format": "obj",
+      "sha256": "291714518416bb8f0bafbf123867db011ecbf5146a05245ca5893ee8c57d4e21",
+      "size_bytes": 2440344
+    },
+    {
+      "path": "simulation/robot/assets/upperarm_0.obj",
+      "category": "simulation",
+      "logical_name": "upperarm_0",
+      "format": "obj",
+      "sha256": "14143d4f1175a7dbacc8e2f2f98f1cac5a2b2e238cd46cd03654d31f2610eb53",
+      "size_bytes": 156252
+    },
+    {
+      "path": "simulation/robot/assets/upperarm_1.obj",
+      "category": "simulation",
+      "logical_name": "upperarm_1",
+      "format": "obj",
+      "sha256": "272899e927f4a32b7c25e34560ec70654c0346cc8ed1c616c0555f3f53b32d14",
+      "size_bytes": 1090164
+    },
+    {
+      "path": "simulation/robot/assets/upperarm_2.obj",
+      "category": "simulation",
+      "logical_name": "upperarm_2",
+      "format": "obj",
+      "sha256": "86c05350d60eb0e7e28a81b544267478b7db997baba41cef19088ebbeffecfa1",
+      "size_bytes": 3677923
+    },
+    {
+      "path": "simulation/robot/assets/upperarm_3.obj",
+      "category": "simulation",
+      "logical_name": "upperarm_3",
+      "format": "obj",
+      "sha256": "b257dab441e6fab64ea03b4b87029d8a96554ad1a513cce944d56acba0ad948a",
+      "size_bytes": 5346165
+    },
+    {
+      "path": "simulation/robot/assets/wrist1_0.obj",
+      "category": "simulation",
+      "logical_name": "wrist1_0",
+      "format": "obj",
+      "sha256": "7ef0c59b5c5d56a9902435c9a058b27d2a38c85fe2bae02d00a9284dd1f4d519",
+      "size_bytes": 278871
+    },
+    {
+      "path": "simulation/robot/assets/wrist1_1.obj",
+      "category": "simulation",
+      "logical_name": "wrist1_1",
+      "format": "obj",
+      "sha256": "ee6d5c562e6becef94109b0543329080d285d1aef521a01ed98e18a5bf1e8684",
+      "size_bytes": 2470967
+    },
+    {
+      "path": "simulation/robot/assets/wrist1_2.obj",
+      "category": "simulation",
+      "logical_name": "wrist1_2",
+      "format": "obj",
+      "sha256": "88c66dc64f15391287147d50add37729a3f41dadd80b1f859cf2cb6d45daf32a",
+      "size_bytes": 1657638
+    },
+    {
+      "path": "simulation/robot/assets/wrist2_0.obj",
+      "category": "simulation",
+      "logical_name": "wrist2_0",
+      "format": "obj",
+      "sha256": "2ac2e2e39d8f7005bc3b3ab26cd61634be2e14930074615da5318b9ee7c569a8",
+      "size_bytes": 846741
+    },
+    {
+      "path": "simulation/robot/assets/wrist2_1.obj",
+      "category": "simulation",
+      "logical_name": "wrist2_1",
+      "format": "obj",
+      "sha256": "a721d06dc61d3b3a8ec58c035c9e3358ed30d6991a72e077d8abf3c3c203b633",
+      "size_bytes": 2156900
+    },
+    {
+      "path": "simulation/robot/assets/wrist2_2.obj",
+      "category": "simulation",
+      "logical_name": "wrist2_2",
+      "format": "obj",
+      "sha256": "6df4335c8bd5e881fda2c224f770115ffe9ddd0cd321ebe3c0a4a310796f0987",
+      "size_bytes": 2141392
+    },
+    {
+      "path": "simulation/robot/assets/wrist3.obj",
+      "category": "simulation",
+      "logical_name": "wrist3",
+      "format": "obj",
+      "sha256": "0e51748f9c93bd66604360a5cf7e2e8a6e754550be64076333ff4fc19ec90c61",
+      "size_bytes": 211390
+    },
+    {
+      "path": "simulation/robot/CHANGELOG.md",
+      "category": "simulation",
+      "logical_name": "CHANGELOG",
+      "format": "md",
+      "sha256": "ef67f701df8698fb2e1a77a5de5d9a39aa22e7b4b101f68fc311d34e3ace87ed",
+      "size_bytes": 154
+    },
+    {
+      "path": "simulation/robot/LICENSE",
+      "category": "simulation",
+      "logical_name": "LICENSE",
+      "format": "",
+      "sha256": "5ec71ccf66c8d03261448f2441a586765b97f2248c860a1ae19689fb1c45cee6",
+      "size_bytes": 1470
+    },
+    {
+      "path": "simulation/robot/README.md",
+      "category": "simulation",
+      "logical_name": "README",
+      "format": "md",
+      "sha256": "435600d4f00cfdbd7edec4b60f0cd7fbb539f39abaefcd8bb3994beed3b1156a",
+      "size_bytes": 1689
+    },
+    {
+      "path": "simulation/robot/scene.xml",
+      "category": "simulation",
+      "logical_name": "scene",
+      "format": "xml",
+      "sha256": "e877852d40095926ff7db9cfb85e595b550e03da398bd6f6f58885d39038d1b6",
+      "size_bytes": 817
+    },
+    {
+      "path": "simulation/robot/scene_ur7e_with_tool.xml",
+      "category": "simulation",
+      "logical_name": "scene_ur7e_with_tool",
+      "format": "xml",
+      "sha256": "40fac62660dfa633c53aed87cb1d8c062475103e410d850515132eed03b3368e",
+      "size_bytes": 874
+    },
+    {
+      "path": "simulation/robot/ur5e.png",
+      "category": "simulation",
+      "logical_name": "ur5e",
+      "format": "png",
+      "sha256": "90310086f1187fcda94252ff68f8c4f8be97f65bec8f4eea449179b0979da795",
+      "size_bytes": 1956670
+    },
+    {
+      "path": "simulation/robot/ur5e.xml",
+      "category": "simulation",
+      "logical_name": "ur5e",
+      "format": "xml",
+      "sha256": "ffd0a7b336d3c2d27c35a15cc0d4aaa95196769aca190ac8d6522d3318c345a0",
+      "size_bytes": 6652
+    },
+    {
+      "path": "simulation/robot/ur7e_with_tool.xml",
+      "category": "simulation",
+      "logical_name": "ur7e_with_tool",
+      "format": "xml",
+      "sha256": "bee440754bb356ce2542451cc0ae5195dff99f829b9de8c3b89d04da1f8c4fbc",
+      "size_bytes": 8873
+    },
+    {
+      "path": "simulation/scene_ur7e_dental.xml",
+      "category": "simulation",
+      "logical_name": "scene_ur7e_dental",
+      "format": "xml",
+      "sha256": "a1796f6b416d3cbf23487814b0a0185312e090e82753b454f25b04eddf5539cc",
+      "size_bytes": 1270
+    },
+    {
+      "path": "simulation/teeth/mandibular.obj",
+      "category": "simulation",
+      "logical_name": "mandibular",
+      "format": "obj",
+      "sha256": "9f7b47e34902e88be6397316ab072d285220c27f9a4c037db312e4782aae8ebd",
+      "size_bytes": 33773737
+    },
+    {
+      "path": "simulation/teeth/mandibular.png",
+      "category": "simulation",
+      "logical_name": "mandibular",
+      "format": "png",
+      "sha256": "f1b3a9a8a9453bf94750a29fb201af6aa7ad5bf94015b37280c8244680229f87",
+      "size_bytes": 8130511
+    },
+    {
+      "path": "simulation/teeth/maxillary.obj",
+      "category": "simulation",
+      "logical_name": "maxillary",
+      "format": "obj",
+      "sha256": "57d7bb9a6c57febca6f130367a7695426a3c2ddaa895d94b27aa1d15259cb9a6",
+      "size_bytes": 33249873
+    },
+    {
+      "path": "simulation/teeth/maxillary.png",
+      "category": "simulation",
+      "logical_name": "maxillary",
+      "format": "png",
+      "sha256": "abd84cc2d6298d8ffcdf0362ffc477c375aaee0fe571fd64cceb9043ff6f98f3",
+      "size_bytes": 7402739
+    },
+    {
+      "path": "source_cad/cleaning_tool/cleaning_tool.stl",
+      "category": "source_cad",
+      "logical_name": "cleaning_tool",
+      "format": "stl",
+      "sha256": "eb6b902337e47e1fa9439e2b3640408365b936f6845c59c7fff0e619488b1d63",
+      "size_bytes": 183084
+    },
+    {
+      "path": "source_cad/cleaning_tool/cleaning_tool_assembly.sldasm",
+      "category": "source_cad",
+      "logical_name": "cleaning_tool_assembly",
+      "format": "sldasm",
+      "sha256": "7c4788b4c31af9f949b0a87a7ae61d6246dd912763d3ece491fff185c01b6f61",
+      "size_bytes": 278227
+    },
+    {
+      "path": "source_cad/cleaning_tool/cleaning_tool_body.stl",
+      "category": "source_cad",
+      "logical_name": "cleaning_tool_body",
+      "format": "stl",
+      "sha256": "c866a3007ec4e0964073cf70b231bbd8949707f21f3e85959dc927ab43a21b3a",
+      "size_bytes": 64584
+    },
+    {
+      "path": "source_cad/cleaning_tool/cleaning_tool_head.stl",
+      "category": "source_cad",
+      "logical_name": "cleaning_tool_head",
+      "format": "stl",
+      "sha256": "7b52318646bfe3fd043a647ed810607093d3e8abf6c09ffbf7f2b4e1bb791d50",
+      "size_bytes": 100884
+    },
+    {
+      "path": "source_cad/cleaning_tool/cleaning_tool_mount.stl",
+      "category": "source_cad",
+      "logical_name": "cleaning_tool_mount",
+      "format": "stl",
+      "sha256": "5b1013fdcb6102d7f7f6b8acb56d63182ccfcd02d309ed52e4b63ee2e64c01ad",
+      "size_bytes": 27184
+    },
+    {
+      "path": "source_cad/cleaning_tool/cleaning_tool_part.sldprt",
+      "category": "source_cad",
+      "logical_name": "cleaning_tool_part",
+      "format": "sldprt",
+      "sha256": "65fb2ec8db1335bada20694b687eed40b35644b2452761e3ebef1827fc3b5e26",
+      "size_bytes": 317967
+    },
+    {
+      "path": "source_cad/dental_chair/dental_chair.stl",
+      "category": "source_cad",
+      "logical_name": "dental_chair",
+      "format": "stl",
+      "sha256": "2f3fff1a0fee683dfe307a6220ff238d89969b503fa6e3b1c92fd984888c0d3c",
+      "size_bytes": 42684
+    },
+    {
+      "path": "source_cad/dental_chair/dental_chair_assembly.sldasm",
+      "category": "source_cad",
+      "logical_name": "dental_chair_assembly",
+      "format": "sldasm",
+      "sha256": "ac439b823268595dca9ceb49b1d293f771da6e8a66f0bc3cfd3c6229dd820b56",
+      "size_bytes": 105670
+    },
+    {
+      "path": "source_cad/fixture/cleaning_tool_assembly.sldasm",
+      "category": "source_cad",
+      "logical_name": "cleaning_tool_assembly",
+      "format": "sldasm",
+      "sha256": "7c4788b4c31af9f949b0a87a7ae61d6246dd912763d3ece491fff185c01b6f61",
+      "size_bytes": 278227
+    },
+    {
+      "path": "source_cad/fixture/cleaning_tool_mount.sldprt",
+      "category": "source_cad",
+      "logical_name": "cleaning_tool_mount",
+      "format": "sldprt",
+      "sha256": "9359f21c8c6d70bed386780959c7074825e14ebdd54d6ea38cdc9cdb358d2f5f",
+      "size_bytes": 134006
+    },
+    {
+      "path": "source_cad/fixture/cleaning_tool_mount_new.sldprt",
+      "category": "source_cad",
+      "logical_name": "cleaning_tool_mount_new",
+      "format": "sldprt",
+      "sha256": "14c4855160049f62d2547d03ae89ef0d7070a57975d12455ed26dcc78bc957f8",
+      "size_bytes": 133368
+    },
+    {
+      "path": "source_cad/fixture/d405_mount.sldprt",
+      "category": "source_cad",
+      "logical_name": "d405_mount",
+      "format": "sldprt",
+      "sha256": "569959851e39ead7ce26e214c7fb7b3b333f5c0bc08805f4830532453496cca2",
+      "size_bytes": 124101
+    },
+    {
+      "path": "source_cad/fixture/hook_mount.sldprt",
+      "category": "source_cad",
+      "logical_name": "hook_mount",
+      "format": "sldprt",
+      "sha256": "2418d224b4a2af4556f11ac389ea870ffcac70b5c576c0de291f9fd553958343",
+      "size_bytes": 144709
+    },
+    {
+      "path": "source_cad/fixture/hook_mount.stl",
+      "category": "source_cad",
+      "logical_name": "hook_mount",
+      "format": "stl",
+      "sha256": "eee23d5bc14da5a2e8a038236ff469b0bf08fe91cdf4be047e12518f80c4befb",
+      "size_bytes": 22984
+    },
+    {
+      "path": "source_cad/fixture/marker_ball.sldprt",
+      "category": "source_cad",
+      "logical_name": "marker_ball",
+      "format": "sldprt",
+      "sha256": "8112ba91b5fe087e376f7ab9508618a099d9d40ccb0e350c904d9f0537820eb1",
+      "size_bytes": 551390
+    },
+    {
+      "path": "source_cad/fixture/marker_ball.stl",
+      "category": "source_cad",
+      "logical_name": "marker_ball",
+      "format": "stl",
+      "sha256": "ca7ec47c9cd366285816652f44a4bcda95663f5bfe6a5c8eac55e37aef2dbb60",
+      "size_bytes": 117684
+    },
+    {
+      "path": "source_cad/fixture/marker_ball_array.stl",
+      "category": "source_cad",
+      "logical_name": "marker_ball_array",
+      "format": "stl",
+      "sha256": "18bf5664462e779cac3e93c490289ee3b082639468c53c54382e63b1a1af392a",
+      "size_bytes": 1058484
+    },
+    {
+      "path": "source_cad/fixture/marker_ball_r3mm.sldprt",
+      "category": "source_cad",
+      "logical_name": "marker_ball_r3mm",
+      "format": "sldprt",
+      "sha256": "65d345f4b076d9580e4668bd42ceaab19cd9fa7c380b00016062ccea31c7a96e",
+      "size_bytes": 545321
+    },
+    {
+      "path": "source_cad/fixture/marker_ball_r3mm.stl",
+      "category": "source_cad",
+      "logical_name": "marker_ball_r3mm",
+      "format": "stl",
+      "sha256": "8e5c814c175ff3891dc085c3d4b1e37700162085377915c381915eb05229319f",
+      "size_bytes": 1058484
+    },
+    {
+      "path": "source_cad/fixture/mount_thick_20260609.stl",
+      "category": "source_cad",
+      "logical_name": "mount_thick_20260609",
+      "format": "stl",
+      "sha256": "996af7fa9a720f842260ef71706000136449904933e98c8a0bffaec32d6a6f17",
+      "size_bytes": 27284
+    },
+    {
+      "path": "source_cad/fixture/mount_thin_20260609.stl",
+      "category": "source_cad",
+      "logical_name": "mount_thin_20260609",
+      "format": "stl",
+      "sha256": "d7a90b0b9ed74950a6edc41998afc5f5f4aec6811fc4ac6d848b6ee76e461415",
+      "size_bytes": 27184
+    },
+    {
+      "path": "source_cad/fixture/tool_body.sldprt",
+      "category": "source_cad",
+      "logical_name": "tool_body",
+      "format": "sldprt",
+      "sha256": "2c609168ac1122c39fe1a3db3ec7674b4ba2fdc526fef8cab6d4bb55b733a077",
+      "size_bytes": 83644
+    },
+    {
+      "path": "source_cad/fixture/tool_head_new.sldprt",
+      "category": "source_cad",
+      "logical_name": "tool_head_new",
+      "format": "sldprt",
+      "sha256": "c2fd6d484214cd346b0b7242e891cb81e1c9a413ce13607e63ef8ca6919f6a43",
+      "size_bytes": 305919
+    },
+    {
+      "path": "source_cad/force_sensor/force_sensor.stl",
+      "category": "source_cad",
+      "logical_name": "force_sensor",
+      "format": "stl",
+      "sha256": "8c3dc24fcab13f8b4e1f468405879fb54a370e305154359c904ab8619b0b92b4",
+      "size_bytes": 834084
+    },
+    {
+      "path": "source_cad/force_sensor/force_sensor_model.stp",
+      "category": "source_cad",
+      "logical_name": "force_sensor_model",
+      "format": "stp",
+      "sha256": "e7b43374f60577f1c932ce23cbc7c0eb046c0dccf911cbaf94a0f9635e9c77da",
+      "size_bytes": 1343846
+    },
+    {
+      "path": "source_cad/README.md",
+      "category": "source_cad",
+      "logical_name": "README",
+      "format": "md",
+      "sha256": "100a0cccc8daf0f12b90f83849f7cb5125f8afe5822d98a00f9817eeb8e2f953",
+      "size_bytes": 313
+    },
+    {
+      "path": "source_cad/robot/base_0.obj",
+      "category": "source_cad",
+      "logical_name": "base_0",
+      "format": "obj",
+      "sha256": "9a3b21f1524baef6af8a52d7af90b6e94b79f7e3c2b04a0f6581f74d22291b0b",
+      "size_bytes": 556543
+    },
+    {
+      "path": "source_cad/robot/base_1.obj",
+      "category": "source_cad",
+      "logical_name": "base_1",
+      "format": "obj",
+      "sha256": "cf7d54691a2c1eeda280955ebd6bd83c2dbecfc46fb53c10198f05d107511b50",
+      "size_bytes": 638415
+    },
+    {
+      "path": "source_cad/robot/end_scaler.stl",
+      "category": "source_cad",
+      "logical_name": "end_scaler",
+      "format": "stl",
+      "sha256": "52cbccc852412a486c87da0cd4faf786e3a19c6c5dd1d5b63901c0eabef9b89b",
+      "size_bytes": 407584
+    },
+    {
+      "path": "source_cad/robot/end_scaler_color.STL",
+      "category": "source_cad",
+      "logical_name": "end_scaler_color",
+      "format": "stl",
+      "sha256": "def6458b9b201897ea4722e769ca4c916054e0646d0626da83d8421ced7bfdb3",
+      "size_bytes": 992684
+    },
+    {
+      "path": "source_cad/robot/force_sensor.stl",
+      "category": "source_cad",
+      "logical_name": "force_sensor",
+      "format": "stl",
+      "sha256": "8c3dc24fcab13f8b4e1f468405879fb54a370e305154359c904ab8619b0b92b4",
+      "size_bytes": 834084
+    },
+    {
+      "path": "source_cad/robot/forearm_0.obj",
+      "category": "source_cad",
+      "logical_name": "forearm_0",
+      "format": "obj",
+      "sha256": "64c049a55149c2ab355594d52302b53d3e34da3677ceaa1917c427cde7743146",
+      "size_bytes": 1691648
+    },
+    {
+      "path": "source_cad/robot/forearm_1.obj",
+      "category": "source_cad",
+      "logical_name": "forearm_1",
+      "format": "obj",
+      "sha256": "a96fe203015cf532b193f414cd01268c7c36795e51a837dd33afd122334f81f2",
+      "size_bytes": 76202
+    },
+    {
+      "path": "source_cad/robot/forearm_2.obj",
+      "category": "source_cad",
+      "logical_name": "forearm_2",
+      "format": "obj",
+      "sha256": "05b436505fc595aeab26675590c2b56b88a65b2d52d6352096fed9f07cb4c4ca",
+      "size_bytes": 932534
+    },
+    {
+      "path": "source_cad/robot/forearm_3.obj",
+      "category": "source_cad",
+      "logical_name": "forearm_3",
+      "format": "obj",
+      "sha256": "fa31af19cfad7a765b62e8a2d5931cb014b88de84195a7850b4e5ee902112e9a",
+      "size_bytes": 1095775
+    },
+    {
+      "path": "source_cad/robot/shoulder_0.obj",
+      "category": "source_cad",
+      "logical_name": "shoulder_0",
+      "format": "obj",
+      "sha256": "477387a7e7312782a6040484a3c2c2fcee33f40109f419076e31b6f6e1692c68",
+      "size_bytes": 2947794
+    },
+    {
+      "path": "source_cad/robot/shoulder_1.obj",
+      "category": "source_cad",
+      "logical_name": "shoulder_1",
+      "format": "obj",
+      "sha256": "8537bba02804640ddf6e260f79fe66e895b3229ed3d44298a95e8e027eb5d435",
+      "size_bytes": 569646
+    },
+    {
+      "path": "source_cad/robot/shoulder_2.obj",
+      "category": "source_cad",
+      "logical_name": "shoulder_2",
+      "format": "obj",
+      "sha256": "291714518416bb8f0bafbf123867db011ecbf5146a05245ca5893ee8c57d4e21",
+      "size_bytes": 2440344
+    },
+    {
+      "path": "source_cad/robot/upperarm_0.obj",
+      "category": "source_cad",
+      "logical_name": "upperarm_0",
+      "format": "obj",
+      "sha256": "14143d4f1175a7dbacc8e2f2f98f1cac5a2b2e238cd46cd03654d31f2610eb53",
+      "size_bytes": 156252
+    },
+    {
+      "path": "source_cad/robot/upperarm_1.obj",
+      "category": "source_cad",
+      "logical_name": "upperarm_1",
+      "format": "obj",
+      "sha256": "272899e927f4a32b7c25e34560ec70654c0346cc8ed1c616c0555f3f53b32d14",
+      "size_bytes": 1090164
+    },
+    {
+      "path": "source_cad/robot/upperarm_2.obj",
+      "category": "source_cad",
+      "logical_name": "upperarm_2",
+      "format": "obj",
+      "sha256": "86c05350d60eb0e7e28a81b544267478b7db997baba41cef19088ebbeffecfa1",
+      "size_bytes": 3677923
+    },
+    {
+      "path": "source_cad/robot/upperarm_3.obj",
+      "category": "source_cad",
+      "logical_name": "upperarm_3",
+      "format": "obj",
+      "sha256": "b257dab441e6fab64ea03b4b87029d8a96554ad1a513cce944d56acba0ad948a",
+      "size_bytes": 5346165
+    },
+    {
+      "path": "source_cad/robot/wrist1_0.obj",
+      "category": "source_cad",
+      "logical_name": "wrist1_0",
+      "format": "obj",
+      "sha256": "7ef0c59b5c5d56a9902435c9a058b27d2a38c85fe2bae02d00a9284dd1f4d519",
+      "size_bytes": 278871
+    },
+    {
+      "path": "source_cad/robot/wrist1_1.obj",
+      "category": "source_cad",
+      "logical_name": "wrist1_1",
+      "format": "obj",
+      "sha256": "ee6d5c562e6becef94109b0543329080d285d1aef521a01ed98e18a5bf1e8684",
+      "size_bytes": 2470967
+    },
+    {
+      "path": "source_cad/robot/wrist1_2.obj",
+      "category": "source_cad",
+      "logical_name": "wrist1_2",
+      "format": "obj",
+      "sha256": "88c66dc64f15391287147d50add37729a3f41dadd80b1f859cf2cb6d45daf32a",
+      "size_bytes": 1657638
+    },
+    {
+      "path": "source_cad/robot/wrist2_0.obj",
+      "category": "source_cad",
+      "logical_name": "wrist2_0",
+      "format": "obj",
+      "sha256": "2ac2e2e39d8f7005bc3b3ab26cd61634be2e14930074615da5318b9ee7c569a8",
+      "size_bytes": 846741
+    },
+    {
+      "path": "source_cad/robot/wrist2_1.obj",
+      "category": "source_cad",
+      "logical_name": "wrist2_1",
+      "format": "obj",
+      "sha256": "a721d06dc61d3b3a8ec58c035c9e3358ed30d6991a72e077d8abf3c3c203b633",
+      "size_bytes": 2156900
+    },
+    {
+      "path": "source_cad/robot/wrist2_2.obj",
+      "category": "source_cad",
+      "logical_name": "wrist2_2",
+      "format": "obj",
+      "sha256": "6df4335c8bd5e881fda2c224f770115ffe9ddd0cd321ebe3c0a4a310796f0987",
+      "size_bytes": 2141392
+    },
+    {
+      "path": "source_cad/robot/wrist3.obj",
+      "category": "source_cad",
+      "logical_name": "wrist3",
+      "format": "obj",
+      "sha256": "0e51748f9c93bd66604360a5cf7e2e8a6e754550be64076333ff4fc19ec90c61",
+      "size_bytes": 211390
+    },
+    {
+      "path": "source_cad/teeth/mandibular_scan.meditMesh",
+      "category": "source_cad",
+      "logical_name": "mandibular_scan",
+      "format": "meditmesh",
+      "sha256": "5280f0d6ab1c6ee02a4393f4730d9ff239596c61f92a6068d6698144e2d26082",
+      "size_bytes": 2504060
+    },
+    {
+      "path": "source_cad/teeth/mandibular_scan.obj",
+      "category": "source_cad",
+      "logical_name": "mandibular_scan",
+      "format": "obj",
+      "sha256": "2aecf128a209f2ed607c569026457910248ca2ef0b73451774a39109b45a4019",
+      "size_bytes": 12127513
+    },
+    {
+      "path": "source_cad/teeth/mandibular_scan.ply",
+      "category": "source_cad",
+      "logical_name": "mandibular_scan",
+      "format": "ply",
+      "sha256": "32db21af8e9db6cd08ca8160e245b20aec2968f5ad0bbd907dc156feec6a53cc",
+      "size_bytes": 4849440
+    },
+    {
+      "path": "source_cad/teeth/mandibular_scan.stl",
+      "category": "source_cad",
+      "logical_name": "mandibular_scan",
+      "format": "stl",
+      "sha256": "496b04b4dcd6fa2ffc76f1a64c471de6245e78938b026a2125b6673f0431e521",
+      "size_bytes": 11735384
+    },
+    {
+      "path": "source_cad/teeth/mandibular_simulation.obj",
+      "category": "source_cad",
+      "logical_name": "mandibular_simulation",
+      "format": "obj",
+      "sha256": "9f7b47e34902e88be6397316ab072d285220c27f9a4c037db312e4782aae8ebd",
+      "size_bytes": 33773737
+    },
+    {
+      "path": "source_cad/teeth/mandibular_simulation.png",
+      "category": "source_cad",
+      "logical_name": "mandibular_simulation",
+      "format": "png",
+      "sha256": "f1b3a9a8a9453bf94750a29fb201af6aa7ad5bf94015b37280c8244680229f87",
+      "size_bytes": 8130511
+    },
+    {
+      "path": "source_cad/teeth/mandibular_surface.obj",
+      "category": "source_cad",
+      "logical_name": "mandibular_surface",
+      "format": "obj",
+      "sha256": "2aecf128a209f2ed607c569026457910248ca2ef0b73451774a39109b45a4019",
+      "size_bytes": 12127513
+    },
+    {
+      "path": "source_cad/teeth/mandibular_surface.stl",
+      "category": "source_cad",
+      "logical_name": "mandibular_surface",
+      "format": "stl",
+      "sha256": "496b04b4dcd6fa2ffc76f1a64c471de6245e78938b026a2125b6673f0431e521",
+      "size_bytes": 11735384
+    },
+    {
+      "path": "source_cad/teeth/maxillary_scan.meditMesh",
+      "category": "source_cad",
+      "logical_name": "maxillary_scan",
+      "format": "meditmesh",
+      "sha256": "7035a8209c8c9bb18beff47ccb9242cff7b97990ee3aa6f46ddc82baca302e39",
+      "size_bytes": 2408374
+    },
+    {
+      "path": "source_cad/teeth/maxillary_scan.obj",
+      "category": "source_cad",
+      "logical_name": "maxillary_scan",
+      "format": "obj",
+      "sha256": "c22400e05e59a90c37c2ffba5a852a24b55b619aded49f1a66cfa6a4b3302916",
+      "size_bytes": 11955043
+    },
+    {
+      "path": "source_cad/teeth/maxillary_scan.ply",
+      "category": "source_cad",
+      "logical_name": "maxillary_scan",
+      "format": "ply",
+      "sha256": "553295f278ab7198740abf549c8d22a0b231a3e5322b679d162fbe9527fafd19",
+      "size_bytes": 4764699
+    },
+    {
+      "path": "source_cad/teeth/maxillary_scan.stl",
+      "category": "source_cad",
+      "logical_name": "maxillary_scan",
+      "format": "stl",
+      "sha256": "5f371b0f57a8cf318adf92c464a1f81505116522dac1e3d96946ec0c9285a79d",
+      "size_bytes": 11541284
+    },
+    {
+      "path": "source_cad/teeth/maxillary_simulation.obj",
+      "category": "source_cad",
+      "logical_name": "maxillary_simulation",
+      "format": "obj",
+      "sha256": "57d7bb9a6c57febca6f130367a7695426a3c2ddaa895d94b27aa1d15259cb9a6",
+      "size_bytes": 33249873
+    },
+    {
+      "path": "source_cad/teeth/maxillary_simulation.png",
+      "category": "source_cad",
+      "logical_name": "maxillary_simulation",
+      "format": "png",
+      "sha256": "abd84cc2d6298d8ffcdf0362ffc477c375aaee0fe571fd64cceb9043ff6f98f3",
+      "size_bytes": 7402739
+    },
+    {
+      "path": "source_cad/teeth/maxillary_surface.obj",
+      "category": "source_cad",
+      "logical_name": "maxillary_surface",
+      "format": "obj",
+      "sha256": "c22400e05e59a90c37c2ffba5a852a24b55b619aded49f1a66cfa6a4b3302916",
+      "size_bytes": 11955043
+    },
+    {
+      "path": "source_cad/teeth/maxillary_surface.stl",
+      "category": "source_cad",
+      "logical_name": "maxillary_surface",
+      "format": "stl",
+      "sha256": "5f371b0f57a8cf318adf92c464a1f81505116522dac1e3d96946ec0c9285a79d",
+      "size_bytes": 11541284
+    },
+    {
+      "path": "source_cad/teeth/occlusion_first.meditMesh",
+      "category": "source_cad",
+      "logical_name": "occlusion_first",
+      "format": "meditmesh",
+      "sha256": "ee4a5a07f344f7e0be2c589a1387d0b458beba7d8ab435ceaf063c00d1fa11f0",
+      "size_bytes": 714264
+    },
+    {
+      "path": "source_cad/teeth/occlusion_first.obj",
+      "category": "source_cad",
+      "logical_name": "occlusion_first",
+      "format": "obj",
+      "sha256": "c5b4a0186be2f2b2cf9403e35ef7b655bab15912a5ceafbc00f2f4f354a6af93",
+      "size_bytes": 3360725
+    },
+    {
+      "path": "source_cad/teeth/occlusion_first.ply",
+      "category": "source_cad",
+      "logical_name": "occlusion_first",
+      "format": "ply",
+      "sha256": "38088261578ef3fc6709ed474653d24e17d5c9d73254b30cf125a1f00d022fc3",
+      "size_bytes": 1370154
+    },
+    {
+      "path": "source_cad/teeth/occlusion_first.stl",
+      "category": "source_cad",
+      "logical_name": "occlusion_first",
+      "format": "stl",
+      "sha256": "51f480213d2ef296b382e1f08b80c403ed36f8551dae4db1b626c0654ae11b97",
+      "size_bytes": 3292734
+    },
+    {
+      "path": "source_cad/teeth/occlusion_second.meditMesh",
+      "category": "source_cad",
+      "logical_name": "occlusion_second",
+      "format": "meditmesh",
+      "sha256": "3e3afed897b30130a3aecbc0bbfe445e1afb4112065c875eccc639922d296226",
+      "size_bytes": 639054
+    },
+    {
+      "path": "source_cad/teeth/occlusion_second.obj",
+      "category": "source_cad",
+      "logical_name": "occlusion_second",
+      "format": "obj",
+      "sha256": "223669de4c6fcb1b338ed6428cf1678822da15c62b7e164f752d0db606b7fdf8",
+      "size_bytes": 3024676
+    },
+    {
+      "path": "source_cad/teeth/occlusion_second.ply",
+      "category": "source_cad",
+      "logical_name": "occlusion_second",
+      "format": "ply",
+      "sha256": "3f8c171d6847e34997e2ebe00c6be7375b2db62665f2033e39fa7124d18004cb",
+      "size_bytes": 1230603
+    },
+    {
+      "path": "source_cad/teeth/occlusion_second.stl",
+      "category": "source_cad",
+      "logical_name": "occlusion_second",
+      "format": "stl",
+      "sha256": "b4991c23fb4d13dd65a411d7ee6a16a90080cea015dd73b76150c9da0ae6e140",
+      "size_bytes": 2959134
+    },
+    {
+      "path": "perception/mandibular/gingival_line_points.csv",
+      "category": "perception",
+      "logical_name": "gingival_line_points",
+      "format": "csv",
+      "sha256": "3dbeae0bfed513568628c72546a0545bd49d10c42c9160a39a8f6432c8fa2fc1",
+      "size_bytes": 251642
+    },
+    {
+      "path": "perception/mandibular/gingival_line_segments.obj",
+      "category": "perception",
+      "logical_name": "gingival_line_segments",
+      "format": "obj",
+      "sha256": "b4d3a6792e5696de4736d953a39273b9a6ccf37635ab5ec6cb2a96dd7e6ee470",
+      "size_bytes": 188885
+    },
+    {
+      "path": "perception/maxillary/gingival_line_points.csv",
+      "category": "perception",
+      "logical_name": "gingival_line_points",
+      "format": "csv",
+      "sha256": "fb725c511b9aa292616d3ffdda7a46ff7c0584e349549380d5857f20663afde8",
+      "size_bytes": 210575
+    },
+    {
+      "path": "perception/maxillary/gingival_line_segments.obj",
+      "category": "perception",
+      "logical_name": "gingival_line_segments",
+      "format": "obj",
+      "sha256": "1f9bef2ba55704b9c3ff56bc74fbd76fa66a0971138702b7ae71e3b50173b2c4",
+      "size_bytes": 159501
+    },
+    {
+      "path": "perception/provenance.json",
+      "category": "perception",
+      "logical_name": "provenance",
+      "format": "json",
+      "sha256": "0e69ec705351fe9ddaf2b35b7c490fc89c7e84533bb21c8cbb3213de62e96e14",
+      "size_bytes": 776
+    },
+    {
+      "path": "perception/README.md",
+      "category": "perception",
+      "logical_name": "README",
+      "format": "md",
+      "sha256": "4a6ffcd67c8312161f9a929e5703a82eea65f4ad275041fdfe3452e5b0927645",
+      "size_bytes": 465
+    },
+    {
+      "path": "perception/registration_math_provenance.json",
+      "category": "perception",
+      "logical_name": "registration_math_provenance",
+      "format": "json",
+      "sha256": "139ca6d5fa1e33b55bd21eeb4d8128364b67f072110cb273a565221564046281",
+      "size_bytes": 257
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_mandibular/gingival_edges.csv",
+      "category": "perception",
+      "logical_name": "gingival_edges",
+      "format": "csv",
+      "sha256": "7cbd9096f3116fdb6f4626f87d70ebe096efc30147446c46775e8a6b06c3ab65",
+      "size_bytes": 390759
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_mandibular/gingival_line.obj",
+      "category": "perception",
+      "logical_name": "gingival_line",
+      "format": "obj",
+      "sha256": "b3bfd248d84b257ea5d0518259d2f009107b92622bc76fd98dfd17eefa9f681f",
+      "size_bytes": 4702320
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_mandibular/gingival_line.ply",
+      "category": "perception",
+      "logical_name": "gingival_line",
+      "format": "ply",
+      "sha256": "e5c6b163b810d793aa87d8577afc28b7f9a4fa66ce645434e66d7964404a2618",
+      "size_bytes": 66163
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_mandibular/gingival_overlay.ply",
+      "category": "perception",
+      "logical_name": "gingival_overlay",
+      "format": "ply",
+      "sha256": "6137a86cbca522669b3ed27e0740a38859399d9f79d361ed11ba9a8e033ea4fb",
+      "size_bytes": 5788312
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_mandibular/gingival_polylines.json",
+      "category": "perception",
+      "logical_name": "gingival_polylines",
+      "format": "json",
+      "sha256": "57058ae0e33ecb4cbb61f8be7c16e12c2b583024ef6c5128ad42a563aec7f359",
+      "size_bytes": 346414
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_mandibular/prediction.npz",
+      "category": "perception",
+      "logical_name": "prediction",
+      "format": "npz",
+      "sha256": "bca51d5be66c03d5ae7d910a8b9eff5f1ccb1a92e26a716d950635873d10048e",
+      "size_bytes": 18195111
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_mandibular/preview.png",
+      "category": "perception",
+      "logical_name": "preview",
+      "format": "png",
+      "sha256": "d92e1dff1c59019bd1337dab5fed6dfc9b966cd5d54f0566143ce1b8571e9b20",
+      "size_bytes": 290384
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_mandibular/segmentation.ply",
+      "category": "perception",
+      "logical_name": "segmentation",
+      "format": "ply",
+      "sha256": "2e4718abfe5f98f0d9e06747a0b13e7d5c7a72dd14d305d3eb1a3c847594a1a1",
+      "size_bytes": 5788312
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_mandibular/summary.json",
+      "category": "perception",
+      "logical_name": "summary",
+      "format": "json",
+      "sha256": "1f587a60f1b5dcadd4efd391a7794cce5277b656ed7873d571d00084a01b3de7",
+      "size_bytes": 3821
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_maxillary/gingival_edges.csv",
+      "category": "perception",
+      "logical_name": "gingival_edges",
+      "format": "csv",
+      "sha256": "162c704dd2aac65e2e890f9ae415fcccfa9149876b6c15bf4a30209c332a806b",
+      "size_bytes": 434388
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_maxillary/gingival_line.obj",
+      "category": "perception",
+      "logical_name": "gingival_line",
+      "format": "obj",
+      "sha256": "556e2260cd589fa254ec83a1934541e0511f073083de39079ff2e16f15af4bf5",
+      "size_bytes": 4677656
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_maxillary/gingival_line.ply",
+      "category": "perception",
+      "logical_name": "gingival_line",
+      "format": "ply",
+      "sha256": "e9b90ca06844e49ca623d52041a3a2d81addab341cd28c6f9cdc08f276ebe6de",
+      "size_bytes": 71548
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_maxillary/gingival_overlay.ply",
+      "category": "perception",
+      "logical_name": "gingival_overlay",
+      "format": "ply",
+      "sha256": "8c7a51d03bae36f7277ab1544180611cc641a05e02511fed56c555b8c8587d15",
+      "size_bytes": 5688043
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_maxillary/gingival_polylines.json",
+      "category": "perception",
+      "logical_name": "gingival_polylines",
+      "format": "json",
+      "sha256": "56a148063347a8611a909db6a2e626cc7a7c56eaa1cc9ee2756a079ad3f9333e",
+      "size_bytes": 381152
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_maxillary/prediction.npz",
+      "category": "perception",
+      "logical_name": "prediction",
+      "format": "npz",
+      "sha256": "470240fea7fdb3fd2c5a9f2cd2259e15016d59f32c394fbefa69fb3972b63e10",
+      "size_bytes": 18020319
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_maxillary/preview.png",
+      "category": "perception",
+      "logical_name": "preview",
+      "format": "png",
+      "sha256": "b788e90e27f92520ee3aaf71dea07afc0a3aa963fb5fe455ba9bf5581235b75f",
+      "size_bytes": 298299
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_maxillary/segmentation.ply",
+      "category": "perception",
+      "logical_name": "segmentation",
+      "format": "ply",
+      "sha256": "c22f23f68327fa25e3a52e7edeb2c30944240f439567e1e830c37c888ddc9edf",
+      "size_bytes": 5688043
+    },
+    {
+      "path": "perception/tooth_segmentation/crosstooth_maxillary/summary.json",
+      "category": "perception",
+      "logical_name": "summary",
+      "format": "json",
+      "sha256": "08ac31fabab9044de366f0e36e6dfb852879b1d49df3095168e361ee73966d22",
+      "size_bytes": 3702
+    },
+    {
+      "path": "perception/topology_provenance.json",
+      "category": "perception",
+      "logical_name": "topology_provenance",
+      "format": "json",
+      "sha256": "8c81e8b8afd91e18b9c68d7994ae7f527bf1e36185bc7299b74639a1de5b57fc",
+      "size_bytes": 788
+    }
+  ]
 }

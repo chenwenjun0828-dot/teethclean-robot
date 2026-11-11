@@ -1,0 +1,8 @@
+{
+  "plan": "outputs/planning/outer_front",
+  "headless": true,
+  "original_timing": true,
+  "duration": 90.0,
+  "trace_speed_mm_s": 1.0,
+  "transfer_speed_mm_s": 150.0
+}

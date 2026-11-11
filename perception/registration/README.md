@@ -2,6 +2,10 @@
 
 局部 RGB-D 牙齿点云与完整口扫模型的配准实现统一放在本目录。
 
+固定外置 D405 的真机采集、离线配准、检查点评价和实时化限制见
+[真机验证指南](../REAL_CAMERA.md)。入口为 `python -m perception.real`，
+与下文现有仿真入口并存；未提供相机到基座的标定时仅输出相机坐标。
+
 | 文件 | 职责 |
 | --- | --- |
 | `registration_workflow.py` | 检查采集与口扫是否匹配，读取或点选标志点，运行配准，保存变换、报告和叠加预览 |
@@ -107,7 +111,7 @@ registered_points = transform_points(scan_points_mm, T_camera_scan)
 
 ```powershell
 .\.venv\Scripts\python.exe -m perception.registration `
-  --scan '.\models\2026615-gch\2026615-gch病例-mandibular.ply' `
+  --scan '.\assets\source_cad\teeth\mandibular_scan.ply' `
   --camera '.\outputs\global_camera_registration\capture_002\camera_mm.ply' `
   --out '.\outputs\automatic_registration\my_run' `
   --voxel-mm 0.5 --no-view

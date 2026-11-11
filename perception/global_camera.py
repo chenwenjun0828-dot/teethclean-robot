@@ -5,7 +5,6 @@ import importlib.metadata
 import json
 from pathlib import Path
 import uuid
-import mujoco
 import numpy as np
 import open3d as o3d
 from PIL import Image
@@ -40,7 +39,10 @@ def load_config(path=None):
     if not path.is_absolute():
         path = PROJECT_ROOT/path
     config = json.loads(path.read_text(encoding="utf-8-sig"))
-    for key in ("model","mandibular_mesh","maxillary_mesh","mandibular_line","maxillary_line"):
+    keys = ("model","mandibular_mesh","maxillary_mesh","mandibular_line","maxillary_line")
+    if config.get("data_source") == "realsense":
+        keys = tuple(key for key in keys if key != "model" and config.get(key))
+    for key in keys:
         asset = Path(config[key])
         config[key] = str(asset if asset.is_absolute() else PROJECT_ROOT/asset)
         if not Path(config[key]).is_file():
@@ -58,6 +60,7 @@ def ensure_empty_directory(path):
 
 
 def capture_rgbd(model,data,camera_name,width,height):
+    import mujoco
     camera_id=model.camera(camera_name).id
     with mujoco.Renderer(model,height=height,width=width) as renderer:
         renderer.update_scene(data,camera=camera_name)
@@ -83,6 +86,7 @@ def selection_mask(frame,model,jaw,config):
     depth=frame["depth_m"]
     mask=valid_depth_mask(depth,config["min_depth_mm"],config["max_depth_mm"])
     if config["mask_mode"] == "ideal_segmentation":
+        import mujoco
         ids=[model.geom("dental_"+name+"_visual").id for name in jaw_names(jaw)]
         seg=frame["segmentation"]
         mask &= np.isin(seg[:,:,0],ids) & (seg[:,:,1]==int(mujoco.mjtObj.mjOBJ_GEOM))
@@ -157,13 +161,23 @@ def save_capture(out,frame,model,data,jaw,config):
 def load_capture(path):
     path=Path(path).resolve()
     metadata=json.loads((path/"capture_metadata.json").read_text(encoding="utf-8"))
+    if metadata.get("data_source") == "realsense":
+        required = {"rgb.png", "depth_raw.npy", "depth_m.npy", "valid_mask.npy", "camera_mm.ply"}
+        if not required.issubset(metadata["file_hashes"]):
+            raise ValueError("Real capture is missing required integrity fingerprints")
+        if (metadata.get("units") != "mm" or metadata.get("frame") != "camera_cv"
+                or metadata.get("optical_frame") != "depth" or not metadata.get("camera_serial")):
+            raise ValueError("Real capture must identify its serial and depth optical frame in mm")
     for name,digest in metadata["file_hashes"].items():
+        if Path(name).name != name:
+            raise ValueError("Capture artifacts must be local filenames")
         if file_hash(path/name)!=digest:
             raise ValueError(f"Capture file integrity check failed: {name}")
     return {
         "rgb":np.asarray(Image.open(path/"rgb.png").convert("RGB")),
         "depth_m":np.load(path/"depth_m.npy",allow_pickle=False),
-        "segmentation":np.load(path/"segmentation.npy",allow_pickle=False),
+        "segmentation":(np.load(path/"segmentation.npy",allow_pickle=False)
+                        if "segmentation.npy" in metadata["file_hashes"] else None),
         "valid_mask":np.load(path/"valid_mask.npy",allow_pickle=False),
         "intrinsics":metadata["intrinsics"],"metadata":metadata,"path":path,
     }

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "jaw": "mandibular",
+  "frame": "d405_camera",
+  "unit": "mm",
+  "transform_name": "T_camera_scan",
+  "transform_translation_unit": "mm",
+  "mesh_path": "models/2026615-gch/2026615-gch病例-mandibular.ply",
+  "mesh_sha256": "32db21af8e9db6cd08ca8160e245b20aec2968f5ad0bbd907dc156feec6a53cc",
+  "files_sha256": {
+    "regional_chain_candidates_camera_mm.csv": "2927d0bf7a863fef3a1c2e9a4ecb616e528468a34ef5d8d9f2679d227992cd82",
+    "T_camera_scan.txt": "8f06b1d01b7571f10e56b13723b6544614942f0477595fee8342b0a7c3465a7f",
+    "stitch_report.json": "c63eadba64c0d2029f3d43fb1f6a209782a599e188feef52d7fe07df29502298"
+  },
+  "region_order": [
+    "outer_left",
+    "outer_front",
+    "outer_right",
+    "inner_right",
+    "inner_front",
+    "inner_left"
+  ],
+  "expected_points": 688,
+  "source_version": "registration_robust_20261020/stitched_regional_paths_v1",
+  "source_snapshot": "clean_smooth_paths_v3",
+  "region_boundaries_approved": false,
+  "robot_execution_allowed": false,
+  "usage": "Static simulator preview using known scan placement. No current-camera registration or robot motion.",
+  "provenance_note": "Source scan work/mandibular_input.ply exactly matches mesh_sha256. Archived stitch_report.json retains historical paths for audit only; runtime never resolves them."
+}

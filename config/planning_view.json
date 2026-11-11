@@ -1,0 +1,12 @@
+{
+  "plan": "outputs/planning/outer_front",
+  "speed": 1.0,
+  "paused": true,
+  "camera": 10,
+  "time": null,
+  "waypoint": null,
+  "distance": null,
+  "snapshot": null,
+  "gif": null,
+  "fps": 10.0
+}
