@@ -70,7 +70,7 @@ class PreparedRegion:
             validate_transform(self.world_from_scan)
         return self
 
-    def save(self, output):
+    def save(self, output, *, diagnostics=True):
         output = Path(output).resolve()
         output.mkdir(parents=True, exist_ok=True)
         # Only serialized provenance is relative; live planning objects keep resolved paths.
@@ -81,7 +81,7 @@ class PreparedRegion:
         metadata = report.get('source_metadata', {})
         if metadata.get('dataset_dir'):
             metadata['dataset_dir'] = relative_path(metadata['dataset_dir'], output)
-        replace(self.geometry, report=report).save(output)
+        replace(self.geometry, report=report).save(output, diagnostics=diagnostics)
         np.savez_compressed(output/'tooth_lookup.npz', **self.lookup)
         np.savez_compressed(output/'region_mesh.npz', vertices=self.geometry.mesh_vertices_m,
                             faces=self.geometry.mesh_faces, labels=self.geometry.face_tooth_ids)
@@ -120,8 +120,13 @@ class PreparedRegion:
         if record.get('schema_version') != 1 or record.get('module') != 'perception':
             raise ValueError('Unsupported prepared perception region')
         folder = path.parent
+        artifact_paths = record.get('artifact_paths', {})
+        if set(artifact_paths) - {'region_mesh.npz'}:
+            raise ValueError('Unsupported shared perception artifact')
+        def artifact(name):
+            return manifest_path(artifact_paths[name], folder, 'manifest') if name in artifact_paths else folder/name
         for name, digest in record['files'].items():
-            if Path(name).name != name or fingerprint(folder/name)['sha256'] != digest:
+            if Path(name).name != name or fingerprint(artifact(name))['sha256'] != digest:
                 raise ValueError('Prepared perception artifact changed; rerun perception')
         report = json.loads((folder/'geometry.json').read_text(encoding='utf-8'))
         report_base = report.pop('path_base', None)
@@ -138,7 +143,7 @@ class PreparedRegion:
                 strokes.append(Stroke(item['id'], item['curve_id'], item['tooth'], item['region'],
                                       arrays['points_scan_m'][mask], arrays['tangents_scan'][mask],
                                       arrays['u'][mask], arrays['sample_index'][mask]))
-        with np.load(folder/'region_mesh.npz', allow_pickle=False) as mesh:
+        with np.load(artifact('region_mesh.npz'), allow_pickle=False) as mesh:
             geometry = Geometry(strokes, planes, report, mesh['vertices'], mesh['faces'], mesh['labels'])
         with np.load(folder/'tooth_lookup.npz', allow_pickle=False) as arrays:
             lookup = {name: arrays[name] for name in arrays.files}

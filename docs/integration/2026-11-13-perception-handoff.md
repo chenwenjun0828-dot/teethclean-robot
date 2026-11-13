@@ -2,7 +2,7 @@
 
 采集与交付日期：2026-11-13。源码整理日期：2026-11-14。交付对象：路径规划、运动控制同事。
 
-本文完整说明进入 Git；数据目录须按交付方式另外包含。三个可复用计算入口已迁入 `perception/coordinate_conversion/`，详见该目录 README；`outputs/` 中对应的旧计算脚本已移除，生成数据保留。
+正式规划输入已迁入 assets/perception/sessions/20261113_220209/，固定标定记录在 assets/calibration/ur7e_d405/20261113/；规划读取不再依赖 outputs/。三个可复用计算入口已迁入 `perception/coordinate_conversion/`，详见该目录 README；`outputs/` 中对应的旧计算脚本已移除，生成数据保留。
 
 ## 1. 交付内容与接口边界
 
@@ -11,11 +11,12 @@
 统一交付根目录（下文称 `交付根目录`）：
 
 ```text
-D:/teethclean-robot/outputs/perception/base_conversion_nominal/20261113_225327_457663/
-├── PERCEPTION_HANDOFF.md             本说明
+D:/teethclean-robot/assets/perception/sessions/20261113_220209/
+├── README.md                         数据包读取入口（完整说明在 docs/integration/）
 ├── planning_input_manifest.json       机器可读交接清单，含文件指纹
-├── handoff_sources/                  本次使用的标定、关节角和正运动学记录副本
-├── conversion_report.json             最初的点转换过程及输入来源
+├── transforms/                      固定手眼、拍摄位姿和相机到基座矩阵
+├── robot_joint_observation.json       本批关节角
+├── fk_report.json                     本批标称正运动学结果
 ├── regional_export_report.json        当前上下颌六区域统计
 ├── mandibular/                       下颌
 │   └── regions/<区域名>/             每区域独立目录
@@ -23,7 +24,7 @@ D:/teethclean-robot/outputs/perception/base_conversion_nominal/20261113_225327_4
     └── regions/<区域名>/             每区域独立目录
 ```
 
-优先读取 `planning_input_manifest.json`，不要按文件修改时间寻找结果。该清单以自身所在目录为路径基准。根目录已有的完整牙龈点集 CSV 仅为初次坐标转换结果；**正式分区输入以各颌的 `regions/` 为准**。
+优先读取 `planning_input_manifest.json`，不要按文件修改时间寻找结果。该清单以自身所在目录为路径基准。**正式分区输入以各颌的 `regions/` 为准**；初次转换的整颌点集只保留在历史输出，不作为本批规划读取入口。
 
 已完成与尚未完成的集成：
 
@@ -35,6 +36,10 @@ D:/teethclean-robot/outputs/perception/base_conversion_nominal/20261113_225327_4
 ## 2. 运控同事应该读取哪些文件
 
 每个区域目录中最直接的输入：
+
+本交付采用精简布局：每颌只有一份 `<jaw>/shared/region_mesh.npz`，由区域 manifest 的
+`artifact_paths` 相对路径引用并保留原有哈希校验。逐牙预览 PLY、逐牙标签 NPY 和重复网格
+不再复制到 Git；完整实验输出留在本地 `outputs/`。
 
 | 文件 | 内容 | 单位 / 坐标系 |
 | --- | --- | --- |
@@ -65,7 +70,7 @@ T_controller_base_scan_m     4×4，口扫局部米制坐标 → 机器人 Base
 from pathlib import Path
 import numpy as np
 
-root = Path('outputs/perception/base_conversion_nominal/20261113_225327_457663')
+root = Path('assets/perception/sessions/20261113_220209')
 region = root / 'mandibular/regions/outer_front'  # 上颌改成 maxillary
 
 points = np.loadtxt(region / 'points_controller_base_nominal_m.csv', delimiter=',')
@@ -94,7 +99,7 @@ points_base = points_scan @ T[:3, :3].T + T[:3, 3]
 
 **本批 PreparedRegion 中，`world_from_scan` 的 world 明确定义为机器人控制器 `controller_base`。** `continuous_gingival_line_world_m.csv` 因而也是该基座坐标；建议使用显式命名的 `points_controller_base_nominal_m.csv`。不要把这个 world 当成项目原有 MuJoCo 世界坐标；使用现有仿真规划器时，需由规划层核对机器人安装位置和世界原点。`planning` 目前的验证/执行链包含 MuJoCo，不能把其仿真执行入口等同于实机下发入口。
 
-PreparedRegion 读取会核对源文件及产物指纹。交付给另一台电脑时，应一起复制项目所需 `assets/` 和 `outputs/`，保留相对目录结构；只复制单个 JSON 或 CSV 不包含全部几何、分割和标定来源。
+PreparedRegion 读取会核对源文件及产物指纹。交付给另一台电脑时，应复制项目源码及匹配的 `assets/`，保留相对目录结构；读取本批规划输入不需要复制 `outputs/`。只复制单个 JSON 或 CSV 不包含全部几何、分割和标定来源。
 
 ## 3. 六区域定义与本批数据量
 
@@ -114,7 +119,7 @@ PreparedRegion 读取会核对源文件及产物指纹。交付给另一台电�
 
 上颌源线生成方法：XZ 牙弓模板转移、牙龈线锚点选取、上颌网格边加权最短路、重复顶点回环清除。它包含新生成的表面路线，**不是简单复制下颌坐标，也不是只保留原始提取线的所有边**。边界状态仍为 `region_boundaries_approved=false`；下颌源快照本身也没有边界已批准标记。
 
-上颌预览：[regions_overview.png](../../outputs/perception/base_conversion_nominal/20261113_225327_457663/maxillary/regions/regions_overview.png)。表面检查：[surface_qa.json](../../outputs/perception/base_conversion_nominal/20261113_225327_457663/maxillary/regions/surface_qa.json)。本批上颌采样曲线到网格的最大距离约 0.176 mm；此数值仅为几何贴合检查，不是配准绝对精度、接触精度或执行精度。
+上颌预览：[regions_overview.png](../../assets/perception/sessions/20261113_220209/maxillary/regions/regions_overview.png)。表面检查：[surface_qa.json](../../assets/perception/sessions/20261113_220209/maxillary/regions/surface_qa.json)。本批上颌采样曲线到网格的最大距离约 0.176 mm；此数值仅为几何贴合检查，不是配准绝对精度、接触精度或执行精度。
 
 ## 4. 坐标转换的完整逻辑
 
@@ -153,10 +158,10 @@ T_B_S = T_B_E @ T_E_C @ T_C_Co @ T_Co_D @ T_D_S
 已保存到项目：
 
 ```text
-outputs/perception/handeye_audit/ur7e_realsense_handeyecalibration_eye_on_hand_25.yaml
-交付根目录/T_wrist3_color_frame_m.npy
-交付根目录/T_wrist3_color_frame_m.txt
-交付根目录/handoff_sources/handeye_25.yaml
+assets/calibration/ur7e_d405/20261113/handeye_25.yaml
+交付根目录/transforms/T_wrist3_color_frame_m.npy
+交付根目录/transforms/T_wrist3_color_frame_m.txt
+assets/calibration/ur7e_d405/20261113/handeye_25.yaml
 ```
 
 原始 YAML：`eye_on_hand=true`，parent=`wrist_3_link`，child=`camera_color_frame`。
@@ -177,7 +182,7 @@ outputs/perception/handeye_audit/ur7e_realsense_handeyecalibration_eye_on_hand_2
 
 ### 相机内部转换与 ROS 帧约定
 
-设备读取记录：`outputs/perception/camera_extrinsics/20261113_220024_601126/camera_extrinsics.json`，交接目录另有副本。
+设备读取记录：`assets/calibration/ur7e_d405/20261113/camera_extrinsics.json`，该固定标定目录保留原始读取内容。
 SDK 的 `T_color_optical_depth_optical_m` 与两颌原始采集元数据中的 `T_color_depth_m` 已核对一致，设备序列号一致。
 
 标准 ROS 的 `T_C_Co`：
@@ -203,7 +208,7 @@ SDK 读取的是 optical 到 optical；上面的 ROS 轴转换不是从 Windows 
 `T_B_E` 与 `T_L_E` 分别保存，避免控制器 Base 和 ROS base_link 混用。
 本批以机械臂从按 S 拍摄到读角度保持静止为时间对齐条件；关节角没有设备同步时间戳，输入精度为示教器手工抄录的两位小数。
 
-位姿来源：下颌原始运行目录的 `robot_joint_observation.json`、`kinematics_nominal/fk_report.json`；本目录 `handoff_sources/` 有副本。
+位姿记录直接保存在交付根目录的 `robot_joint_observation.json` 和 `fk_report.json`。它们来自原始下颌实验记录，但正式读取不需要原始输出目录。
 计算已用 URDF 变换链与独立 DH 计算交叉验证，但**未加入该台机械臂的出厂运动学修正**。
 
 矩阵文件选择：
@@ -248,7 +253,7 @@ SDK 读取的是 optical 到 optical；上面的 ROS 轴转换不是从 Windows 
 源线数据：`assets/regional_paths/mandibular/`、`assets/regional_paths/maxillary/`。
 口扫：`assets/source_cad/teeth/{mandibular,maxillary}_scan.ply`。
 分割预测：`assets/perception/tooth_segmentation/crosstooth_{mandibular,maxillary}/`。
-标定审核说明：`outputs/perception/handeye_audit/README.md`。
+标定读取入口：`assets/calibration/ur7e_d405/20261113/README.md`。早期审核过程保留在本地 `outputs/perception/handeye_audit/README.md`，只用于历史追溯，不是规划加载依赖。
 
 复现时须使用实际同批数据路径，输出到新目录；转换脚本会新建时间戳目录。任何一项配准、手眼、相机帧、拍摄位姿改变，都应重新组合坐标，而不是编辑已有点 CSV。
 

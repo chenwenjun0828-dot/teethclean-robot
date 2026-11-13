@@ -1,0 +1,18 @@
+parameters:
+  eye_on_hand: true
+  freehand_robot_movement: false
+  move_group: manipulator
+  move_group_namespace: /
+  namespace: /ur7e_realsense_handeyecalibration_eye_on_hand/
+  robot_base_frame: base_link
+  robot_effector_frame: wrist_3_link
+  tracking_base_frame: camera_color_frame
+  tracking_marker_frame: aruco_marker_frame
+transformation:
+  qw: 0.7043646668095719
+  qx: 0.0039010393200360908
+  qy: 0.002449858713323372
+  qz: 0.7098233556560035
+  x: 0.052784734483046124
+  y: -0.00890095396872504
+  z: 0.0611502459188928

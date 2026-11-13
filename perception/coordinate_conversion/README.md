@@ -3,9 +3,16 @@
 本目录保存可提交 Git 的计算源码，不依赖 `outputs/` 中的 Python 脚本。
 无需 ROS 或 MuJoCo；需要项目感知依赖（NumPy、SciPy、Open3D）。
 
+本批正式规划输入读取 `assets/perception/sessions/20261113_220209/`，
+固定标定读取 `assets/calibration/ur7e_d405/20261113/`。
+`outputs/` 是重新计算时的默认实验输出位置，不是下游读取本批资产的入口。
+
 1. `ur7e_fk.py`：从六个度制关节角计算 UR7e 标称正运动学，区分控制器 Base 与 ROS base_link。
 2. `convert_points.py`：组合拍摄位姿、手眼、D405 内部外参和口扫配准，导出位置点和矩阵。
 3. `export_regions.py`：将已准备的六区域转成显式 controller_base 的位置、法向、切向。
+4. `publish_session.py`：将验证后的实验结果发布为稳定资产，重新保存 PreparedRegion 的相对路径和文件指纹。
+发布默认只保留规划数据，并共享每颌网格；`compact_session.py --session <目录>`
+可将旧的完整发布包转换为相同的精简布局，原始实验输出无需重复归档。
 
 ```powershell
 python -m perception.coordinate_conversion.ur7e_fk --joint-observation <关节记录.json> --out <新的FK输出目录>

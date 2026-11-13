@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-11-13T14:00:23.081082+00:00",
+  "device": {
+    "name": "Intel RealSense D405",
+    "serial": "335122273144",
+    "firmware": "5.17.0.10"
+  },
+  "sdk_version": "2.56.4.9191",
+  "translation_unit": "m",
+  "matrix_convention": "p_target = R @ p_source + t",
+  "sdk_optical_axes": "x right, y down, z forward",
+  "ros_stream_frame_axes": "x forward, y left, z up",
+  "raw_sdk_extrinsics": {
+    "rotation_column_major": [
+      0.9999688267707825,
+      9.411187784280628e-05,
+      -0.007893195375800133,
+      -8.76229751156643e-05,
+      0.9999996423721313,
+      0.0008224299526773393,
+      0.007893270812928677,
+      -0.0008217127178795636,
+      0.9999685287475586
+    ],
+    "translation_m": [
+      -8.415490810875781e-06,
+      9.505017260380555e-06,
+      9.999999747378752e-06
+    ]
+  },
+  "T_color_optical_depth_optical_m": [
+    [
+      0.9999688267707825,
+      -8.76229751156643e-05,
+      0.007893270812928677,
+      -8.415490810875781e-06
+    ],
+    [
+      9.411187784280628e-05,
+      0.9999996423721313,
+      -0.0008217127178795636,
+      9.505017260380555e-06
+    ],
+    [
+      -0.007893195375800133,
+      0.0008224299526773393,
+      0.9999685287475586,
+      9.999999747378752e-06
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "T_depth_optical_color_optical_m": [
+    [
+      0.9999688608625142,
+      9.411188116309977e-05,
+      -0.00789319609912097,
+      8.49326618369277e-06
+    ],
+    [
+      -8.762297821980051e-05,
+      0.9999996735589292,
+      0.0008224299644363344,
+      -9.513975847357172e-06
+    ],
+    [
+      0.007893270063360705,
+      -0.0008217127010650699,
+      0.9999684913308374,
+      -9.925448525602415e-06
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "T_color_frame_color_optical_ros_convention_m": [
+    [
+      0.0,
+      0.0,
+      1.0,
+      0.0
+    ],
+    [
+      -1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      -1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "T_color_frame_depth_optical_ros_convention_m": [
+    [
+      -0.007893195375800133,
+      0.0008224299526773393,
+      0.9999685287475586,
+      9.999999747378752e-06
+    ],
+    [
+      -0.9999688267707825,
+      8.76229751156643e-05,
+      -0.007893270812928677,
+      8.415490810875781e-06
+    ],
+    [
+      -9.411187784280628e-05,
+      -0.9999996423721313,
+      0.0008217127178795636,
+      -9.505017260380555e-06
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "sdk_extrinsics_source": "device SDK get_extrinsics_to(color_profile)",
+  "ros_frame_status": "standard_realsense_ros_convention_not_verified_against_live_tf",
+  "ros_frame_names_are_assumed": true,
+  "base_coordinates_available": false,
+  "notes": [
+    "This is not a camera-to-robot-base calibration.",
+    "Verify camera_color_frame and camera_depth_optical_frame on the calibration ROS machine.",
+    "Confirm the same camera serial and unchanged mounting were used for hand-eye calibration."
+  ],
+  "sources": [
+    "https://dev.realsenseai.com/docs/projection-in-realsense-sdk-2-0/",
+    "https://github.com/IntelRealSense/realsense-ros/blob/ros1-legacy/realsense2_camera/src/base_realsense_node.cpp"
+  ],
+  "sdk_point_transform_check": "passed",
+  "depth_intrinsics": {
+    "fx": 392.24017333984375,
+    "fy": 392.24017333984375,
+    "cx": 324.8447265625,
+    "cy": 238.8348846435547,
+    "width": 640,
+    "height": 480,
+    "distortion_model": "distortion.brown_conrady",
+    "distortion_coeffs": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "color_intrinsics": {
+    "fx": 393.9422607421875,
+    "fy": 393.3451843261719,
+    "cx": 319.6420593261719,
+    "cy": 240.9423828125,
+    "width": 640,
+    "height": 480,
+    "distortion_model": "distortion.inverse_brown_conrady",
+    "distortion_coeffs": [
+      -0.050520990043878555,
+      0.062003154307603836,
+      0.00038400397170335054,
+      0.001218050136230886,
+      -0.021873241290450096
+    ]
+  },
+  "camera_options": {
+    "serial": null,
+    "width": 640,
+    "height": 480,
+    "fps": 30,
+    "warmup_frames": 0,
+    "timeout_ms": 5000
+  }
+}

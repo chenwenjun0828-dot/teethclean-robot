@@ -48,3 +48,9 @@ and source fingerprints are still verified. Copying only the region folder does
 not copy its source assets. Legacy absolute-path manifests remain readable at
 their original locations. Use `PreparedRegion.load_from_manifest(index, region)`
 to resolve an entry from the multi-region index.
+
+Published planning sessions may share one `region_mesh.npz` per jaw. In that case,
+`perception_region.json` retains the artifact hash in `files` and supplies its
+relative location in `artifact_paths`; loading still checks the shared bytes.
+`PreparedRegion.save(..., diagnostics=False)` omits rebuildable per-tooth PLY/NPY
+diagnostics. Existing saves and legacy manifests remain supported.

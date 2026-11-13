@@ -78,7 +78,7 @@ class Geometry:
     mesh_faces: np.ndarray
     face_tooth_ids: np.ndarray
 
-    def save(self, output):
+    def save(self, output, *, diagnostics=True):
         dump(output/'geometry.json', self.report)
         dump(output/'tooth_planes.json', self.planes)
         columns = {'points_scan_m': [], 'tangents_scan': [], 'u': [], 'stroke_id': [],
@@ -92,6 +92,8 @@ class Geometry:
                                 ('curve_id', stroke.curve_id)]:
                 columns[name].append(np.full(len(stroke.points), value))
         np.savez_compressed(output/'geometry.npz', **{k: np.concatenate(v) for k, v in columns.items()})
+        if not diagnostics:
+            return
         np.save(output/'tooth_face_ids.npy', self.face_tooth_ids)
         folder = output/'teeth'
         folder.mkdir(exist_ok=True)

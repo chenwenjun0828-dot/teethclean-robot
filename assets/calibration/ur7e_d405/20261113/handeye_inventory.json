@@ -1,0 +1,107 @@
+{
+  "matrix_convention": "p_parent = R @ p_child + t",
+  "translation_unit": "m",
+  "calibrations": [
+    {
+      "label": "13",
+      "source": "E:\\easy_handeye\\标定结果\\ur7e_realsense_handeyecalibration_eye_on_hand_13.yaml",
+      "source_sha256": "d04f334a93cf199aac2255624805e8c4fb54a3fc61e8207a68a2a2ae93ed7c21",
+      "parameters": {
+        "eye_on_hand": true,
+        "freehand_robot_movement": false,
+        "move_group": "manipulator",
+        "move_group_namespace": "/",
+        "namespace": "/ur7e_realsense_handeyecalibration_eye_on_hand/",
+        "robot_base_frame": "base_link",
+        "robot_effector_frame": "wrist_3_link",
+        "tracking_base_frame": "camera_color_frame",
+        "tracking_marker_frame": "aruco_marker_frame"
+      },
+      "quaternion_order": "xyzw",
+      "quaternion_norm": 1.0,
+      "T_wrist3_camera_color_frame_m": [
+        [
+          -0.0015031129286616762,
+          -0.9999922638995277,
+          0.0036349405251501327,
+          0.05292744153161687
+        ],
+        [
+          0.999989571734727,
+          -0.001518764492450031,
+          -0.0043069451138872195,
+          -0.007681218231959204
+        ],
+        [
+          0.004312432413528854,
+          0.003628428794142365,
+          0.9999841185894728,
+          0.06361344391206464
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "usable_as_T_base_camera": false
+    },
+    {
+      "label": "25",
+      "source": "E:\\easy_handeye\\标定结果\\ur7e_realsense_handeyecalibration_eye_on_hand_25.yaml",
+      "source_sha256": "a3959a1ffdeb970044b2a3fba845fc9f26090a3e8c431c0bd5481a23f57633ec",
+      "parameters": {
+        "eye_on_hand": true,
+        "freehand_robot_movement": false,
+        "move_group": "manipulator",
+        "move_group_namespace": "/",
+        "namespace": "/ur7e_realsense_handeyecalibration_eye_on_hand/",
+        "robot_base_frame": "base_link",
+        "robot_effector_frame": "wrist_3_link",
+        "tracking_base_frame": "camera_color_frame",
+        "tracking_marker_frame": "aruco_marker_frame"
+      },
+      "quaternion_order": "xyzw",
+      "quaternion_norm": 1.0,
+      "T_wrist3_camera_color_frame_m": [
+        [
+          -0.0077103960849287945,
+          -0.9999298688102479,
+          0.008989285474069152,
+          0.052784734483046124
+        ],
+        [
+          0.9999680967909247,
+          -0.007728828685051259,
+          -0.0020175746561879302,
+          -0.00890095396872504
+        ],
+        [
+          0.002086909808706978,
+          0.00897344238728511,
+          0.9999575601690167,
+          0.0611502459188928
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "usable_as_T_base_camera": false
+    }
+  ],
+  "comparison": {
+    "translation_difference_mm": 2.752356249256487,
+    "rotation_difference_deg": 0.48707064257768656,
+    "interpretation": "Difference between two calibration results; not an accuracy measurement"
+  },
+  "missing": [
+    "capture-time base_link to wrist_3_link pose",
+    "verified camera_color_frame to depth optical TF",
+    "camera device and mounting identity confirmation"
+  ],
+  "status": "handeye_only_not_ready_for_base_export"
+}

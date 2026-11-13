@@ -1,0 +1,399 @@
+{
+  "schema_version": 1,
+  "module": "perception",
+  "purpose": "geometry_input_for_downstream_planning",
+  "path_base": "manifest",
+  "coordinate_frame": "controller_base",
+  "position_unit": "m",
+  "kinematics_status": "nominal_factory_correction_not_applied",
+  "region_boundaries_approved": false,
+  "robot_execution_allowed": false,
+  "cross_region_connections": false,
+  "documentation": "README.md",
+  "calibration_sources": {
+    "handeye_25.yaml": {
+      "path": "../../../calibration/ur7e_d405/20261113/handeye_25.yaml",
+      "sha256": "a3959a1ffdeb970044b2a3fba845fc9f26090a3e8c431c0bd5481a23f57633ec"
+    },
+    "handeye_inventory.json": {
+      "path": "../../../calibration/ur7e_d405/20261113/handeye_inventory.json",
+      "sha256": "4ac9a5b32cbe2e03936b53dc64450e56f61f017f3bcce82cafd19ee11768dfe2"
+    },
+    "camera_extrinsics.json": {
+      "path": "../../../calibration/ur7e_d405/20261113/camera_extrinsics.json",
+      "sha256": "4f946e74ffe2e24ea0d41196c464a8cd7bccee0ea822234205fb50a7aad974ff"
+    },
+    "robot_joint_observation.json": {
+      "path": "robot_joint_observation.json",
+      "sha256": "2dab9e73bdbf30c6b679f5fff228fef5cf12c56c220fe8a15f61f74f3bdf2a84"
+    },
+    "fk_report.json": {
+      "path": "fk_report.json",
+      "sha256": "59cf29b5a3a019d975390be8f35811a60b8ce78d187779d67bb9f5ab1c98701f"
+    }
+  },
+  "shared_transforms": {
+    "T_wrist3_color_frame_m": {
+      "path": "transforms/T_wrist3_color_frame_m.npy",
+      "sha256": "5936db43db6405ed3ea8b2fa157e1fa1e7b2b144cf7469debdcf56a26c64dbee"
+    },
+    "T_color_frame_depth_optical_ros_convention_m": {
+      "path": "transforms/T_color_frame_depth_optical_ros_convention_m.npy",
+      "sha256": "480b8b22fdaadc873a47a4fc1d5ac0d666cb2e069165748b95dfbab09b36a0f4"
+    },
+    "T_controller_base_wrist3_nominal_m": {
+      "path": "transforms/T_controller_base_wrist3_nominal_m.npy",
+      "sha256": "ed9571c66c4ba23df7646b5cf0762af475bd7563dab264e490891881926b098e"
+    },
+    "T_controller_base_depth_optical_nominal_m": {
+      "path": "transforms/T_controller_base_depth_optical_nominal_m.npy",
+      "sha256": "d60d299a536e77c4c60bcadc9d3515a8b3d2245f12648a89d40ce5a6cb5b75bd"
+    }
+  },
+  "jaws": {
+    "mandibular": {
+      "region_order": [
+        "outer_left",
+        "outer_front",
+        "outer_right",
+        "inner_right",
+        "inner_front",
+        "inner_left"
+      ],
+      "regions": {
+        "outer_left": {
+          "points": 416,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 1.0,
+          "retained_length_mm": 44.59988146160947,
+          "files": {
+            "points_csv": {
+              "path": "mandibular/regions/outer_left/points_controller_base_nominal_m.csv",
+              "sha256": "7ea6019f918ede1be4ded486f73f741710f7ddbbfa14c23fce81536ea8521258"
+            },
+            "geometry_npz": {
+              "path": "mandibular/regions/outer_left/region_controller_base_nominal.npz",
+              "sha256": "fc0576f1674b61f31287b3da6527e5af8857bb9d256a88fe1a52075c556cdf14"
+            },
+            "prepared_region": {
+              "path": "mandibular/regions/outer_left/perception_region.json",
+              "sha256": "5b3191ebd125d9d2682b7eababc6b10b641c9cac6dff928aef26176d3236f75c"
+            },
+            "coordinate_metadata": {
+              "path": "mandibular/regions/outer_left/base_coordinates.json",
+              "sha256": "991122346ed8ce2ce806d74052378243baa9c5159a22a2557801c823d72319e1"
+            }
+          }
+        },
+        "outer_front": {
+          "points": 430,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 1.0,
+          "retained_length_mm": 52.5867502056031,
+          "files": {
+            "points_csv": {
+              "path": "mandibular/regions/outer_front/points_controller_base_nominal_m.csv",
+              "sha256": "4350ea062f9736500178754f9cec605351301d6344cee191178bd3805d09aec7"
+            },
+            "geometry_npz": {
+              "path": "mandibular/regions/outer_front/region_controller_base_nominal.npz",
+              "sha256": "816b4a0a262035285a0bb423166ec4eea95f4450498b395aa1c16c2dee18a31f"
+            },
+            "prepared_region": {
+              "path": "mandibular/regions/outer_front/perception_region.json",
+              "sha256": "01a1a8d16dd6eea2c0b2a2f7ab0f20a8613bb33f552ed65920e2404ce391ddc9"
+            },
+            "coordinate_metadata": {
+              "path": "mandibular/regions/outer_front/base_coordinates.json",
+              "sha256": "43e68d88f3cc21b60699ef445983ca148cf2b2db77ea65ef778396b0bc9e9a41"
+            }
+          }
+        },
+        "outer_right": {
+          "points": 479,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 1.0,
+          "retained_length_mm": 60.78347209814338,
+          "files": {
+            "points_csv": {
+              "path": "mandibular/regions/outer_right/points_controller_base_nominal_m.csv",
+              "sha256": "7fa70b10c24ad7948031e2798f9ab495e116de39cbfca26c188cff4e642b3f38"
+            },
+            "geometry_npz": {
+              "path": "mandibular/regions/outer_right/region_controller_base_nominal.npz",
+              "sha256": "9024defb64d264f91503350441a7ca7bab2efbc371904a5478b240b35a7c85ff"
+            },
+            "prepared_region": {
+              "path": "mandibular/regions/outer_right/perception_region.json",
+              "sha256": "c4c5ec23d70ccac89d0706706e352cf57427876be444f59247ba81188ad2561c"
+            },
+            "coordinate_metadata": {
+              "path": "mandibular/regions/outer_right/base_coordinates.json",
+              "sha256": "f1d52818d8361fded284d89cf279f76e77e5ead6c07c5e92f6204d281b402116"
+            }
+          }
+        },
+        "inner_right": {
+          "points": 416,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 1.0,
+          "retained_length_mm": 53.40664627564119,
+          "files": {
+            "points_csv": {
+              "path": "mandibular/regions/inner_right/points_controller_base_nominal_m.csv",
+              "sha256": "4657eaf93974203873cd4b2ab14005ae7da0ae18c0e59794a8c7abf2aeb6f6b4"
+            },
+            "geometry_npz": {
+              "path": "mandibular/regions/inner_right/region_controller_base_nominal.npz",
+              "sha256": "ed103fdefa451e757d4b67ecc4f3ce9d7a9d6686b72e522310cddb3298eccb69"
+            },
+            "prepared_region": {
+              "path": "mandibular/regions/inner_right/perception_region.json",
+              "sha256": "4fb18a7373c01420329871fdbf468e4dc92ce18b58777f8c42ba61fb7aa4a732"
+            },
+            "coordinate_metadata": {
+              "path": "mandibular/regions/inner_right/base_coordinates.json",
+              "sha256": "7cdb689cfc9305e59c20df204e758936b6aa8cfbc1b3add85c5190fcb0892e5c"
+            }
+          }
+        },
+        "inner_front": {
+          "points": 553,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 1.0,
+          "retained_length_mm": 57.329596498038924,
+          "files": {
+            "points_csv": {
+              "path": "mandibular/regions/inner_front/points_controller_base_nominal_m.csv",
+              "sha256": "39079dbb29fa3d0d9fdd906c3384ea5138e44ea633291de3f062cd10060fb48d"
+            },
+            "geometry_npz": {
+              "path": "mandibular/regions/inner_front/region_controller_base_nominal.npz",
+              "sha256": "45a2544626492d2bd0cab08c6e29ee627ece5b8a4a3c04bb0b52250d5bff1878"
+            },
+            "prepared_region": {
+              "path": "mandibular/regions/inner_front/perception_region.json",
+              "sha256": "7574ac5a36f0b53fe04898589b0dbf5f17c57f3a01669d720fc9fd1d282ad49c"
+            },
+            "coordinate_metadata": {
+              "path": "mandibular/regions/inner_front/base_coordinates.json",
+              "sha256": "01e2708a007a638f3d9bed9e23254758271454884ff838039d40bb60582cbccc"
+            }
+          }
+        },
+        "inner_left": {
+          "points": 417,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 1.0,
+          "retained_length_mm": 47.39214503064254,
+          "files": {
+            "points_csv": {
+              "path": "mandibular/regions/inner_left/points_controller_base_nominal_m.csv",
+              "sha256": "0325aaa1d950f468c41f7928ddb69501d509a416985727558181d12e106c8717"
+            },
+            "geometry_npz": {
+              "path": "mandibular/regions/inner_left/region_controller_base_nominal.npz",
+              "sha256": "c4eb296e450d11ab7b334fc54d7f57cff90e2da3f2247af71b63f830d0bf08f7"
+            },
+            "prepared_region": {
+              "path": "mandibular/regions/inner_left/perception_region.json",
+              "sha256": "91360ee9c11ed9e8a1d27f1dfabbbba14ebfcd14a416c164ce7115ffe128f84a"
+            },
+            "coordinate_metadata": {
+              "path": "mandibular/regions/inner_left/base_coordinates.json",
+              "sha256": "8cd415b605c8c804fec2fc37a1b7f860cd4009279ee87023059a8d88f3432259"
+            }
+          }
+        }
+      },
+      "total_points": 2711,
+      "shared_artifacts": {
+        "region_mesh": {
+          "path": "mandibular/shared/region_mesh.npz",
+          "sha256": "9ce661eee27d11151d225f0cf01222070d50114930a4fddaa042df36d8f407a3"
+        }
+      }
+    },
+    "maxillary": {
+      "region_order": [
+        "outer_left",
+        "outer_front",
+        "outer_right",
+        "inner_right",
+        "inner_front",
+        "inner_left"
+      ],
+      "regions": {
+        "outer_left": {
+          "points": 323,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 0.25,
+          "retained_length_mm": 44.13741834153933,
+          "files": {
+            "points_csv": {
+              "path": "maxillary/regions/outer_left/points_controller_base_nominal_m.csv",
+              "sha256": "0ec8a5531e6ce769dd11075d50b2772b28616ba59df3b06b9c76364d67124565"
+            },
+            "geometry_npz": {
+              "path": "maxillary/regions/outer_left/region_controller_base_nominal.npz",
+              "sha256": "fdf88a657920daa45308d2e930f662b5cb23c963301752acea878a96f78c4082"
+            },
+            "prepared_region": {
+              "path": "maxillary/regions/outer_left/perception_region.json",
+              "sha256": "088e905e3374010c6cc9232fe0f9288d7b2e58c2d55650ddbb5ab71e3815f849"
+            },
+            "coordinate_metadata": {
+              "path": "maxillary/regions/outer_left/base_coordinates.json",
+              "sha256": "5d07a0d406e667f6950ba214f2eb9237a14b8289e9e4f76e6872396396b87113"
+            }
+          }
+        },
+        "outer_front": {
+          "points": 315,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 0.25,
+          "retained_length_mm": 51.4605242935577,
+          "files": {
+            "points_csv": {
+              "path": "maxillary/regions/outer_front/points_controller_base_nominal_m.csv",
+              "sha256": "6a951e1d626e188ad17ab20d5e00090fe40ad4dac7635db425004ca962aa6664"
+            },
+            "geometry_npz": {
+              "path": "maxillary/regions/outer_front/region_controller_base_nominal.npz",
+              "sha256": "9c260d5d40373116c463ddaad736be13c0ca17998b02f82ca2d8c982db95bb22"
+            },
+            "prepared_region": {
+              "path": "maxillary/regions/outer_front/perception_region.json",
+              "sha256": "1c705a2e7ae1861e771fccb6f71c988d6d76b2a8e6ee7460dcbf25606f6662f7"
+            },
+            "coordinate_metadata": {
+              "path": "maxillary/regions/outer_front/base_coordinates.json",
+              "sha256": "a28362cd5c35f91292fe5a36859d3a67e4e95fb5b2db490d9f25264dec868df4"
+            }
+          }
+        },
+        "outer_right": {
+          "points": 486,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 0.25,
+          "retained_length_mm": 60.51915352532578,
+          "files": {
+            "points_csv": {
+              "path": "maxillary/regions/outer_right/points_controller_base_nominal_m.csv",
+              "sha256": "ec0b3bda7ea57e465d64e8a448a31038674d6ea4c83c3d873a6af2e022392c28"
+            },
+            "geometry_npz": {
+              "path": "maxillary/regions/outer_right/region_controller_base_nominal.npz",
+              "sha256": "8ae5e9748e45f8532950bd1fa9d718ac8c44a961f3dd5686a85a3f4a0710557e"
+            },
+            "prepared_region": {
+              "path": "maxillary/regions/outer_right/perception_region.json",
+              "sha256": "372fc7bb3ddecfa9716c90e08819cca40978d27ef08a7e0c4144ae57c9565414"
+            },
+            "coordinate_metadata": {
+              "path": "maxillary/regions/outer_right/base_coordinates.json",
+              "sha256": "77f72ea1da03f34dd1f2d358d1d76207c01e4823a4985b14d41faa8f8957094e"
+            }
+          }
+        },
+        "inner_right": {
+          "points": 305,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 0.25,
+          "retained_length_mm": 43.94487650197096,
+          "files": {
+            "points_csv": {
+              "path": "maxillary/regions/inner_right/points_controller_base_nominal_m.csv",
+              "sha256": "0c28015c73fdaaf35b1ead88d7fb5383570b22f6359c83e9fc1d857a15bc00d3"
+            },
+            "geometry_npz": {
+              "path": "maxillary/regions/inner_right/region_controller_base_nominal.npz",
+              "sha256": "8cc54b20ee651eb68ededbae4b42e9716aa5f7ba8b58098018339906dd24c1be"
+            },
+            "prepared_region": {
+              "path": "maxillary/regions/inner_right/perception_region.json",
+              "sha256": "205d6b5f431eba35bfb70c5d03596c89b11b871ad8c407c39c771cefb52f21af"
+            },
+            "coordinate_metadata": {
+              "path": "maxillary/regions/inner_right/base_coordinates.json",
+              "sha256": "28e3c06159d6fe1313cef3445a2b81c423303e414785082f0deaed30aaec094d"
+            }
+          }
+        },
+        "inner_front": {
+          "points": 279,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 0.25,
+          "retained_length_mm": 38.21080333950533,
+          "files": {
+            "points_csv": {
+              "path": "maxillary/regions/inner_front/points_controller_base_nominal_m.csv",
+              "sha256": "a531cae1fe4b834a4694738c01380cc51ad2ab3b6d92be0219cc4043e325fbd7"
+            },
+            "geometry_npz": {
+              "path": "maxillary/regions/inner_front/region_controller_base_nominal.npz",
+              "sha256": "a9bfd13ab092432ca53c29e7e04e733fce064c937c47c87cd8cf908e916ad08e"
+            },
+            "prepared_region": {
+              "path": "maxillary/regions/inner_front/perception_region.json",
+              "sha256": "0ab533a19f8c842ced9bec1958c15b7adbcc3aaf29e8bc82fbf3b2aa7c4bf8e0"
+            },
+            "coordinate_metadata": {
+              "path": "maxillary/regions/inner_front/base_coordinates.json",
+              "sha256": "aad7a61891e0f69af92c90cd2dedbe874a229c1d29a85a98ca07bc104b5b2d2e"
+            }
+          }
+        },
+        "inner_left": {
+          "points": 276,
+          "position_unit": "m",
+          "coordinate_frame": "controller_base",
+          "endpoint_trim_mm": 0.25,
+          "retained_length_mm": 41.9625878912767,
+          "files": {
+            "points_csv": {
+              "path": "maxillary/regions/inner_left/points_controller_base_nominal_m.csv",
+              "sha256": "8159f22aeee5b5c4d4b28a0cead5581c715eb4e1e5590b98dd4410b128edd5cb"
+            },
+            "geometry_npz": {
+              "path": "maxillary/regions/inner_left/region_controller_base_nominal.npz",
+              "sha256": "108a2501f0048816b452a4252b4a666918f9c49dc92bc2f870121868d342a244"
+            },
+            "prepared_region": {
+              "path": "maxillary/regions/inner_left/perception_region.json",
+              "sha256": "0443a07575f55dbbdf65dd271c6a10137ae1510c81c558748cb55ef61027242d"
+            },
+            "coordinate_metadata": {
+              "path": "maxillary/regions/inner_left/base_coordinates.json",
+              "sha256": "c1e21dfe067a2ce64eb7334e937ba0d8792ee3654415507892908b0f39435596"
+            }
+          }
+        }
+      },
+      "total_points": 1984,
+      "shared_artifacts": {
+        "region_mesh": {
+          "path": "maxillary/shared/region_mesh.npz",
+          "sha256": "85fe551a6e1d65cbbdb31c60b7e2b8765855eefd279123de410c6c809e08807a"
+        }
+      }
+    }
+  },
+  "status": "stable_planning_input_snapshot",
+  "raw_capture_included": false,
+  "source_conversion_id": "20261113_225327_457663",
+  "documentation_sha256": "ae7a054f4834e4d5d9549bc90e4b7810320aacabb413f7ad1dc5bc2523595fb6",
+  "canonical_documentation": "../../../../docs/integration/2026-11-13-perception-handoff.md",
+  "storage": "compact_planning_only_shared_jaw_mesh"
+}

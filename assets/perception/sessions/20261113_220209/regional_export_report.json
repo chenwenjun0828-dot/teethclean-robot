@@ -1,0 +1,80 @@
+{
+  "mandibular": {
+    "frame": "controller_base",
+    "units": "m",
+    "status": "nominal_kinematics",
+    "robot_execution_allowed": false,
+    "cross_region_connections": false,
+    "regions": {
+      "outer_left": {
+        "directory": "mandibular\\regions\\outer_left",
+        "points": 416,
+        "retained_length_mm": 44.59988146160947
+      },
+      "outer_front": {
+        "directory": "mandibular\\regions\\outer_front",
+        "points": 430,
+        "retained_length_mm": 52.5867502056031
+      },
+      "outer_right": {
+        "directory": "mandibular\\regions\\outer_right",
+        "points": 479,
+        "retained_length_mm": 60.78347209814338
+      },
+      "inner_right": {
+        "directory": "mandibular\\regions\\inner_right",
+        "points": 416,
+        "retained_length_mm": 53.40664627564119
+      },
+      "inner_front": {
+        "directory": "mandibular\\regions\\inner_front",
+        "points": 553,
+        "retained_length_mm": 57.329596498038924
+      },
+      "inner_left": {
+        "directory": "mandibular\\regions\\inner_left",
+        "points": 417,
+        "retained_length_mm": 47.39214503064254
+      }
+    }
+  },
+  "maxillary": {
+    "frame": "controller_base",
+    "units": "m",
+    "status": "nominal_kinematics",
+    "robot_execution_allowed": false,
+    "cross_region_connections": false,
+    "regions": {
+      "outer_left": {
+        "directory": "maxillary\\regions\\outer_left",
+        "points": 323,
+        "retained_length_mm": 44.13741834153933
+      },
+      "outer_front": {
+        "directory": "maxillary\\regions\\outer_front",
+        "points": 315,
+        "retained_length_mm": 51.4605242935577
+      },
+      "outer_right": {
+        "directory": "maxillary\\regions\\outer_right",
+        "points": 486,
+        "retained_length_mm": 60.51915352532578
+      },
+      "inner_right": {
+        "directory": "maxillary\\regions\\inner_right",
+        "points": 305,
+        "retained_length_mm": 43.94487650197096
+      },
+      "inner_front": {
+        "directory": "maxillary\\regions\\inner_front",
+        "points": 279,
+        "retained_length_mm": 38.21080333950533
+      },
+      "inner_left": {
+        "directory": "maxillary\\regions\\inner_left",
+        "points": 276,
+        "retained_length_mm": 41.9625878912767
+      }
+    }
+  }
+}

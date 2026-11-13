@@ -1,0 +1,42 @@
+{
+  "robot_model_reported": "UR7e",
+  "source": "user transcribed teach pendant joint positions",
+  "joint_names": [
+    "shoulder_pan_joint",
+    "shoulder_lift_joint",
+    "elbow_joint",
+    "wrist_1_joint",
+    "wrist_2_joint",
+    "wrist_3_joint"
+  ],
+  "joint_positions_deg": [
+    78.28,
+    -46.01,
+    65.01,
+    -273.56,
+    29.12,
+    -19.07
+  ],
+  "joint_positions_rad": [
+    1.3662437384611612,
+    -0.803025988842591,
+    1.1346385467215137,
+    -4.774522701755688,
+    0.5082398781807488,
+    -0.33283428835531864
+  ],
+  "input_unit_status": "degrees inferred from teach pendant values; confirm before execution",
+  "measurement_timestamp": null,
+  "capture_host_received_at_utc": "2026-11-13T14:02:09.329364+00:00",
+  "capture_time_alignment": "user supplied after registration; valid for capture only if robot remained stationary",
+  "camera_serial": "335122273144",
+  "camera_intrinsics_extrinsics_report": "../../../calibration/ur7e_d405/20261113/camera_extrinsics.json",
+  "camera_serial_match": true,
+  "target_parent_frame": "base_link",
+  "target_child_frame": "wrist_3_link",
+  "forward_kinematics_status": "computed_nominal_factory_correction_not_applied",
+  "T_base_wrist3_m": null,
+  "robot_execution_allowed": false,
+  "path_base": "manifest",
+  "fk_report": "fk_report.json"
+}

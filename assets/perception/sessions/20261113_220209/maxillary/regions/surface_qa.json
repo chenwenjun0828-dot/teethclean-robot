@@ -1,0 +1,32 @@
+{
+  "inner_front": {
+    "points": 279,
+    "surface_max_mm": 0.12038367241621017,
+    "surface_p95_mm": 0.029394186846911894
+  },
+  "inner_left": {
+    "points": 276,
+    "surface_max_mm": 0.12022855877876282,
+    "surface_p95_mm": 0.03383648954331875
+  },
+  "inner_right": {
+    "points": 305,
+    "surface_max_mm": 0.1757841408252716,
+    "surface_p95_mm": 0.04144947528839113
+  },
+  "outer_front": {
+    "points": 315,
+    "surface_max_mm": 0.11502872407436371,
+    "surface_p95_mm": 0.05174187161028385
+  },
+  "outer_left": {
+    "points": 323,
+    "surface_max_mm": 0.14185591042041779,
+    "surface_p95_mm": 0.053590070083737326
+  },
+  "outer_right": {
+    "points": 486,
+    "surface_max_mm": 0.13087405264377594,
+    "surface_p95_mm": 0.03931452892720699
+  }
+}

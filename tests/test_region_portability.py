@@ -103,3 +103,25 @@ class RegionPortabilityTests(unittest.TestCase):
         dump(path, record)
         with self.assertRaisesRegex(ValueError, 'path base'):
             PreparedRegion.load(path)
+
+    def test_shared_mesh_loads_and_still_rejects_tampering(self):
+        path = self.export()
+        folder = path.parent
+        shared = folder.parent/'shared/region_mesh.npz'
+        shared.parent.mkdir()
+        shutil.copyfile(folder/'region_mesh.npz', shared)
+        (folder/'region_mesh.npz').unlink()
+        record = json.loads(path.read_text())
+        record['artifact_paths'] = {'region_mesh.npz': '../shared/region_mesh.npz'}
+        dump(path, record)
+        loaded = PreparedRegion.load(path)
+        np.testing.assert_allclose(loaded.geometry.mesh_vertices_m, self.prepared.geometry.mesh_vertices_m)
+        shared.write_bytes(shared.read_bytes()+b'changed')
+        with self.assertRaisesRegex(ValueError, 'artifact changed'):
+            PreparedRegion.load(path)
+
+    def test_compact_save_omits_tooth_diagnostics_and_remains_loadable(self):
+        path = self.prepared.save(self.output, diagnostics=False)
+        self.assertFalse((path.parent/'teeth').exists())
+        self.assertFalse((path.parent/'tooth_face_ids.npy').exists())
+        PreparedRegion.load(path)

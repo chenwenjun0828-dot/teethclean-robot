@@ -103,8 +103,11 @@ python -m perception.real manual --source sample \
 
 2026-11-13 实拍上下颌六区交接见
 [感知模块交接说明](../docs/integration/2026-11-13-perception-handoff.md)。
-`outputs/perception/base_conversion_nominal/20261113_225327_457663/planning_input_manifest.json`
-是本批规划输入清单，包含坐标定义、12 个区域文件和指纹；数据目录需随交付提供。
+`assets/perception/sessions/20261113_220209/planning_input_manifest.json`
+是本批正式规划输入清单，包含坐标定义、12 个区域文件和指纹。
+读取示例见 [本批输入资产说明](../assets/perception/sessions/20261113_220209/README.md)；
+固定手眼和相机内部外参归档在 `assets/calibration/ur7e_d405/20261113/`。
+`outputs/` 中对应目录是原始实验记录，正式规划读取不依赖它。
 点坐标为机器人控制器 Base 下的米制位置，使用标称运动学；工具姿态、TCP、定时和真机执行属于下游规划/控制。
 本批基座组合通过说明中列出的离线脚本完成，不代表 `config/camera_to_base.example.json` 已被替换为实测外参。
 可复用的正运动学、点转换和区域导出代码见 [坐标转换入口](coordinate_conversion/README.md)，

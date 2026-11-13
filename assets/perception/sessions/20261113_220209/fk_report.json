@@ -1,0 +1,131 @@
+{
+  "robot": "UR7e",
+  "status": "nominal_model_only",
+  "robot_execution_allowed": false,
+  "factory_calibration_applied": false,
+  "translation_unit": "m",
+  "joint_positions_deg": [
+    78.28,
+    -46.01,
+    65.01,
+    -273.56,
+    29.12,
+    -19.07
+  ],
+  "joint_positions_rad": [
+    1.3662437384611612,
+    -0.803025988842591,
+    1.1346385467215137,
+    -4.774522701755688,
+    0.5082398781807488,
+    -0.33283428835531864
+  ],
+  "sources": [
+    "https://github.com/UniversalRobots/Universal_Robots_ROS2_Description/blob/rolling/config/ur7e/default_kinematics.yaml",
+    "https://github.com/UniversalRobots/Universal_Robots_ROS2_Description/blob/rolling/urdf/ur_macro.xacro"
+  ],
+  "matrix_convention": "p_parent = R @ p_child + t",
+  "T_base_link_wrist3_nominal_m": [
+    [
+      -0.46966591610604624,
+      0.0448063969948007,
+      -0.8817064783909735,
+      -0.1025742231507762
+    ],
+    [
+      0.0002918488515893881,
+      0.9987190956429329,
+      0.05059726101687678,
+      0.5901421795394489
+    ],
+    [
+      0.8828441776851201,
+      0.023506483924790725,
+      -0.46907739568324675,
+      0.32040604208641954
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "T_controller_base_wrist3_nominal_m": [
+    [
+      0.46966591610604624,
+      -0.044806396994800574,
+      0.8817064783909735,
+      0.10257422315077627
+    ],
+    [
+      -0.00029184885158933056,
+      -0.9987190956429329,
+      -0.05059726101687667,
+      -0.5901421795394489
+    ],
+    [
+      0.8828441776851201,
+      0.023506483924790725,
+      -0.46907739568324675,
+      0.32040604208641954
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "T_controller_base_tool0_nominal_m": [
+    [
+      0.46966591610604647,
+      -0.04480639699480068,
+      0.8817064783909734,
+      0.10257422315077627
+    ],
+    [
+      -0.00029184885158956356,
+      -0.9987190956429329,
+      -0.05059726101687667,
+      -0.5901421795394489
+    ],
+    [
+      0.88284417768512,
+      0.023506483924790527,
+      -0.46907739568324697,
+      0.32040604208641954
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "wrist_position_in_base_link_mm": [
+    -102.5742231507762,
+    590.1421795394489,
+    320.4060420864195
+  ],
+  "wrist_quaternion_xyzw_in_base_link": [
+    0.013156594679738712,
+    0.8569513415930081,
+    0.021618422582755464,
+    -0.5147756268156156
+  ],
+  "controller_tool0_pose_xyz_m_rotvec_rad": [
+    0.10257422315077627,
+    -0.5901421795394489,
+    0.32040604208641954,
+    2.655757945074547,
+    -0.0407732961662555,
+    1.595329156384688
+  ],
+  "checks": [
+    "URDF FK agrees with independent standard DH FK within 1e-8",
+    "2pi joint wrapping invariant",
+    "proper orthonormal rotations"
+  ],
+  "note": "No active TCP offset applied. Controller base and ROS base_link differ by Rz(pi). Capture-time alignment depends on robot remaining stationary."
+}

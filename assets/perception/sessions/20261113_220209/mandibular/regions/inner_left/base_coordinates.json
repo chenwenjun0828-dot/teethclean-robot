@@ -1,0 +1,19 @@
+{
+  "region": "inner_left",
+  "frame": "controller_base",
+  "position_unit": "m",
+  "status": "nominal_kinematics_not_independently_validated",
+  "world_field_interpretation": "PreparedRegion world_from_scan uses controller_base as world",
+  "source_boundaries_approved": false,
+  "robot_execution_allowed": false,
+  "cross_region_connections": false,
+  "points": 417,
+  "retained_length_mm": 47.39214503064254,
+  "endpoint_trim_mm": 1.0,
+  "trim_scope": "region_endpoints_only",
+  "points_file": "points_controller_base_nominal_m.csv",
+  "geometry_file": "region_controller_base_nominal.npz",
+  "transform_source": "../../T_controller_base_scan_nominal_m.npy",
+  "transform_sha256": "9616c32271882cc5f5701e43d6dbf40fa8f76a6061f5ca8ac15c613bdc658f16",
+  "note": "Different regions are independent. No TCP offset or executable robot poses included."
+}

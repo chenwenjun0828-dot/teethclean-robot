@@ -1,0 +1,31 @@
+{
+  "status": "provided_handeye_and_device_sdk_extrinsics",
+  "camera_serial": "335122273144",
+  "robot_effector_frame": "wrist_3_link",
+  "tracking_base_frame": "camera_color_frame",
+  "translation_unit": "m",
+  "selected_handeye_label": "25",
+  "robot_execution_allowed": false,
+  "sources": {
+    "handeye_25.yaml": {
+      "path": "handoff_sources/handeye_25.yaml",
+      "sha256": "a3959a1ffdeb970044b2a3fba845fc9f26090a3e8c431c0bd5481a23f57633ec"
+    },
+    "handeye_inventory.json": {
+      "path": "handoff_sources/handeye_inventory.json",
+      "sha256": "4ac9a5b32cbe2e03936b53dc64450e56f61f017f3bcce82cafd19ee11768dfe2"
+    },
+    "camera_extrinsics.json": {
+      "path": "handoff_sources/camera_extrinsics.json",
+      "sha256": "4f946e74ffe2e24ea0d41196c464a8cd7bccee0ea822234205fb50a7aad974ff"
+    },
+    "robot_joint_observation.json": {
+      "path": "handoff_sources/robot_joint_observation.json",
+      "sha256": "abe57e3a289b1d4614e7395d61e0eaf097493867cdd40161740e941cb6b60ef7"
+    },
+    "fk_report.json": {
+      "path": "handoff_sources/fk_report.json",
+      "sha256": "59cf29b5a3a019d975390be8f35811a60b8ce78d187779d67bb9f5ab1c98701f"
+    }
+  }
+}
