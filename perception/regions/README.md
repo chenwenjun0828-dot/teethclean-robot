@@ -21,8 +21,18 @@ regional length, retained length and endpoint loss. Synthetic bridge length is
 always zero. Different regions are not connected automatically.
 
 The dataset jaw and scan hash, prediction files and prediction hash must match.
-Only a mandibular dataset is currently bundled. Missing or mismatched data fails
-explicitly; extracted-topology fallback and three-region aliases were removed.
+The mandibular snapshot and a review-required maxillary candidate are bundled.
+The maxillary source transfers the lower six-region structure to anchors on the
+upper gingival topology, then follows upper-mesh edges with repeated-vertex loops
+removed. It is generated surface geometry, not a copy of the lower-jaw coordinates
+or a claim of approved anatomical boundaries. See `assets/regional_paths/maxillary/stitch_report.json`.
+Missing or mismatched data still fails explicitly; no runtime extracted-topology
+fallback or three-region aliases are enabled.
+
+The explicit source builder is `python -m perception.regions.build_template_source
+--registration-matrix <upper-scan-to-camera-metres.npy> --out <new-source-folder>`.
+It does not run robot motion. The current upper export uses `--trim-mm 0.25` to
+retain short endpoint tooth support, and keeps the normal coverage checks.
 
 `PreparedRegion.save()` writes source/artifact hashes and the registered transform.
 `PreparedRegion.load()` rejects changed sources, changed artifacts and retired

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "jaw": "maxillary",
+  "frame": "d405_camera",
+  "unit": "mm",
+  "transform_name": "T_camera_scan",
+  "transform_translation_unit": "mm",
+  "mesh_path": "assets/source_cad/teeth/maxillary_scan.ply",
+  "mesh_sha256": "553295f278ab7198740abf549c8d22a0b231a3e5322b679d162fbe9527fafd19",
+  "files_sha256": {
+    "regional_chain_candidates_camera_mm.csv": "50e01a3c37bbfc15d0c1ae0195f432999916c6f6a090a35c693e34db25308f12",
+    "T_camera_scan.txt": "7122328abbf63993c8ade3eb01d3f91b128934c2b33b200cd2b5800bc2f67a4b",
+    "stitch_report.json": "6beaac2af9e5f9f3885e5bf2b228fa5afd2160aa580c175348cf2b06873b89fc"
+  },
+  "region_order": [
+    "outer_left",
+    "outer_front",
+    "outer_right",
+    "inner_right",
+    "inner_front",
+    "inner_left"
+  ],
+  "expected_points": 423,
+  "source_version": "template_geodesic_candidate_v1",
+  "source_snapshot": "maxillary_surface_candidate",
+  "region_boundaries_approved": false,
+  "robot_execution_allowed": false,
+  "usage": "Review-required maxillary six-region source; no robot execution.",
+  "provenance_note": "See stitch_report.json. Current registration only serializes points; loader removes it before any new placement."
+}

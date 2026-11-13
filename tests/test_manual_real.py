@@ -1,5 +1,8 @@
 """Offline tests for saved PLY normalization and manual/camera workflow wiring."""
 import json
+import contextlib
+import io
+import sys
 from pathlib import Path
 import tempfile
 import unittest
@@ -9,6 +12,29 @@ import numpy as np
 import open3d as o3d
 
 from perception.registration import manual_real as manual
+
+
+class RealEntryTests(unittest.TestCase):
+    def test_devices_and_manual_dispatch_without_legacy_calibration(self):
+        from perception.real import main
+        with patch.dict(sys.modules, {'perception.calibration': None}), \
+             patch('perception.acquisition.realsense.list_devices', return_value=[]), \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(['devices']), 0)
+            with patch.object(manual, 'run_manual', return_value=0) as run:
+                self.assertEqual(main(['manual', '--source', 'camera']), 0)
+                self.assertEqual(run.call_args.args[0].source, 'camera')
+
+    def test_legacy_calibrate_reports_missing_module(self):
+        from perception.real import main
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch.dict(sys.modules, {'perception.calibration': None}), \
+             contextlib.redirect_stderr(io.StringIO()) as errors:
+            result = main(['calibrate', '--samples', 'unused.json',
+                           '--out', str(Path(tmp) / 'calibration.json')])
+            self.assertEqual(result, 1)
+            self.assertIn('Legacy calibrate requires perception.calibration', errors.getvalue())
+            self.assertFalse((Path(tmp) / 'calibration.json').exists())
 
 
 class ManualRealTests(unittest.TestCase):
@@ -28,7 +54,7 @@ class ManualRealTests(unittest.TestCase):
         o3d.io.write_point_cloud(str(path), cloud)
         return path
 
-    def pairs(self, *args):
+    def pairs(self, *args, **kwargs):
         indices = [0, 10, 20, 30, 40, 50]
         return self.points[indices], (self.points + self.offset)[indices], indices, indices
 
@@ -77,6 +103,20 @@ class ManualRealTests(unittest.TestCase):
         self.assertFalse((out / 'T_camera_scan_estimated.npy').exists())
         self.assertEqual(json.loads((out / 'registration_report.json').read_text())['status'], 'failed')
 
+    def test_legacy_picker_cli_runs_same_registration_and_exports(self):
+        with patch('perception.registration.legacy_landmark_picker.pick_pairs_legacy',
+                   side_effect=self.pairs) as picker:
+            result = manual.main(['--source', 'ply', '--camera', str(self.camera),
+                '--scan', str(self.scan), '--units', 'mm', '--frame', 'cv',
+                '--picker', 'legacy', '--out', str(self.root / 'legacy_picker')])
+        self.assertEqual(result, 0)
+        picker.assert_called_once()
+        out = self.root / 'legacy_picker'
+        np.testing.assert_allclose(np.load(out / 'transforms/T_camera_scan_m.npy')[:3, 3],
+                                   self.offset / 1000, atol=1e-8)
+        report = json.loads((out / 'registration/registration_report.json').read_text())
+        self.assertEqual(report['landmark_picker'], 'legacy')
+
     def test_external_matrix_reaches_run_report_and_preserves_old_command(self):
         line = self.root / 'line.csv'
         np.savetxt(line, self.points[:8], delimiter=',', header='x,y,z', comments='')
@@ -122,3 +162,32 @@ class ManualRealTests(unittest.TestCase):
              patch.object(manual, 'register_manual_clouds') as register:
             self.assertEqual(manual.main(['--source', 'camera', '--out', str(self.root / 'cancel')]), 1)
             register.assert_not_called()
+
+    def test_saved_original_frame_can_be_recropped_for_maxillary_without_camera(self):
+        import cv2
+        from perception.acquisition.capture import RGBDFrame, save_real_capture
+        from perception.real import load_real_config
+        y, x = np.indices((30, 40))
+        points = np.stack([x * .2, y * .2, np.full(x.shape, 100.)], axis=2)
+        frame = RGBDFrame(np.zeros((30, 40, 3), np.uint8),
+            np.full((30, 40), 1000, np.uint16), .0001, points,
+            np.full(points.shape, .5), np.ones(x.shape, bool), {},
+            {'host_received_at_utc': '2026-11-13T14:02:09Z', 'camera_serial': 'TEST-D405'})
+        source = self.root / 'original_capture'
+        original = save_real_capture(source, frame, 'mandibular', load_real_config())
+        original_bytes = (source / 'capture_metadata.json').read_bytes()
+        out = self.root / 'upper_recrop'
+        with patch.object(cv2, 'selectROI', return_value=(2, 3, 20, 20)), \
+             patch.object(cv2, 'destroyAllWindows'), \
+             patch('perception.acquisition.realsense.RealSenseCamera', side_effect=AssertionError('No hardware needed')):
+            code = manual.main(['--source', 'capture', '--capture', str(source),
+                '--jaw', 'maxillary', '--scan', str(self.scan), '--out', str(out), '--prepare-only'])
+        self.assertEqual(code, 0)
+        metadata = json.loads((out / 'capture/capture_metadata.json').read_text())
+        self.assertEqual(metadata['jaw'], 'maxillary')
+        self.assertEqual(metadata['parent_capture_jaw'], 'mandibular')
+        self.assertEqual(metadata['roi'], [2, 3, 22, 23])
+        self.assertEqual(metadata['acquisition_id'], original['acquisition_id'])
+        self.assertNotEqual(metadata['capture_id'], original['capture_id'])
+        self.assertEqual(metadata['host_received_at_utc'], frame.metadata['host_received_at_utc'])
+        self.assertEqual((source / 'capture_metadata.json').read_bytes(), original_bytes)

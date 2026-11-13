@@ -10,7 +10,7 @@ os.environ.setdefault('OMP_NUM_THREADS', '4')
 import numpy as np
 import open3d as o3d
 
-from ..global_camera import PROJECT_ROOT, ensure_empty_directory, file_hash, save_cloud, write_json
+from ..global_camera import PROJECT_ROOT, ensure_empty_directory, file_hash, save_cloud, write_json, load_capture
 from ..artifacts import default_output, export_coordinates, load_extrinsics
 from .algorithms import load_scan_cloud, load_line_csv, pick_landmark_pairs, coarse_from_landmarks
 from .registration_math import transform_points
@@ -72,9 +72,14 @@ def refine_manual(scan, camera, initial):
 
 def register_manual_clouds(camera_path, scan_path, output_dir, *, units, frame,
                            roi=None, landmarks=None, line=None, show_view=False,
-                           prepare_only=False, extrinsics=None, run_dir=None):
+                           prepare_only=False, extrinsics=None, run_dir=None, picker='paired',
+                           camera_landmarks=None):
     """File API; optional landmarks must match the normalized cloud and scan hashes."""
     scan_path, camera_path = Path(scan_path).resolve(), Path(camera_path).resolve()
+    if picker not in ('paired', 'legacy'):
+        raise ValueError('Picker must be paired or legacy')
+    if camera_landmarks is not None and (picker != 'legacy' or landmarks is not None):
+        raise ValueError('Camera-only landmarks require picker=legacy and no full landmarks file')
     external = load_extrinsics(extrinsics) if extrinsics is not None else None
     camera, conversion = prepare_cloud(camera_path, units=units, frame=frame, roi=roi)
     scan = load_scan_cloud([scan_path], allow_point_cloud=True)
@@ -89,6 +94,7 @@ def register_manual_clouds(camera_path, scan_path, output_dir, *, units, frame,
     if prepare_only:
         return out
     report = dict(status='running', registration_method='manual_multiscale_robust_icp',
+                  landmark_picker=picker,
                   robot_execution_allowed=False, units='mm', source_frame='oral_scan',
                   target_frame='camera_cv', **fingerprints)
     try:
@@ -101,7 +107,13 @@ def register_manual_clouds(camera_path, scan_path, output_dir, *, units, frame,
                 raise ValueError('Landmarks do not match this scan and normalized camera cloud')
             source, target = np.asarray(pairs['source_scan_mm']), np.asarray(pairs['target_camera_mm'])
         else:
-            source, target, si, ti = pick_landmark_pairs(scan, camera, 6)
+            if picker == 'legacy':
+                from .legacy_landmark_picker import pick_pairs_legacy
+                source, target, si, ti = pick_pairs_legacy(scan, camera, 6,
+                    reference_path=out / 'camera_landmarks_reference.png',
+                    camera_landmarks=camera_landmarks)
+            else:
+                source, target, si, ti = pick_landmark_pairs(scan, camera, 6)
             pairs = dict(source_scan_mm=source.tolist(), target_camera_mm=target.tolist(),
                          source_indices=si, target_indices=ti, **fingerprints)
         write_json(out / 'landmarks.json', pairs)
@@ -150,7 +162,8 @@ def choose_ply():
 
 def add_arguments(parser):
     """Shared CLI for perception.real manual and the legacy module command."""
-    parser.add_argument('--source', choices=('sample', 'ply', 'camera'), default='sample')
+    parser.add_argument('--source', choices=('sample', 'ply', 'camera', 'capture'), default='sample')
+    parser.add_argument('--capture', type=Path, help='Saved capture directory; reselect ROI without a camera')
     parser.add_argument('--camera', type=Path, help='Existing PLY; omit with --source ply for a file chooser')
     parser.add_argument('--scan', type=Path, help='Matching oral scan in mm')
     parser.add_argument('--jaw', choices=('mandibular', 'maxillary'), default='mandibular')
@@ -161,6 +174,10 @@ def add_arguments(parser):
     parser.add_argument('--serial')
     parser.add_argument('--out', type=Path)
     parser.add_argument('--landmarks', type=Path)
+    parser.add_argument('--camera-landmarks', type=Path,
+                        help='Resume legacy picking from a saved camera-only checkpoint JSON')
+    parser.add_argument('--picker', choices=('paired', 'legacy'), default='paired',
+                        help='paired: side-by-side window; legacy: sequential compatibility windows')
     parser.add_argument('--line', type=Path, help='Optional scan-frame x,y,z CSV in mm')
     parser.add_argument('--extrinsics', type=Path, help='Camera CV -> base JSON; translation_unit=m')
     parser.add_argument('--prepare-only', action='store_true')
@@ -169,13 +186,17 @@ def add_arguments(parser):
 
 
 def run_manual(args, parser):
+    if args.source == 'capture' and args.capture is None:
+        parser.error('--source capture requires --capture')
+    if args.capture is not None and args.source != 'capture':
+        parser.error('--capture requires --source capture')
     if args.camera and args.source != 'ply':
         parser.error('--camera requires --source ply')
     if args.source == 'ply' and (args.units is None or args.frame is None):
         parser.error('Existing PLY requires explicit --units and --frame')
     if args.source == 'sample' and args.jaw != 'mandibular':
         parser.error('The legacy sample ROI is mandibular only')
-    if args.source == 'camera' and (args.units is not None or args.frame is not None):
+    if args.source in ('camera', 'capture') and (args.units is not None or args.frame is not None):
         parser.error('D405 acquisition already provides CV camera millimetres')
     out = args.out or default_output('real')
     summary = dict(status='running', source=args.source, robot_execution_allowed=False)
@@ -195,6 +216,28 @@ def run_manual(args, parser):
             if real_main(command) != 0:
                 raise RuntimeError('Camera acquisition failed or was cancelled')
             camera, units, frame, roi = capture / 'camera_mm.ply', 'mm', 'cv', args.roi_mm
+        elif args.source == 'capture':
+            import cv2
+            from ..real import load_real_config, recrop_saved_capture
+            loaded = load_capture(args.capture)
+            if loaded['metadata'].get('data_source') != 'realsense':
+                raise ValueError('Saved ROI selection requires a real-camera capture')
+            if 'point_colors.npy' not in loaded['metadata']['file_hashes']:
+                raise ValueError('Saved capture has no fingerprinted native-depth color map')
+            colors = np.load(loaded['path'] / 'point_colors.npy', allow_pickle=False)
+            image = np.rint(colors[:, :, ::-1] * 255).astype(np.uint8)
+            print(f'Saved original frame: select {args.jaw} ROI; Enter confirms; C/Esc cancels.', flush=True)
+            window = 'Saved original frame - select ' + args.jaw + ' ROI'
+            try:
+                x, y, width, height = cv2.selectROI(window, image, showCrosshair=True, fromCenter=False)
+            finally:
+                cv2.destroyAllWindows()
+            if width <= 0 or height <= 0:
+                raise ValueError('Saved capture ROI selection cancelled')
+            options = load_real_config(args.config)
+            options['roi'] = [int(x), int(y), int(x + width), int(y + height)]
+            recrop_saved_capture(args.capture, out / 'capture', options, jaw=args.jaw)
+            camera, units, frame, roi = out / 'capture/camera_mm.ply', 'mm', 'cv', args.roi_mm
         elif args.source == 'sample':
             camera, units, frame = SAMPLE, args.units or 'm', args.frame or 'opengl'
             roi = args.roi_mm if args.roi_mm is not None else LEGACY_ROI
@@ -203,7 +246,8 @@ def run_manual(args, parser):
         result = register_manual_clouds(camera, scan, out / 'registration', units=units,
             frame=frame, roi=roi, landmarks=args.landmarks, line=args.line,
             show_view=args.view, prepare_only=args.prepare_only,
-            extrinsics=args.extrinsics, run_dir=out)
+            extrinsics=args.extrinsics, run_dir=out, picker=args.picker,
+            camera_landmarks=args.camera_landmarks)
         summary.update(status='prepared' if args.prepare_only else 'completed',
                        registration_dir=str(result))
         if not args.prepare_only:

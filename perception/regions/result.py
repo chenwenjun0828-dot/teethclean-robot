@@ -1,4 +1,6 @@
 """Explicit, replayable boundary between perception and robot planning."""
+from __future__ import annotations
+
 from dataclasses import dataclass, replace
 from copy import deepcopy
 import json

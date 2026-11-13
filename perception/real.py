@@ -11,7 +11,6 @@ import numpy as np
 import open3d as o3d
 
 from .acquisition.capture import RGBDFrame, depth_roi_mask, save_real_capture
-from .calibration import calibrate_eye_to_hand, load_base_calibration
 from .global_camera import PROJECT_ROOT, ensure_empty_directory, load_capture, write_json
 from .registration import load_scan_cloud, pick_landmark_pairs, register_capture
 from .registration.evaluation import (evaluate_checkpoints, evaluate_registration, read_json,
@@ -56,6 +55,11 @@ def register_saved_capture(capture_dir, scan, output_dir, *, config=None, jaw=No
     if registration_method is not None:
         options["registration_method"] = registration_method
     if calibration is not None:
+        try:
+            from .calibration import load_base_calibration
+        except ImportError as error:
+            raise RuntimeError('Legacy --calibration requires perception.calibration; '
+                               'use manual --extrinsics for an externally supplied camera-to-base transform') from error
         matrix, provenance = load_base_calibration(calibration, metadata)
         options["T_base_camera_m"] = matrix.tolist()
         options["base_calibration"] = provenance
@@ -84,10 +88,13 @@ def register_saved_capture(capture_dir, scan, output_dir, *, config=None, jaw=No
     return summary
 
 
-def recrop_saved_capture(capture_dir, output_dir, config):
+def recrop_saved_capture(capture_dir, output_dir, config, *, jaw=None):
     """Recompute depth ROI and filtering from saved SDK geometry, without hardware."""
     loaded = load_capture(capture_dir)
     metadata, root = deepcopy(loaded["metadata"]), loaded["path"]
+    target_jaw = metadata['jaw'] if jaw is None else jaw
+    if target_jaw not in ('mandibular', 'maxillary'):
+        raise ValueError('Unknown target jaw')
     if metadata.get("data_source") != "realsense" or config.get("data_source") != "realsense":
         raise ValueError("Recropping requires real-camera data and configuration")
     names = ("depth_raw", "points_camera_mm", "point_colors", "color_valid_mask")
@@ -96,10 +103,11 @@ def recrop_saved_capture(capture_dir, output_dir, config):
     raw, points, colors, color_valid = [np.load(root / (name + ".npy"), allow_pickle=False) for name in names]
     metadata["parent_capture_id"] = metadata["capture_id"]
     metadata["parent_capture_dir"] = str(root)
+    metadata["parent_capture_jaw"] = metadata['jaw']
     metadata["acquisition_id"] = metadata.get("acquisition_id", metadata["capture_id"])
     frame = RGBDFrame(loaded["rgb"], raw, metadata["depth_scale_m"], points, colors,
                       color_valid, metadata["intrinsics"], metadata)
-    return save_real_capture(output_dir, frame, metadata["jaw"], config)
+    return save_real_capture(output_dir, frame, target_jaw, config)
 
 
 def _capture(args):
@@ -119,27 +127,36 @@ def _capture(args):
         with RealSenseCamera(config["camera"]) as source:
             for index in range(args.count):
                 frame = source.read()
-                if args.select_roi and index == 0:
-                    image = np.rint(frame.colors[:, :, ::-1] * 255).astype(np.uint8)
-                    x, y, width, height = cv2.selectROI(window, image, showCrosshair=True, fromCenter=False)
-                    if width <= 0 or height <= 0:
-                        raise RuntimeError("ROI selection cancelled")
-                    config["roi"] = [int(x), int(y), int(x + width), int(y + height)]
-                    cv2.destroyWindow(window)
-                if args.preview:
-                    print("Preview: S/Space saves; Q/Esc cancels. ROI uses native depth pixels.")
+                select_roi = args.select_roi and index == 0
+                if args.preview or select_roi:
+                    instruction = "S/Space: freeze, then select ROI" if select_roi else "S/Space: save"
+                    print(f"Live preview: {instruction}; Q/Esc: cancel. ROI uses native depth pixels.")
                     cv2.namedWindow(window, cv2.WINDOW_NORMAL)
                     while True:
-                        mask, roi = depth_roi_mask(frame.depth_m, config)
+                        _, roi = depth_roi_mask(frame.depth_m, config)
                         image = np.rint(frame.colors[:, :, ::-1] * 255).astype(np.uint8)
-                        image[~mask] //= 4
                         cv2.rectangle(image, tuple(roi[:2]), tuple(roi[2:]), (0, 255, 0), 1)
+                        cv2.putText(image, instruction + " | Q/Esc: cancel", (8, 20),
+                                    cv2.FONT_HERSHEY_SIMPLEX, .45, (0, 255, 0), 1)
                         cv2.imshow(window, image)
                         key = cv2.waitKey(1) & 0xff
-                        if key in (ord("s"), ord("S"), 32):
-                            break
-                        if key in (ord("q"), 27) or cv2.getWindowProperty(window, cv2.WND_PROP_VISIBLE) < 1:
+                        if key in (ord("q"), ord("Q"), 27) or cv2.getWindowProperty(window, cv2.WND_PROP_VISIBLE) < 1:
                             raise RuntimeError("Capture cancelled")
+                        if key in (ord("s"), ord("S"), 32):
+                            if select_roi:
+                                print("Frozen frame: drag ROI, Enter/Space confirms; C/Esc cancels ROI and resumes live preview.")
+                                # Use an unannotated image from the same frame that will be saved.
+                                frozen = np.rint(frame.colors[:, :, ::-1] * 255).astype(np.uint8)
+                                x, y, width, height = cv2.selectROI(
+                                    window, frozen, showCrosshair=True, fromCenter=False)
+                                if cv2.getWindowProperty(window, cv2.WND_PROP_VISIBLE) < 1:
+                                    raise RuntimeError("Capture cancelled")
+                                if width <= 0 or height <= 0:
+                                    print("ROI cancelled; resuming live preview.")
+                                    frame = source.read()
+                                    continue
+                                config["roi"] = [int(x), int(y), int(x + width), int(y + height)]
+                            break
                         frame = source.read()
                 directory = out if args.count == 1 else out / f"capture_{index + 1:04d}"
                 metadata = save_real_capture(directory, frame, args.jaw, config)
@@ -260,6 +277,11 @@ def main(argv=None):
         if args.command == "repeatability":
             result = repeatability_report(args.registrations, static_scene=args.static_scene)
         else:
+            try:
+                from .calibration import calibrate_eye_to_hand
+            except ImportError as error:
+                raise RuntimeError('Legacy calibrate requires perception.calibration, '
+                                   'which is not included in this workspace') from error
             result = calibrate_eye_to_hand(read_json(args.samples),
                 read_json(args.validation_samples) if args.validation_samples else None)
         write_json(args.out, result)

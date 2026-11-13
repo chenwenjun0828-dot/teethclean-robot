@@ -3,9 +3,9 @@
 本文保留相机采集、文件格式、离线回放与评价的详细说明；模块职责和两条主流程统一见
 [感知总说明](README.md)，人工配准参数见 [分类接口文档](registration/MANUAL_REAL.md)。
 
-**当前工作区状态：**旧 `calibration/` 文件已删除，但 `real.py` 及旧配准服务仍有相关导入。
-因此真机入口目前会因缺失模块而导入失败。下文 `calibrate` / `--calibration` 是保留的历史
-固定外置相机接口说明，不能视为当前可运行验收；恢复入口或清理旧导入属于后续代码修复。
+**当前工作区状态：**旧 `calibration/` 文件已删除，真机入口已将旧标定导入延迟到使用时，
+不影响设备枚举、采集和人工配准。下文 `calibrate` / `--calibration` 是保留的历史
+固定外置相机接口说明，当前仍不可用；调用时会提示缺失旧标定模块。
 
 **末端相机的当前入口**为 `python -m perception.real manual`，统一支持相机拍摄保存 PLY、
 选择已有 PLY、人工选点及多尺度 ICP。通过 `--extrinsics` 导入外部标定流程提供的
@@ -35,6 +35,35 @@ SDK 仅在设备枚举、采集时导入。离线回放、重选 ROI、评价和
 
 ## 2. 采集一组真实数据
 
+### 单独读取 D405 深度/彩色外参（无需 ROS）
+
+插上 D405 并关闭占用设备的 Viewer/采集程序，在项目根目录执行：
+
+```powershell
+& D:\python\python.exe -m perception.acquisition.camera_extrinsics
+```
+
+多台相机追加 `--serial 实际序列号`；`--config` 可指定采集配置中的流参数。
+输出自动保存到 `outputs/perception/camera_extrinsics/<时间戳>/`，也可用 `--out` 指定空目录。
+`camera_extrinsics.json` 保存序列号、固件、内参、SDK 原始外参、矩阵及来源；矩阵另存 NPY/TXT，平移单位米。
+
+- `T_color_optical_depth_optical_m` 是设备 SDK 读取的深度光学帧到彩色光学帧转换。
+- `T_color_frame_depth_optical_ros_convention_m` 是在此基础上按标准 RealSense ROS 帧轴向推导的候选值。
+- 后者不是现场读取的 ROS TF，报告明确标注未验证；需在手眼标定的 ROS 机器上核对实际帧定义。
+- 这不是相机到机器人基座的外参，不能直接作为 `--extrinsics` 配置。
+
+ROS1 上可在相机节点运行时查看：
+
+```bash
+rosrun tf tf_echo camera_color_frame camera_depth_optical_frame
+```
+
+实际帧名以该设备 TF 为准。须确认手眼标定与当前相机序列号、安装状态一致；相机内部外参可在稍后读取，
+机器人末端位姿则必须对应牙模拍摄时刻。
+
+参考：[SDK 外参说明](https://dev.realsenseai.com/docs/projection-in-realsense-sdk-2-0/)、
+[ROS1 驱动静态 TF 实现](https://github.com/IntelRealSense/realsense-ros/blob/ros1-legacy/realsense2_camera/src/base_realsense_node.cpp)。
+
 使用与口扫文件对应的实体牙模；先固定一个颌，保证该颌在曝光及采集过程中静止。
 调整照明、距离和视角，在预览中确认牙面深度完整，再保存。
 
@@ -44,7 +73,10 @@ SDK 仅在设备枚举、采集时导入。离线回放、重选 ROI、评价和
   --select-roi --preview
 ```
 
-先在窗口中框选牙模区域，Enter 确认；随后按 S 或空格保存，Q 或 Esc 取消。
+先显示实时画面，按 S 或空格冻结当前帧，再在该帧上框选牙模区域，Enter 确认并保存。
+取消 ROI 框选返回实时预览；实时预览中 Q 或 Esc 退出，关闭窗口也会取消采集。
+单独使用 `--select-roi` 也会先显示实时预览；仅使用 `--preview` 时按 S/空格直接保存。
+多帧采集只在第一帧选择 ROI，后续复用该 ROI；未加 `--preview` 时后续帧自动保存。
 框选和预览都使用**原生深度图像素网格**上的着色点图，不是原始 RGB 像素网格。
 GUI 点选需要可用的 Windows 图形桌面；无窗口采集可以省略这两个参数。
 

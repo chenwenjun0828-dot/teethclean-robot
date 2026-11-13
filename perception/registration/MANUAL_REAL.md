@@ -47,17 +47,40 @@ python -m perception.registration.manual_real --source camera \
   --scan assets/source_cad/teeth/mandibular_scan.ply --view
 ```
 
-此入口复用 `perception.real capture`：先框选深度网格上的牙模 ROI，Enter 确认，
-预览时按 S/空格保存，Q/Esc 取消。保存 RGB-D、原始点图、元数据和 `capture/camera_mm.ply` 后，
+此入口复用 `perception.real capture`：先显示实时画面，按 S/空格冻结当前帧，
+再在该帧上框选深度网格上的牙模 ROI，Enter 确认并保存。取消 ROI 框选返回实时预览；
+实时预览中 Q/Esc 退出。保存 RGB-D、原始点图、元数据和 `capture/camera_mm.ply` 后，
 自动进入人工配对。采集失败或取消会停止。多台设备用 `--serial` 指定；
 `--config` 指定真机采集配置，`--jaw` 可选上下颌。相机输入直接使用 SDK 的 CV 毫米坐标，
 无需设置 `--units/--frame`。详见 [真机采集文档](../REAL_CAMERA.md)。
 
 ## 4. 选点与输出
 
+可从同一份已保存完整采集重新框选另一颌，无需相机连接：
+
+```powershell
+python -m perception.real manual --source capture --capture <旧运行目录>/capture --jaw maxillary --picker legacy --view
+```
+
+此模式显示原始深度网格着色图，框选上颌后按 Enter，自动生成新的采集和上颌配准。
+新目录保留原始 acquisition_id、时间戳、父采集路径及父颌别，分配新 capture_id；原始目录不改写。
+必须使用包含未裁剪深度/点图的采集目录，单独的下颌 PLY 或 PNG 不能恢复上颌几何。
+
 左侧为相机点云，右侧为口扫。Shift+左键依次选左、右对应点，至少六对，分散覆盖牙面。
 Shift+右键/Backspace 撤销；点击 Finish & Register 或按 Enter/Q 完成，Esc 取消。
 `--view` 控制最终叠加窗口，人工模式始终需要选点窗口（除非传入已有标记）。
+
+如果并排窗口未响应或无法旋转，可追加 `--picker legacy` 使用兼容窗口。
+该模式先显示相机点云，Shift+左键依次选至少六点，记住顺序后按 Q；
+随后显示口扫，按相同顺序选择相同数量的对应点，再按 Q 执行配准。
+第二步会同时保留第一步的相机参考图，以 1、2、3… 标出选点顺序；
+参考图也保存为 `registration/camera_landmarks_reference.png`，可随时打开对照。
+参考图使用独立进程显示，不与点云窗口混用事件循环。第一步完成时同时保存
+`registration/camera_landmarks_reference.json`；若第二步意外退出，可追加
+`--picker legacy --camera-landmarks <旧目录>/registration/camera_landmarks_reference.json`
+直接重选口扫点，程序会核对两份点云的指纹。
+不按 Shift 时左键拖动旋转，滚轮缩放，Shift+右键撤销。关闭窗口也会提交当前选点，
+点数不足或两边数量不同会停止配准。兼容模式与并排模式输出相同格式的对应点和矩阵。
 
 默认输出 `outputs/perception/real/<时间戳>/`；可用 `--out` 指定不存在或为空的目录。
 历史 `outputs/manual_real/` 不迁移或删除。

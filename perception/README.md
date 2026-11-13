@@ -39,13 +39,13 @@ python -m perception.simulation
 
 牙龈线提取 → MuJoCo 采集 → 自动配准 → 相机坐标 → 世界坐标 → 区域路径准备。
 用 `--view` 查看最终配准叠加，用 `--out` 指定空目录。与完整 pipeline 共用原有感知算法，
-当前区域快照只随仓库提供下颌；其他口扫/上颌还需匹配的区域源线和分割预测，缺失会明确失败。
+当前提供下颌区域快照及待核对的上颌六区候选源线；其他口扫仍需匹配的区域源线和分割预测，缺失会明确失败。
 仿真使用 `T_world_camera × T_camera_scan`，世界坐标不等于机器人基座坐标。
 
 **真机感知**（默认人工选点）：
 
-当前工作区的旧标定模块已被删除，而真机入口仍有相关导入，运行前需解决该缺失；
-以下为接口用法，具体状态见 [真机详细指南](REAL_CAMERA.md)。
+当前真机入口不再在启动时依赖已删除的旧标定模块，可直接使用采集与人工配准；
+旧 `calibrate` / `--calibration` 功能仍不可用，具体状态见 [真机详细指南](REAL_CAMERA.md)。
 
 ```bash
 python -m perception.real manual --source sample --view
