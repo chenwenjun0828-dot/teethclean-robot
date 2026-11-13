@@ -81,6 +81,8 @@ class ContactPathTests(unittest.TestCase):
         self.assertGreaterEqual(path.source_time, before)
         paused = path.source_time
         for _ in range(100): path.update(1., 0., .001)
+        self.assertAlmostEqual(path.source_time, paused, places=6)
+        for _ in range(200): path.update(1., 0., .001)
         self.assertGreater(path.source_time, paused)
 
     def test_soft_force_guard_unloads_and_hard_limit_latches_fault(self):

@@ -1,0 +1,10 @@
+{
+  "T_base_camera": [
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1]
+  ],
+  "translation_unit": "m",
+  "status": "placeholder"
+}

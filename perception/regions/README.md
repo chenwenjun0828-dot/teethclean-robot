@@ -28,3 +28,13 @@ explicitly; extracted-topology fallback and three-region aliases were removed.
 `PreparedRegion.load()` rejects changed sources, changed artifacts and retired
 region references. Mesh data uses millimetres; continuous positions and registered
 world transforms use metres. Shared surface fitting lives in `surface.py`.
+
+New regional manifests declare `path_base: "manifest"`: source paths in
+`perception_region.json`, fingerprint paths in `geometry.json`, and entries in
+`perception_regions.json` are relative to their containing JSON file. Moving the
+repository together with its assets and outputs preserves those references;
+loading does not depend on the terminal working directory. The regional geometry
+and source fingerprints are still verified. Copying only the region folder does
+not copy its source assets. Legacy absolute-path manifests remain readable at
+their original locations. Use `PreparedRegion.load_from_manifest(index, region)`
+to resolve an entry from the multi-region index.

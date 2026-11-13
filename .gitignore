@@ -6,6 +6,8 @@ __pycache__/
 
 # Generated simulation results and local archives
 outputs/
+# Rebuildable force-contact meshes, candidate manifests and geometry diagnostics
+assets/contact/
 *.zip
 *.zip.sha256
 

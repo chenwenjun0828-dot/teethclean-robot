@@ -20,11 +20,13 @@ def fixed_jaws(model):
 
 
 def contact_allowed(names, distance_from_tip_m, jaw, tip_radius_m=.003):
-    return (set(names) == {'ur_end_scaler_geom', 'dental_' + jaw + '_visual'}
-            and distance_from_tip_m <= tip_radius_m)
+    tool = lambda n: n == 'ur_end_scaler_geom' or n.startswith('ur_force_tool_')
+    tooth = lambda n: n == 'dental_' + jaw + '_visual' or n.startswith('force_' + jaw + '_tooth_')
+    return (len(names) == 2 and ((tool(names[0]) and tooth(names[1]))
+            or (tool(names[1]) and tooth(names[0]))) and distance_from_tip_m <= tip_radius_m)
 
 
-def contacts(model, data, robot, jaw):
+def contacts(model, data, robot, jaw, allowed_teeth=None):
     rows, forbidden = [], []
     tip = data.site_xpos[robot.site]
     for i, contact in enumerate(data.contact):
@@ -34,6 +36,11 @@ def contacts(model, data, robot, jaw):
             continue
         distance = float(np.linalg.norm(contact.pos - tip))
         allowed = contact_allowed(names, distance, jaw)
+        if allowed and allowed_teeth is not None:
+            for name in names:
+                if name.startswith('force_'+jaw+'_tooth_'):
+                    tooth=int(name.split('_tooth_',1)[1].split('_',1)[0])
+                    allowed &= tooth in allowed_teeth
         wrench = np.zeros(6)
         mujoco.mj_contactForce(model, data, i, wrench)
         world_force = contact.frame.reshape(3, 3).T @ wrench[:3]

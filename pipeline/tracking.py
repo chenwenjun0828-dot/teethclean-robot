@@ -84,7 +84,7 @@ def run_tracking(registration_dir, jaw='mandibular', path_index=0, offset_mm=1.5
         name = region
         if name not in manifest['regions']:
             raise ValueError(f'Perception did not produce region {region}')
-        prepared = PreparedRegion.load(manifest['regions'][name])
+        prepared = PreparedRegion.load_from_manifest(manifest_path, name)
     prepared.validate(region)
     if prepared.inputs.jaw != jaw or fingerprint(prepared.inputs.scan)['sha256'] != fingerprint(inputs.scan)['sha256']:
         raise ValueError('Tracking registration and perception source scan differ')

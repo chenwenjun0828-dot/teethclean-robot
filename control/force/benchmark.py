@@ -9,7 +9,7 @@ import numpy as np
 
 from .contact_experiment import contacts, write_csv
 from planning.infrastructure.io import dump, fingerprint
-from .compliance import ForceControlConfig, NormalAdmittance, SensorContactForce, smoothstep
+from .compliance import ForceControlConfig, NormalAdmittance, SensorContactForce, smoothstep, feedback_force
 from .force_guard import PredictiveContactGuard
 
 
@@ -52,7 +52,7 @@ def run(output, target_force_N=1.):
         mujoco.mj_forward(model, data)
         measured = observer.read(data)
         target = config.target_force_N*smoothstep(data.time/config.target_ramp_s)
-        controller.step(measured['force_N'], target, model.opt.timestep)
+        controller.step(feedback_force(measured, np.array([0.,0.,1.]), config.force_component), target, model.opt.timestep)
         hits, bad = contacts(model, data, robot, 'mandibular')
         oracle = np.sum([[h[f'force_on_robot_world_{axis}_N'] for axis in 'xyz'] for h in hits], axis=0) if hits else np.zeros(3)
         rows.append({'time_s': float(data.time), 'target_N': float(target),

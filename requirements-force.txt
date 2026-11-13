@@ -1,0 +1,3 @@
+# Experimental offline convex geometry generation and the existing force runtime.
+-r requirements-perception.txt
+coacd==1.0.14

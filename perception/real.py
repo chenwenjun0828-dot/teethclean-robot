@@ -178,6 +178,8 @@ def _pick_checkpoints(args):
 def build_argparser():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    from .registration.manual_real import add_arguments
+    add_arguments(commands.add_parser('manual', help='PLY/sample/D405 -> manual landmarks -> ICP -> optional base coordinates'))
     commands.add_parser("devices", help="List connected RealSense devices")
     capture = commands.add_parser("capture", help="Save D405 snapshots without running registration")
     capture.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
@@ -220,7 +222,11 @@ def build_argparser():
 
 
 def main(argv=None):
-    args = build_argparser().parse_args(argv)
+    parser = build_argparser()
+    args = parser.parse_args(argv)
+    if args.command == 'manual':
+        from .registration.manual_real import run_manual
+        return run_manual(args, parser)
     try:
         if args.command == "devices":
             from .acquisition.realsense import list_devices

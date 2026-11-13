@@ -162,17 +162,22 @@ class ContactPath:
         state['dq'] = state['dq'] * rate
         return state
 
-    def update(self, force_N, tangent_error_m, dt):
+    def update(self, force_N, tangent_error_m, dt, total_force_N=None):
         if not np.isfinite([force_N, tangent_error_m, dt]).all() or force_N < 0 or not 0 < dt <= .02:
             raise ValueError('Invalid feedback or sample interval')
         c, fc, s = self.config, self.force, self.segment
+        total_force_N = force_N if total_force_N is None else total_force_N
+        if not np.isfinite(total_force_N) or total_force_N < 0:
+            raise ValueError('Invalid total contact force')
         a, b = self.plan.times[[s['trace_start_waypoint'], s['trace_end_waypoint']]]
+        if getattr(self, 'experiment_stage', 'regional') != 'regional':
+            b = self.stage_stop_time
         normal = self.normal.copy()
         target, rate, acceleration, advance = 0., 0., 0., False
         stage, index = self.stage, self.index
         roll = self.roll_corrections[index]
         offset = normal * self.admittance.displacement
-        if force_N >= fc.force_stop_N:
+        if total_force_N >= fc.force_stop_N:
             self.fault_reason = 'Measured contact force reached hard limit'
         if stage == 'exit':
             u = min(self.elapsed/self.exit_duration, 1.)
@@ -204,7 +209,7 @@ class ContactPath:
             advance = u >= 1.
         elif stage in ('acquire', 'trace'):
             target = fc.target_force_N * (smoothstep(self.elapsed/fc.target_ramp_s) if stage == 'acquire' else 1.)
-            if force_N >= c.soft_force_N:
+            if total_force_N >= c.soft_force_N:
                 target = 0.  # unload before reaching the predictive/hard limits
             self.admittance.step(force_N, target, dt)
             offset = normal * self.admittance.displacement
@@ -221,7 +226,8 @@ class ContactPath:
                 duration = self.durations[index][1]
                 # Stop advancing when unloaded, overloaded, or lagging. Normal
                 # compliance remains active throughout the pause/reacquisition.
-                goal = 1. if stable else 0.
+                self.stable = self.stable + dt if stable else 0.
+                goal = 1. if self.stable >= c.stable_contact_s else 0.
                 speed, speed_dot = self.governor.step(goal, dt)
                 self.progress = min(self.progress + speed*dt, duration)
                 u = self.progress/duration

@@ -12,6 +12,17 @@ import mujoco
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+def _copy_display_state(destination, model, source):
+    if hasattr(mujoco, 'mj_copyData'):
+        mujoco.mj_copyData(destination, model, source)
+    else:
+        flags = int(mujoco.mjtState.mjSTATE_INTEGRATION)
+        state = np.empty(mujoco.mj_stateSize(model,flags))
+        mujoco.mj_getState(model,source,state,flags)
+        mujoco.mj_setState(model,destination,state,flags)
+        mujoco.mj_forward(model,destination)
+
+
 PHASES = {'transfer': '转移', 'acquire': '建立接触', 'trace': '沿线洁治', 'release': '卸力退离'}
 
 
@@ -39,6 +50,7 @@ def panel_rows(row, force, path, timestep, progress, status='运行中', peak=No
         ('指令施加后合力', value('applied_command_force_N', ' N')),
         ('牙面法向分力', value('compensated_force_normal_N', ' N')),
         ('当前目标力', value('force_target_N', ' N')),
+        ('控制量', getattr(force,'force_component','resultant')),
         ('未滤波历史峰值', '--' if peak is None else f'{peak:.3f} N'),
         ('原始 Fx / Fy / Fz [N]', ' / '.join(value(k) for k in ('Fx_N', 'Fy_N', 'Fz_N'))),
         ('原始 Tx / Ty / Tz [N m]', ' / '.join(value(k, digits=4) for k in ('Tx_Nm', 'Ty_Nm', 'Tz_Nm'))),
@@ -169,7 +181,7 @@ class ForcePanel:
     def open(self, model, data, jaw):
         from mujoco import viewer
         self.model, self.data = copy.copy(model), mujoco.MjData(model)
-        mujoco.mj_copyData(self.data, self.model, data)
+        _copy_display_state(self.data, self.model, data)
         self.viewer = viewer.launch_passive(self.model, self.data, show_left_ui=False, show_right_ui=False)
         with self.viewer.lock():
             self.viewer.cam.lookat[:] = data.xpos[model.body('dental_'+jaw).id]
@@ -181,7 +193,9 @@ class ForcePanel:
 
     def update(self, data, row, progress, status='运行中', force_draw=False):
         self.peak = max(self.peak, row['compensated_force_N'], row['applied_command_force_N'])
-        self.history.append(row)
+        self.history.append(dict(row,
+            compensated_force_N=row.get('regulated_force_N',row['compensated_force_N']),
+            applied_command_force_N=row.get('applied_regulated_force_N',row['applied_command_force_N'])))
         running = self.is_running()
         now = time.monotonic()
         if not force_draw and (not running or now-self.last_draw < .05):
@@ -192,7 +206,7 @@ class ForcePanel:
         if not running:
             return
         with self.viewer.lock():
-            mujoco.mj_copyData(self.data, self.model, data)
+            _copy_display_state(self.data, self.model, data)
         self.viewer.sync(state_only=True)
         viewport = self.viewer.viewport
         if viewport is not None and viewport.width > 0 and viewport.height > 0:

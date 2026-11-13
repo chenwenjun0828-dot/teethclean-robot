@@ -8,8 +8,9 @@ def plot(output, rows, config):
     import matplotlib.pyplot as plt
     t = np.array([r['time_s'] for r in rows])
     fig, ax = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
-    ax[0].plot(t, [r['compensated_force_N'] for r in rows], lw=.8, label='Unfiltered compensated force')
-    ax[0].plot(t, [r['applied_command_force_N'] for r in rows], lw=.5, alpha=.6, label='After command application')
+    ax[0].plot(t, [r.get('regulated_force_N',r['compensated_force_N']) for r in rows], lw=.8, label='Regulated force (normal for new runs)')
+    ax[0].plot(t, [r['compensated_force_N'] for r in rows], lw=.5, alpha=.6, label='Total force / protection')
+    ax[0].plot(t, [r.get('applied_regulated_force_N',r['applied_command_force_N']) for r in rows], lw=.5, alpha=.6, label='After command application')
     ax[0].plot(t, [r['force_target_N'] for r in rows], '--', lw=.8, label='Force target')
     ax[0].axhline(config.predictive_force_N, ls=':', c='orange', label='Predictive guard')
     ax[0].axhline(3., ls='--', c='red', label='Maximum 3 N')
@@ -20,5 +21,5 @@ def plot(output, rows, config):
         ax[2].plot(t, [r[name] for r in rows], lw=.6, label=name)
     ax[2].set_ylabel('Raw sensor (N)'); ax[2].set_xlabel('Executed simulation time (s)'); ax[2].legend()
     for axis in ax: axis.grid(alpha=.2)
-    fig.suptitle('Full retained-path attempt | collisions ON | fixed jaws | convex-hull contact model')
+    fig.suptitle('Force experiment | collisions ON | fixed jaws | see report for collision asset and material provenance')
     fig.tight_layout(); fig.savefig(output/'force_tracking.png', dpi=160); plt.close(fig)

@@ -58,7 +58,7 @@
 
 - 将 `perception/tooth_instances.py` 归入 `perception/tooth_segmentation/`。
 - 整理 `registration/`、`gingival_extraction/` 的 CLI 和模块 `__main__.py`。
-- 增加 `perception/ARCHITECTURE.md`、各子模块 README、`perception/tools/`。
+- 原计划增加 `perception/ARCHITECTURE.md`、各子模块 README、`perception/tools/`；感知根目录架构说明现已合入 [感知 README](../../../perception/README.md#模块架构)，各分类文档仍独立保留。
 - 更新 `perception/workflow.py` 返回 `PerceptionResult` 并支持 `--no-output`。
 
 **步骤：**
@@ -67,7 +67,7 @@
 2. 让三个子模块分别输出结构化报告和预览图；no-output 时改用内存对象/临时缓冲。
 3. 为输入单位、来源扫描指纹和 CrossTooth 面编号增加契约校验。
 4. 迁移并运行现有感知测试。
-5. 更新 `perception/README.md` 和 `ARCHITECTURE.md`，给出单模块命令。
+5. 在 [感知 README](../../../perception/README.md) 中统一总览、架构与单模块命令，分类细节保留在子目录文档中。
 
 ## 阶段 4：重构 control 和真机接口
 

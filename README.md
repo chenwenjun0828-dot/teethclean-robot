@@ -2,6 +2,11 @@
 
 本项目提供从仿真 RGB-D 采集、口扫配准和牙龈线处理，到器械姿态选择、轨迹规划、位置控制与恒力实验的模块化工作流。
 
+独立感知分为 `python -m perception.simulation`（仿真自动配准）与
+`python -m perception.real manual`（真实 PLY/相机采集、人工配准、可选外参转换）。
+模块职责、坐标链及 `outputs/perception/` 结果结构见 [感知说明](perception/README.md)；
+真机通过 `--extrinsics config/camera_to_base.example.json` 加载可替换的外参示例。
+
 ```text
 彩色口扫 + 仿真 RGB-D + 匹配的六区域源线/牙齿分割预测
   -> perception：提取、配准、分区曲线和牙面法向
@@ -723,6 +728,14 @@ $plan = "outputs/planning/my_front"
 
 ### 5.3 恒力控制与接触核验
 
+新的前区顺序开发入口为 `python -m control.force.stages --params config/force_outer_front.json`，
+使用牙面法向力反馈，支持 `hold`、`short`、`regional` 三阶段，并单独加载接触碰撞资产和
+`config/force_contact_material.json`。接触资产必须先通过原扫描工作带核验，否则拒绝启动。
+默认使用 `assets/contact/outer_front_local/` 的局部面片，当前组合层首次接触检查失败，
+尚未进入实际牙面恒力阶段；不会自动回退整牙凸包，也不会跳过前一阶段验收。
+具体命令、当前门槛和未标定材料参数说明见 [力控模块](control/force/README.md)。
+以下保留历史合力实验和保护停止证据；复现其合力定义时需显式使用 `--force-component resultant`。
+
 恒力是独立实验，读取已验证的完整规划目录，保留连续参考，通过法向导纳外环与位置内环调节接触合力。
 默认 `auto` 对当前区域采用一次贴合、连续沿线、一次卸力；`segments` 为逐段实验，不是六区自动执行。
 **此节是开发实验，不是安装或主流程成功检查。** 当前前区示例会按保护逻辑停止并返回退出码 2；
@@ -730,7 +743,7 @@ $plan = "outputs/planning/my_front"
 
 ```powershell
 & $py -m control.force --source $plan --out outputs/tutorial/force_front `
-  --target-force-n 1 --contact-schedule regional `
+  --force-component resultant --target-force-n 1 --contact-schedule regional `
   --trace-speed-mm-s 1 --max-duration-s 90
 ```
 
@@ -809,6 +822,35 @@ planning API 只接受 `PreparedRegion` 或其保存路径；拟合、裁剪和�
 保留机器人资产附带的许可证。`.gitignore` 已排除环境、`outputs/`、缓存和本地 `.env`；
 本页图片保存在 `docs/images/`，克隆后可直接显示。
 `.gitattributes` 保留资产原始字节，避免 Git 的换行转换破坏来源哈希校验；请保留此文件。
+
+版本管理按文件用途划分：
+
+| 内容 | 管理方式 |
+| --- | --- |
+| 源码、配置、依赖、测试、说明和文档图 | 提交 Git |
+| 原始模型、扫描、分割、人工配准样例 `assets/real_captures/dental_phantom_legacy.ply` 及来源 README | 作为运行输入提交，保留原始字节和指纹 |
+| `outputs/` 实验结果、`assets/contact/` 自动构建网格与几何检查日志 | 已忽略，保存在本地；需要分享时另行归档 |
+| 相机新采集数据、规划和力控运行目录 | 放在 `outputs/`，避免混入源码提交 |
+
+`assets/contact/` 需要用与源规划匹配的构建命令重新生成；默认配置引用的
+`outputs/planning/...` 是本地实验目录，克隆仓库后还需要先生成规划或指定自己的完整规划目录。
+使用样例的入口必须同时提交 PLY 样例，不能只提交引用它的 Python 文件。
+
+日常在自己的 `wyh` 分支提交；每次先检查实际变更（包括删除项）、暂存内容和基本入口，
+再提交并推送。登录 GitHub 与 `git config user.name/user.email` 分别用于远程认证和提交署名。
+
+```bash
+git status --short --branch
+git diff --check
+git add -A
+git diff --cached --stat
+git diff --cached --name-status
+git commit -m "描述本次修改"
+git push -u origin wyh
+```
+
+若远程出现他人新提交，先 `git fetch origin` 检查分支关系；在工作区干净且确认需要时
+再整理分支提交。日常同步不使用 `reset --hard` 或强制推送。
 
 口扫、分割及源 CAD 的公开授权和去标识情况需由数据所有者确认；根目录尚未声明项目许可证。
 提交前检查 `git status --short`、`git diff --check`，避免漏掉新增模块或资产。工作区包含资产迁移，不能只提交 README。

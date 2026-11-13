@@ -13,6 +13,7 @@ import numpy as np
 
 @dataclass(frozen=True)
 class ForceControlConfig:
+    force_component: str = 'normal'
     target_force_N: float = 1.
     force_stop_N: float = 3.
     virtual_mass_kg: float = 5.
@@ -26,10 +27,39 @@ class ForceControlConfig:
 
     def __post_init__(self):
         for name, value in asdict(self).items():
+            if name == 'force_component':
+                if value not in ('normal', 'resultant'):
+                    raise ValueError('force_component must be normal or resultant')
+                continue
             if isinstance(value, bool) or not np.isfinite(value) or value <= 0:
                 raise ValueError(name + ' must be positive and finite')
         if not self.contact_threshold_N < self.target_force_N < self.force_stop_N:
             raise ValueError('Require contact threshold < target force < force stop limit')
+
+
+def force_components(measurement, normal_world):
+    """Signed outward normal force and tangential magnitude; never use abs(Fn)."""
+    normal = np.asarray(normal_world, float)
+    if normal.shape != (3,) or not np.isfinite(normal).all() or not np.isclose(np.linalg.norm(normal), 1.):
+        raise ValueError('Expected a finite unit surface normal')
+    vector = np.asarray(measurement['external_force_world_N'], float)
+    if vector.shape != (3,) or not np.isfinite(vector).all():
+        raise ValueError('Invalid compensated contact force')
+    signed = float(vector @ normal)
+    return dict(normal_force_N=signed, tangential_force_N=float(np.linalg.norm(vector-signed*normal)),
+                resultant_force_N=float(np.linalg.norm(vector)))
+
+
+def feedback_force(measurement, normal_world, component='normal'):
+    values = force_components(measurement, normal_world)
+    if component == 'resultant':
+        return values['resultant_force_N']
+    if component != 'normal':
+        raise ValueError('Unknown force component')
+    if values['normal_force_N'] < -.05:
+        raise ValueError('Contact normal force has the wrong sign')
+    # Small negative numerical noise is recorded signed, but cannot drive attraction.
+    return max(0., values['normal_force_N'])
 
 
 class SensorContactForce:
@@ -147,9 +177,9 @@ normal correction out over its interval without jumping to the zero target.
         if not 0 < dt <= .02:
             raise ValueError('Force controller requires increasing time, step <= 20 ms')
         measurement = self.observer.read(data)
-        force = measurement['force_N']
-        if force > c.force_stop_N:
-            self.fault_reason = f'Compensated force {force:.3f} N exceeds {c.force_stop_N:g} N stop limit'
+        force = feedback_force(measurement, self.normal, c.force_component)
+        if measurement['force_N'] > c.force_stop_N:
+            self.fault_reason = f'Compensated resultant exceeds {c.force_stop_N:g} N stop limit'
         nominal = robot.fk(state['q']).copy()
         jacp, jacr = np.zeros((3, self.model.nv)), np.zeros((3, self.model.nv))
         mujoco.mj_jacSite(self.model, robot.data, jacp, jacr, robot.site)

@@ -1,5 +1,6 @@
 """Explicit, replayable boundary between perception and robot planning."""
 from dataclasses import dataclass, replace
+from copy import deepcopy
 import json
 from pathlib import Path
 import numpy as np
@@ -7,7 +8,7 @@ import numpy as np
 from .config import RegionConfig, SweepOptions, REGION_ORDER, continuous_path_kind
 from .continuous import SweepPath
 from .geometry import Geometry, Stroke
-from .io import Inputs, dump, fingerprint, validate_transform
+from .io import Inputs, dump, fingerprint, validate_transform, relative_path, manifest_path
 
 
 def resolve_regional_dataset(inputs, dataset=None):
@@ -70,7 +71,15 @@ class PreparedRegion:
     def save(self, output):
         output = Path(output).resolve()
         output.mkdir(parents=True, exist_ok=True)
-        self.geometry.save(output)
+        # Only serialized provenance is relative; live planning objects keep resolved paths.
+        report = deepcopy(self.geometry.report)
+        report['path_base'] = 'manifest'
+        for item in report.get('inputs', {}).values():
+            item['path'] = relative_path(item['path'], output)
+        metadata = report.get('source_metadata', {})
+        if metadata.get('dataset_dir'):
+            metadata['dataset_dir'] = relative_path(metadata['dataset_dir'], output)
+        replace(self.geometry, report=report).save(output)
         np.savez_compressed(output/'tooth_lookup.npz', **self.lookup)
         np.savez_compressed(output/'region_mesh.npz', vertices=self.geometry.mesh_vertices_m,
                             faces=self.geometry.mesh_faces, labels=self.geometry.face_tooth_ids)
@@ -88,8 +97,10 @@ class PreparedRegion:
                        header='x_m,y_m,z_m', comments='')
         dump(output/'perception_region.json', {
             'schema_version': 1, 'module': 'perception', 'jaw': self.inputs.jaw,
+            'path_base': 'manifest',
             'region': self.region, 'units': {'position': 'm', 'source': 'mm'},
-            'inputs': {key: str(value) for key, value in vars(self.inputs).items()},
+            'inputs': {'jaw': self.inputs.jaw, **{key: relative_path(getattr(self.inputs, key), output)
+                                                for key in ('scan', 'topology', 'prediction')}},
             'world_from_scan_m': self.world_from_scan,
             'files': {name: fingerprint(output/name)['sha256'] for name in (
                 'geometry.json', 'geometry.npz', 'tooth_planes.json', 'tooth_lookup.npz',
@@ -111,6 +122,12 @@ class PreparedRegion:
             if Path(name).name != name or fingerprint(folder/name)['sha256'] != digest:
                 raise ValueError('Prepared perception artifact changed; rerun perception')
         report = json.loads((folder/'geometry.json').read_text(encoding='utf-8'))
+        report_base = report.pop('path_base', None)
+        for item in report.get('inputs', {}).values():
+            item['path'] = str(manifest_path(item['path'], folder, report_base))
+        metadata = report.get('source_metadata', {})
+        if metadata.get('dataset_dir'):
+            metadata['dataset_dir'] = str(manifest_path(metadata['dataset_dir'], folder, report_base))
         planes = {int(k): v for k, v in json.loads((folder/'tooth_planes.json').read_text(encoding='utf-8')).items()}
         with np.load(folder/'geometry.npz', allow_pickle=False) as arrays:
             strokes = []
@@ -124,11 +141,21 @@ class PreparedRegion:
         with np.load(folder/'tooth_lookup.npz', allow_pickle=False) as arrays:
             lookup = {name: arrays[name] for name in arrays.files}
         values = record['inputs']
-        inputs = Inputs(values['jaw'], *(Path(values[k]) for k in ('scan', 'topology', 'prediction')))
+        inputs = Inputs(values['jaw'], *(manifest_path(values[k], folder, record.get('path_base'))
+                                        for k in ('scan', 'topology', 'prediction')))
         reference = SweepPath(json.loads((folder/'continuous_gingival_line.json').read_text(encoding='utf-8')))
         world = record.get('world_from_scan_m')
         return cls(inputs, geometry, lookup, reference,
                    None if world is None else validate_transform(world), folder).validate(record['region'])
+
+    @classmethod
+    def load_from_manifest(cls, path, region):
+        """Resolve an entry in a six-region index relative to that index file."""
+        path = Path(path).resolve()
+        record = json.loads(path.read_text(encoding='utf-8'))
+        if record.get('module') != 'perception' or record.get('schema_version') != 1:
+            raise ValueError('Unsupported perception regions manifest')
+        return cls.load(manifest_path(record['regions'][region], path.parent, record.get('path_base')))
 
 
 def prepare_region(inputs, cfg=None, options=None, *, world_from_scan=None, output=None,
@@ -161,6 +188,8 @@ def prepare_regions(inputs, cfg=None, options=None, *, world_from_scan=None, out
     if output is not None:
         dump(Path(output)/'perception_regions.json', {
             'schema_version': 1, 'module': 'perception', 'jaw': inputs.jaw,
+            'path_base': 'manifest',
             'region_order': list(names), 'cross_region_connections': False,
-            'regions': {name: str(result.output_dir/'perception_region.json') for name, result in results.items()}})
+            'regions': {name: relative_path(result.output_dir/'perception_region.json', output)
+                        for name, result in results.items()}})
     return results

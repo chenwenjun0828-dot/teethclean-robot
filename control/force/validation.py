@@ -11,7 +11,7 @@ from .contact_experiment import write_csv
 from planning.motion_planning.execution import load_verified
 
 
-def signal_metrics(rows, target_N, tolerance_N, contact_threshold_N):
+def signal_metrics(rows, target_N, tolerance_N, contact_threshold_N, force_component='resultant'):
     if not rows:
         raise ValueError('Force validation requires recorded samples')
     time = np.array([float(r['time_s']) for r in rows])
@@ -21,7 +21,21 @@ def signal_metrics(rows, target_N, tolerance_N, contact_threshold_N):
     if len(time) > 1 and (np.any(np.diff(time) <= 0) or not np.allclose(np.diff(time), .001, atol=1e-9, rtol=0)):
         raise ValueError('Force log must retain every 1 ms executed sample in order')
     trace = np.array([r['phase'] == 'trace' for r in rows])
-    values = forces[trace]
+    feedback = forces
+    if force_component == 'normal':
+        normals = np.array([[float(r['normal_world_'+a]) for a in 'xyz'] for r in rows])
+        if not np.allclose(np.linalg.norm(normals,axis=1),1.,atol=1e-6):
+            raise ValueError('Force log contains non-unit surface normals')
+        before = np.array([[float(r['external_force_world_'+a+'_N']) for a in 'xyz'] for r in rows])
+        after = np.array([[float(r['applied_external_force_world_'+a+'_N']) for a in 'xyz'] for r in rows])
+        if not np.allclose(np.c_[np.linalg.norm(before,axis=1),np.linalg.norm(after,axis=1)],
+                           forces,atol=1e-9,rtol=0):
+            raise ValueError('Recorded resultant forces disagree with the compensated vectors')
+        signed = np.c_[(before*normals).sum(1),(after*normals).sum(1)]
+        if not np.isfinite(signed).all() or np.any(signed < -.05):
+            raise ValueError('Invalid or reversed signed normal force in recorded samples')
+        feedback = np.maximum(signed,0.)
+    values = feedback[trace]
     return {'samples': len(rows), 'trace_samples': int(trace.sum()),
             'recorded_duration_s': float(time[-1]), 'peak_force_N': float(forces.max()),
             'trace_mean_N': float(values[:, 1].mean()) if len(values) else None,
@@ -44,7 +58,8 @@ def audit(output, *, checker=None, scan_tolerance_mm=.1):
     with (output/'trajectory_force.csv').open(encoding='utf-8-sig', newline='') as stream:
         rows = list(csv.DictReader(stream))
     fc, pc = report['force_control'], report['path_control']
-    signals = signal_metrics(rows, fc['target_force_N'], pc['force_tolerance_N'], fc['contact_threshold_N'])
+    signals = signal_metrics(rows, fc['target_force_N'], pc['force_tolerance_N'], fc['contact_threshold_N'],
+                             'normal' if report.get('regulated_quantity') == 'normal' else 'resultant')
     signal_match = all(np.isclose(signals[a], report[b], atol=1e-9, rtol=0)
         if signals[a] is not None else report[b] is None
         for a, b in [('peak_force_N', 'peak_compensated_force_N'),
@@ -55,6 +70,9 @@ def audit(output, *, checker=None, scan_tolerance_mm=.1):
                     and fingerprint(source/'planning_report.json') == report['source_planning_report'])
     geom, _, tool = next(p for p in checker.parts if model.geom(p[0]).name == 'ur_end_scaler_geom')
     selected_jaw = dict(checker.teeth)[report['jaw']]
+    require_tooth_label=report.get('contact_model_manifest') is not None
+    tooth_labels=(np.load(source/'tooth_face_ids.npy',allow_pickle=False) if require_tooth_label else None)
+    target_teeth=set(report.get('selected_teeth',[]))
 
     def replay(q, force, time, phase, predicted=False):
         pose = robot.fk(q)
@@ -63,25 +81,31 @@ def audit(output, *, checker=None, scan_tolerance_mm=.1):
         gap = float(fcl.distance(tool, selected_jaw, fcl.DistanceRequest(enable_nearest_points=True), result))*1000
         near_tip = None
         penetration = 0.
+        face_ids=[]
         if gap > 0:
             near_tip = float(np.linalg.norm(np.asarray(result.nearest_points[0])-pose[:3, 3])*1000)
+            face_ids=[int(result.b2)]
         else:
             collision = fcl.CollisionResult()
             fcl.collide(tool, selected_jaw, fcl.CollisionRequest(num_max_contacts=100, enable_contact=True), collision)
             if collision.contacts:
                 near_tip = float(max(np.linalg.norm(c.pos-pose[:3, 3])*1000 for c in collision.contacts))
                 penetration = float(max(c.penetration_depth*1000 for c in collision.contacts))
+                face_ids=[int(c.b2) for c in collision.contacts]
             else:
                 penetration = float('inf')
             # FCL's negative mesh-distance sentinel is not a penetration depth.
             gap = 0.
+        label_ok=(not require_tooth_label or bool(face_ids and all(
+            0<=i<len(tooth_labels) and int(tooth_labels[i]) in target_teeth for i in face_ids)))
         return {'time_s': float(time), 'phase': phase, 'predicted_not_executed': predicted,
                 'force_N': float(force), 'scan_mesh_tool_gap_mm': gap,
                 'max_reported_penetration_mm': penetration,
                 'contact_or_nearest_point_to_tcp_mm': near_tip,
+                'target_tooth_label_consistent': label_ok,
                 'surface_contact_consistent': bool(np.isfinite(gap) and gap <= scan_tolerance_mm
                                                     and penetration <= scan_tolerance_mm
-                                                    and near_tip is not None and near_tip <= 3.)}
+                                                    and near_tip is not None and near_tip <= 3. and label_ok)}
 
     force = np.array([max(float(r['compensated_force_N']), float(r['applied_command_force_N'])) for r in rows])
     boundaries = {i for i in range(1, len(rows)) if rows[i]['phase'] != rows[i-1]['phase']}
@@ -92,7 +116,7 @@ def audit(output, *, checker=None, scan_tolerance_mm=.1):
     positive = np.flatnonzero(force >= fc['contact_threshold_N'])
     if len(positive):
         extra.update((int(positive[0]), int(positive[-1])))
-    indices = sorted(set(range(0, len(rows), 50)) | boundaries | extra)
+    indices = sorted(set(range(0, len(rows), 10)) | boundaries | extra)
     measured = [replay(np.array([float(rows[i][n]) for n in robot.joint_names]), force[i],
                        rows[i]['time_s'], rows[i]['phase']) for i in indices]
     prediction = report.get('predicted_rejected_step')
@@ -103,7 +127,7 @@ def audit(output, *, checker=None, scan_tolerance_mm=.1):
     present = [r for r in measured if r['force_N'] >= fc['contact_threshold_N'] and r['phase'] == 'trace']
     surface_passed = bool(present and all(r['surface_contact_consistent'] for r in present))
     summary = {'simulation_only': True, 'method': 'FCL original tool / original scanned jaw triangle meshes',
-               'sample_period_s': .05, 'scan_contact_tolerance_mm': scan_tolerance_mm,
+               'sample_period_s': .01, 'scan_contact_tolerance_mm': scan_tolerance_mm,
                'extra_samples': 'phase boundaries, force extrema, first/last force-present sample',
                'input_csv': fingerprint(output/'trajectory_force.csv'),
                'audit_code': fingerprint(Path(__file__)),

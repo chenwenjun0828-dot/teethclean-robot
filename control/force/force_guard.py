@@ -1,27 +1,34 @@
 """One-step physical contact guard; independent predicted state only."""
 import mujoco
 import numpy as np
+import copy
 from .contact_experiment import contacts
 
 
 class PredictiveContactGuard:
     """Do not commit a simulated step that already predicts a rejected state."""
-    def __init__(self, model, robot, jaw, observer, force_limit):
+    def __init__(self, model, robot, jaw, observer, force_limit, allowed_teeth=None, geometry_guard=None):
         self.model, self.robot, self.jaw = model, robot, jaw
         self.observer, self.force_limit = observer, force_limit
+        self.allowed_teeth = allowed_teeth
+        self.geometry_guard = geometry_guard
         self.trial = mujoco.MjData(model)
 
-    def check(self, data, command, phase):
-        mujoco.mj_copyData(self.trial, self.model, data)
+    def check(self, data, command, phase, normal_world=None):
+        if hasattr(mujoco, 'mj_copyData'):
+            mujoco.mj_copyData(self.trial, self.model, data)
+        else:
+            # MjData.__copy__ copies the complete simulation state in MuJoCo 3.3.
+            self.trial = copy.copy(data)
         self.trial.ctrl[:] = command
         # Same pre-step refresh and integration order as the committed execution.
         mujoco.mj_forward(self.model, self.trial)
-        immediate = self._assess(phase)
+        immediate = self._assess(phase, normal_world)
         if not immediate['safe']:
             return self._result(immediate, 'command_application')
         mujoco.mj_step(self.model, self.trial)
         mujoco.mj_forward(self.model, self.trial)
-        return dict(self._result(self._assess(phase), 'next_step'),
+        return dict(self._result(self._assess(phase, normal_world), 'next_step'),
                     command_application_force_N=immediate['force_N'])
 
     def _result(self, assessment, stage):
@@ -30,18 +37,24 @@ class PredictiveContactGuard:
                     if hasattr(self.robot, 'qadr') else None,
                     tcp_world_m=self.trial.site_xpos[self.robot.site].copy())
 
-    def _assess(self, phase):
-        force = self.observer.read(self.trial)['force_N']
-        hits, bad = contacts(self.model, self.trial, self.robot, self.jaw)
+    def _assess(self, phase, normal_world=None):
+        measurement = self.observer.read(self.trial)
+        force = measurement['force_N']
+        hits, bad = contacts(self.model, self.trial, self.robot, self.jaw, self.allowed_teeth)
         normal_sum = sum(max(0., h['normal_force_N']) for h in hits)
         reason = ''
-        if bad:
+        geometry = self.geometry_guard.assess(self.trial,phase) if self.geometry_guard is not None else {'safe':True}
+        if not geometry['safe']:
+            reason = 'Predicted original/local geometry guard: '+geometry['reason']
+        elif bad:
             reason = 'Predicted unintended collision: ' + '; '.join(sorted(set(bad)))
         elif not np.isfinite(force) or force >= self.force_limit or normal_sum >= self.force_limit:
             reason = f'Predicted contact force reaches {self.force_limit:g} N guard'
         elif phase == 'transfer' and force >= .05:
             reason = 'Predicted contact during free transfer'
+        elif normal_world is not None and float(measurement['external_force_world_N']@normal_world) < -.05:
+            reason = 'Predicted normal contact force has the wrong sign'
         elif not np.isfinite(self.trial.qpos).all() or any(w.number for w in self.trial.warning):
             reason = 'Predicted invalid dynamics'
         return {'safe': not reason, 'reason': reason, 'force_N': force,
-                'contact_normal_sum_N': normal_sum, 'contacts': hits}
+                'contact_normal_sum_N': normal_sum, 'contacts': hits, 'geometry_evidence':geometry}

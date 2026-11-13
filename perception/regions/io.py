@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import hashlib
 import json
+import os
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,6 +25,21 @@ def dump(path, value):
 def fingerprint(path):
     path = Path(path).resolve()
     return {'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+
+
+def relative_path(path, folder):
+    """Persist source paths relative to the manifest, including outside-run assets."""
+    return Path(os.path.relpath(Path(path).resolve(), Path(folder).resolve())).as_posix()
+
+
+def manifest_path(value, folder, path_base=None):
+    """New manifests use their own directory; legacy absolute paths remain supported."""
+    if path_base not in (None, 'manifest'):
+        raise ValueError(f'Unsupported perception path base: {path_base}')
+    path = Path(value)
+    if path_base == 'manifest' and not path.is_absolute():
+        path = Path(folder) / path
+    return path.resolve()
 
 
 @dataclass
