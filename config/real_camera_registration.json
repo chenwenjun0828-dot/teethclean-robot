@@ -1,0 +1,37 @@
+{
+  "data_source": "realsense",
+  "camera": {
+    "serial": null,
+    "width": 640,
+    "height": 480,
+    "fps": 30,
+    "warmup_frames": 30,
+    "timeout_ms": 5000
+  },
+  "min_depth_mm": 70.0,
+  "max_depth_mm": 300.0,
+  "mask_mode": "depth_roi",
+  "roi": null,
+  "capture_minimum_points": 200,
+  "capture_outlier_neighbors": 20,
+  "capture_outlier_std_ratio": 2.0,
+  "registration_method": "automatic",
+  "automatic_registration": {
+    "voxel_mm": 0.5,
+    "minimum_points": 200,
+    "seed": 0
+  },
+  "voxel_mm": 0.7,
+  "coarse_distance_mm": 8.0,
+  "fine_distance_mm": 3.0,
+  "icp_iterations": 80,
+  "icp_direction": "camera_to_scan",
+  "min_registration_points": 200,
+  "minimum_landmarks": 6,
+  "landmark_reject_mm": 2.0,
+  "quality": {
+    "min_fitness": null,
+    "max_inlier_rmse_mm": null,
+    "max_checkpoint_p95_mm": null
+  }
+}

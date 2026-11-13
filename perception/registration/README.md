@@ -1,6 +1,14 @@
 # 牙齿点云配准算法开发
 
+真实点云的人工配准统一入口是 `python -m perception.registration.manual_real`，支持连接 D405
+采集、文件选择框或指定已有 PLY；历史 `4.ply` 已作为仓库样例导入。
+具体命令、单位/坐标系与结果格式见 [人工配准接口](MANUAL_REAL.md)。
+
 局部 RGB-D 牙齿点云与完整口扫模型的配准实现统一放在本目录。
+
+固定外置 D405 的真机采集、离线配准、检查点评价和实时化限制见
+[真机验证指南](../REAL_CAMERA.md)。入口为 `python -m perception.real`，
+与下文现有仿真入口并存；未提供相机到基座的标定时仅输出相机坐标。
 
 | 文件 | 职责 |
 | --- | --- |
@@ -107,7 +115,7 @@ registered_points = transform_points(scan_points_mm, T_camera_scan)
 
 ```powershell
 .\.venv\Scripts\python.exe -m perception.registration `
-  --scan '.\models\2026615-gch\2026615-gch病例-mandibular.ply' `
+  --scan '.\assets\source_cad\teeth\mandibular_scan.ply' `
   --camera '.\outputs\global_camera_registration\capture_002\camera_mm.ply' `
   --out '.\outputs\automatic_registration\my_run' `
   --voxel-mm 0.5 --no-view

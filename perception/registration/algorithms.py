@@ -8,9 +8,17 @@ from ..global_camera import make_cloud
 from .registration_math import robust_rigid_transform
 
 
-def load_scan_cloud(mesh_paths,voxel_mm=0.0):
+def load_scan_cloud(mesh_paths,voxel_mm=0.0,allow_point_cloud=False):
     points=[];colors=[]
     for path in mesh_paths:
+        if allow_point_cloud and Path(path).suffix.lower() != ".stl":
+            cloud = o3d.io.read_point_cloud(str(path))
+            if not cloud.has_points() or not np.isfinite(np.asarray(cloud.points)).all():
+                raise ValueError(f"Missing or invalid scan point cloud: {path}")
+            points.append(np.asarray(cloud.points))
+            colors.append(np.asarray(cloud.colors) if cloud.has_colors()
+                          else np.full((len(cloud.points), 3), .8))
+            continue
         mesh=o3d.io.read_triangle_mesh(str(path))
         if not mesh.has_vertices() or not mesh.has_triangles():
             raise ValueError(f"Missing triangle mesh: {path}")
@@ -50,7 +58,7 @@ def coarse_from_landmarks(source,target,minimum_points=6,reject_mm=2.0):
 def pick_landmark_pairs(scan_cloud,camera_cloud,minimum_points=6):
     from .landmark_picker import pick_pairs
     print("LEFT: camera cloud; RIGHT: scan. Shift+left click one LEFT point, then its RIGHT match.")
-    print("Repeat for at least six pairs. Shift+right/Backspace: undo. Finish & Register or Q: finish.")
+    print(f"Repeat for at least {minimum_points} pairs. Shift+right/Backspace: undo. Finish & Register or Q: finish.")
     return pick_pairs(scan_cloud,camera_cloud,minimum_points)
 
 

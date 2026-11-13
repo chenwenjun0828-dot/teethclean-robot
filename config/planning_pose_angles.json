@@ -1,0 +1,11 @@
+{
+  "perception_result": null,
+  "region": "outer_front",
+  "planning_mode": "simple",
+  "pose_angles_deg": [6.37, 13.26, -0.4],
+  "jaw_opening_deg": 20.0,
+  "standoff_mm": 1.8,
+  "model_scope": "mandibular",
+  "port": 8765,
+  "no_browser": false
+}

@@ -1,5 +1,5 @@
 {
-  "model": "models/scene_ur7e_dental.xml",
+  "model": "assets/simulation/scene_ur7e_dental.xml",
   "camera": "global_dental_camera",
   "width": 1280,
   "height": 720,
@@ -32,8 +32,8 @@
   "min_registration_points": 200,
   "minimum_landmarks": 6,
   "landmark_reject_mm": 2.0,
-  "mandibular_mesh": "models/2026615-gch/2026615-gch病例-mandibular.ply",
-  "maxillary_mesh": "models/2026615-gch/2026615-gch病例-maxillary.ply",
+  "mandibular_mesh": "assets/source_cad/teeth/mandibular_scan.ply",
+  "maxillary_mesh": "assets/source_cad/teeth/maxillary_scan.ply",
   "mandibular_line": "assets/perception/mandibular/gingival_line_points.csv",
   "maxillary_line": "assets/perception/maxillary/gingival_line_points.csv",
   "ideal_translation_limit_mm": 0.5,

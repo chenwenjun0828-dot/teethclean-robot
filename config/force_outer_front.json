@@ -1,0 +1,17 @@
+{
+  "source": "outputs/planning/outer_front_aligned0_20261112_201022",
+  "contact_model": "assets/contact/outer_front_local/manifest.json",
+  "contact_material": "config/force_contact_material.json",
+  "force_component": "normal",
+  "stage": "hold",
+  "target_force_n": 0.5,
+  "force_tolerance_n": 0.1,
+  "force_limit_n": 3.0,
+  "contact_schedule": "regional",
+  "stable_contact_s": 0.5,
+  "acquisition_timeout_s": 15.0,
+  "trace_speed_mm_s": 1.0,
+  "max_duration_s": 300.0,
+  "contact_margin_mm": 0.0,
+  "viewer": false
+}

@@ -1,0 +1,58 @@
+{
+  "pose_angles.png": {
+    "source": "outputs/pose_angles_restore/1440_mandibular.png",
+    "sha256": "bb3d80994666d38b60d823c32e8510f56f68955b505f84bc73003e9778aa5459"
+  },
+  "gingival_extraction.png": {
+    "source": "outputs/pregithub_20261111/pipeline_front/extraction/gingival_line_preview.png",
+    "sha256": "fc0ee7f32aef8174a698a2e0cf333cb76a3c5cd94815e726b89c4953770e7b69"
+  },
+  "registration.png": {
+    "source": "outputs/pregithub_20261111/pipeline_front/registration/registration_overlay.png",
+    "sha256": "80e4233e0dcf47134b29f3d4dd1768ba27c569b1d1689c91a9ce72a7a4137101"
+  },
+  "regional_paths.png": {
+    "source": "outputs/pregithub_20261111/regional_preview/regional_preview.png",
+    "sha256": "1658676d7d808d7777baeba0b5b29017dd4f7081bb459231fba63c85cbb80294"
+  },
+  "tool_pose.png": {
+    "source": "outputs/pregithub_20261111/pose_preview.png",
+    "sha256": "18f0fc90830e302ddd8506da25685bcc6fa92d1560fd773f55a2bb0a003a377e"
+  },
+  "trajectory.png": {
+    "source": "outputs/pregithub_20261111/pipeline_front/tracking/continuous_sweep.png",
+    "sha256": "6ad423c5dce8927c6affd2709aafb667c0f239a5219bf032919de8ad839353b8"
+  },
+  "force_control.png": {
+    "source": "outputs/pregithub_20261111/force_front/force_tracking.png",
+    "sha256": "3b6d106af39f564717ecc3766d46f92f08e6df52d82216964ea4201b4563214a"
+  },
+  "force_benchmark.png": {
+    "source": "outputs/pregithub_20261111/force_benchmark/benchmark_force.png",
+    "sha256": "90a44d6a55bd9fee6a9733e9f24ff942b57192a6611b9765b50efba84c334959"
+  },
+  "rgb.png": {
+    "source": "outputs/pregithub_20261111/pipeline_front/capture/rgb.png",
+    "sha256": "ff46e7927fcb615eaa3565b65f86d8575e31d58e43efe1ae5db6d050d580e637"
+  },
+  "depth_preview.png": {
+    "source": "outputs/pregithub_20261111/pipeline_front/capture/depth_preview.png",
+    "sha256": "a0af388b08c7d830cf6ea155bb56363db7f119fbabd9347dcc12d17544eea11a"
+  },
+  "camera_mm.ply": {
+    "source": "outputs/pregithub_20261111/pipeline_front/capture/camera_mm.ply",
+    "sha256": "61f56facba81d88806d6e21e5829f1921630e6fa68da6a6bcac214c026017a96"
+  },
+  "segmentation.ply": {
+    "source": "assets/perception/tooth_segmentation/crosstooth_mandibular/segmentation.ply",
+    "sha256": "2e4718abfe5f98f0d9e06747a0b13e7d5c7a72dd14d305d3eb1a3c847594a1a1"
+  },
+  "execution_trace.csv": {
+    "source": "outputs/pregithub_20261111/pipeline_front/tracking/execution_trace.csv",
+    "sha256": "869d9ec465a9bd5239869e259fe0b29df58bc8d29e11e96e1b68d3629de9b633"
+  },
+  "execution_report.json": {
+    "source": "outputs/pregithub_20261111/pipeline_front/tracking/execution_report.json",
+    "sha256": "91251bee162c19e045da2d4e366e6ca81193680b037ac137c9b94e6eb044b69b"
+  }
+}

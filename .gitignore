@@ -6,12 +6,15 @@ __pycache__/
 
 # Generated simulation results and local archives
 outputs/
+# Rebuildable force-contact meshes, candidate manifests and geometry diagnostics
+assets/contact/
 *.zip
 *.zip.sha256
 
 # Editor, test, and operating system caches
 .vscode/
 .idea/
+/design/session-*/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -26,4 +29,4 @@ Thumbs.db
 !.env.example
 !.env.template
 
-# Keep models/**/*.obj: these are required mesh assets, not compiler output.
+# Keep assets/**/*.obj: these are required mesh assets, not compiler output.

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>洁治器姿态</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+  <script src="./vendor/lucide.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>洁治器姿态</h1>
+    <span class="status">姿态预览</span>
+    <div class="toolbar">
+      <button id="fit" title="适配视角" aria-label="适配视角"><i data-lucide="scan"></i></button>
+      <button id="reset" title="角度归零" aria-label="角度归零"><i data-lucide="rotate-ccw"></i></button>
+      <button id="copy" title="复制三个角度" aria-label="复制三个角度"><i data-lucide="copy"></i></button>
+      <button id="save" title="导出姿态 JSON" aria-label="导出姿态 JSON"><i data-lucide="download"></i></button>
+    </div>
+  </header>
+  <main>
+    <section id="viewport" aria-label="牙模与洁治器三维视图">
+      <div id="loading" role="status">正在载入牙模…</div>
+      <div class="legend"><span><b class="x"></b>TCP X</span><span><b class="y"></b>TCP Y</span><span><b class="z"></b>TCP Z</span><span><b class="path"></b>牙龈线</span></div>
+      <div id="scene-status" role="status"></div>
+    </section>
+    <aside>
+      <div class="field"><label for="region">牙龈区域</label><select id="region"></select></div>
+      <div class="field"><label for="scope">牙模范围</label><select id="scope"><option value="tooth">局部牙冠</option><option value="mandibular">完整下颌</option><option value="both">上下颌</option></select></div>
+      <fieldset class="mode"><legend>姿态参考</legend><div role="group" aria-label="姿态参考"><button data-mode="simple" aria-pressed="true">区域固定</button><button data-mode="continuous" aria-pressed="false">局部牙面</button></div></fieldset>
+      <div id="angles"></div>
+      <div class="slider-field"><label for="offset">离面距离 <span>mm</span></label><input id="offset-number" type="number" min="0" max="30" step="0.01" aria-label="离面距离数值"><input id="offset" type="range" min="0" max="30" step="0.01" aria-label="离面距离"></div>
+      <div class="slider-field station"><label for="station">路径位置 <span>mm</span></label><input id="station-number" type="number" min="0" step="0.01" aria-label="路径位置数值"><input id="station" type="range" min="0" step="0.01" aria-label="路径位置"></div>
+      <div class="pick-row"><label><input id="pick" type="checkbox">牙面选点</label><button id="restore" title="恢复路径参考点" aria-label="恢复路径参考点"><i data-lucide="map-pin-off"></i></button></div>
+      <div class="toggles"><label><input id="tool-full" type="checkbox">完整器械</label><label><input id="axes" type="checkbox" checked>TCP 坐标轴</label><label><input id="reference" type="checkbox">固定参考轴</label></div>
+      <dl><div><dt>三角度 · °</dt><dd id="angle-values">–</dd></div><div><dt>参考点 · 口扫 mm</dt><dd id="point-values">–</dd></div><div><dt>参考来源</dt><dd id="reference-value">牙龈路径</dd></div></dl>
+      <div id="error" role="alert" hidden></div>
+    </aside>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
