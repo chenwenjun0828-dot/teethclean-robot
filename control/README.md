@@ -32,3 +32,12 @@ removed. Hardware backends remain under `control/hardware/`.
 ROS 1 UR7e saved-trajectory export, read-only checks and protected action execution
 also live under `control/hardware/`. See [hardware setup](hardware/README.md).
 Simulation readiness does not authorize hardware motion.
+
+The standalone two-file workstation delivery is in
+`control/employment/2026_11_16/`. Its developer-approved geometry replay policy
+is separate from the original project CLI, which retains full execution gates.
+The current JSON contains only joint names and timed joint points. The paired
+script uses the workstation's existing ROS 1/MoveIt environment, with defaults
+`manipulator`, `base_link` and `tool0`. No TCP reference or deployment dictionary
+is embedded. This minimal delivery omits the protected backend's TCP/force/watchdog
+monitoring; see the hardware README for startup, speed limits and start/stop commands.

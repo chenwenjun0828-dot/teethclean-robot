@@ -1,6 +1,7 @@
 """Portable ROS trajectory contract. Angles are rad, time s, TCP poses m/xyzw."""
 import hashlib
 import json
+import math
 from pathlib import Path
 
 import numpy as np
@@ -15,6 +16,15 @@ UR_MAPPING = {'ur_'+name: name for name in UR_JOINTS}
 
 def read_json(path):
     return json.loads(Path(path).read_text(encoding='utf-8'))
+
+
+def unique_json_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError('Duplicate JSON key: '+key)
+        result[key] = value
+    return result
 
 
 def write_json(path, value):
@@ -51,6 +61,16 @@ def evaluate(c, u, dt):
     return (np.polynomial.polynomial.polyval(u, c),
             np.polynomial.polynomial.polyval(u, np.arange(1, 6)[:, None]*c[1:])/dt,
             np.polynomial.polynomial.polyval(u, (np.arange(2, 6)*np.arange(1, 5))[:, None]*c[2:])/dt**2)
+
+
+def bernstein_bounds(c, derivative, dt):
+    """Conservative component bounds over a whole normalized quintic segment."""
+    p = np.polynomial.polynomial.polyder(c, derivative, axis=0)/dt**derivative
+    n = len(p)-1
+    matrix = np.array([[math.comb(k, j)/math.comb(n, j) if j <= k else 0
+                        for j in range(n+1)] for k in range(n+1)])
+    b = matrix@p
+    return b.min(axis=0), b.max(axis=0)
 
 
 def orientation_error_deg(a, b):

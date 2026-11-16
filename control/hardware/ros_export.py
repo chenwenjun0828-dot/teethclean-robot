@@ -1,5 +1,4 @@
 """Offline export and FK audit; this module alone needs the planning environment."""
-import math
 from pathlib import Path
 import shutil
 import tempfile
@@ -7,7 +6,7 @@ import tempfile
 import numpy as np
 
 from .trajectory_contract import (JointTrajectory, SCHEMA, UNITS, UR_JOINTS, UR_MAPPING,
-                                  execution_blockers, joint_order, orientation_error_deg,
+                                  bernstein_bounds, execution_blockers, joint_order, orientation_error_deg,
                                   read_json, sha256, write_json)
 
 
@@ -55,15 +54,6 @@ def sample_grid(plan, step_s, slow):
         else:
             merged.append(value)
     return np.array(merged)/1e9
-
-
-def bernstein_bounds(c, derivative, dt):
-    p = np.polynomial.polynomial.polyder(c, derivative, axis=0)/dt**derivative
-    n = len(p)-1
-    matrix = np.array([[math.comb(k, j)/math.comb(n, j) if j <= k else 0
-                        for j in range(n+1)] for k in range(n+1)])
-    b = matrix@p
-    return b.min(axis=0), b.max(axis=0)
 
 
 def interpolation_audit(curve, plan, robot, order, slow, config):

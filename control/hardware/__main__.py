@@ -15,6 +15,16 @@ def main(argv=None):
     export.add_argument('--mapping', help='JSON with mapping and joint_names; default is explicit reference mapping')
     export.add_argument('--step-s', type=float, default=.01)
     export.add_argument('--slowdown', type=float, default=1.)
+    standalone = commands.add_parser('standalone-pack', help='Offline build of independent .py + .json')
+    standalone.add_argument('--trajectory', required=True)
+    standalone.add_argument('--deployment', help='Required for the protected backend')
+    standalone.add_argument('--out', required=True)
+    standalone.add_argument('--format', choices=('portable', 'plain'), default='portable',
+                            help='plain: readable joint points with configuration/reference in the paired script')
+    standalone.add_argument('--backend', choices=('protected', 'moveit'), default='protected',
+                            help='moveit: plain JSON + small MoveIt script without embedded reference data')
+    standalone.add_argument('--allow-geometry-only', action='store_true',
+                            help='Explicitly allow unverified motion in the standalone hardware policy only')
     inspect_parser = commands.add_parser('inspect', help='Check bundle and list blockers without ROS')
     inspect_parser.add_argument('--trajectory', required=True)
     inspect_parser.add_argument('--deployment')
@@ -25,6 +35,13 @@ def main(argv=None):
         command.add_argument('--out', required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command == 'standalone-pack':
+            from .standalone_pack import pack_standalone
+            print(json.dumps(pack_standalone(args.trajectory, args.deployment, args.out,
+                                            allow_geometry_only=args.allow_geometry_only, format=args.format,
+                                            backend=args.backend),
+                             ensure_ascii=False, indent=2))
+            return 0
         if args.command == 'export':
             from .ros_export import export_plan
             mapping = read_json(args.mapping) if args.mapping else {}

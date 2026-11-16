@@ -30,7 +30,12 @@ def matrix_quaternion(matrix):
 
 def fill_goal(curve, goal, point_factory, duration_factory):
     """Message conversion is separate so it can be tested without ROS installed."""
-    goal.trajectory.joint_names = list(curve.names)
+    fill_joint_trajectory(curve, goal.trajectory, point_factory, duration_factory)
+    return goal
+
+
+def fill_joint_trajectory(curve, message, point_factory, duration_factory):
+    message.joint_names = list(curve.names)
     for p in curve.record['points']:
         point = point_factory()
         point.positions = list(p['positions'])
@@ -38,8 +43,8 @@ def fill_goal(curve, goal, point_factory, duration_factory):
         point.accelerations = list(p['accelerations'])
         nanoseconds = round(p['time_from_start']*1e9)
         point.time_from_start = duration_factory(nanoseconds//10**9, nanoseconds % 10**9)
-        goal.trajectory.points.append(point)
-    return goal
+        message.points.append(point)
+    return message
 
 
 class Ros1TrajectoryBackend:

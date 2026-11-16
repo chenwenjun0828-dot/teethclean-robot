@@ -25,6 +25,10 @@ ROS_FIELDS = ('action', 'controller', 'list_controllers_service', 'stop_service'
               'heartbeat_topic', 'base_frame', 'tip_frame', 'controller_state_topic')
 
 
+class OperatorStop(RuntimeError):
+    """A latched operator/input event, distinct from normal goal completion."""
+
+
 def log_state(stream, value):
     def sanitize(item):
         if isinstance(item, dict):
@@ -74,6 +78,11 @@ def deployment_errors(config, trajectory_path, curve, report, *, require_authori
                       ('export_report_sha256', bundle/'export_report.json')):
         if authorization.get(key) != sha256(path):
             missing.append('authorization.'+key)
+    return missing+authorization_errors(authorization)
+
+
+def authorization_errors(authorization):
+    missing = []
     if not authorization.get('approved_by'):
         missing.append('authorization.approved_by')
     try:
@@ -179,30 +188,63 @@ def stop_and_confirm(backend, config, now, sleep, initial_state=None, log=None):
 
 
 def run(trajectory_path, deployment_path, output, backend_factory, *, execute=False,
-        now=time.monotonic, sleep=time.sleep):
+        now=time.monotonic, sleep=time.sleep, source_gate=execution_blockers, before_send=None,
+        curve_transform=None, operator=None, input_adapter=None):
     """Backend construction follows offline gates. No goal or stop is sent by check."""
+    if operator is not None and not execute:
+        raise ValueError('Operator controls require execute mode')
     output = Path(output)
     if output.exists():
         raise ValueError('Run output must be a new directory')
     output.mkdir(parents=True)
-    curve, report, manifest = load_bundle(trajectory_path)
-    config = read_json(deployment_path)
-    blockers = deployment_errors(config, trajectory_path, curve, report, require_authorization=execute)
+    if input_adapter is None:
+        curve, report, manifest = load_bundle(trajectory_path)
+        config = read_json(deployment_path)
+        fingerprints = {'trajectory_sha256': sha256(trajectory_path),
+                        'deployment_sha256': sha256(deployment_path)}
+    else:
+        curve, report, config = input_adapter.load()
+        fingerprints = input_adapter.fingerprints
+
+    def validate_deployment(require_authorization=True):
+        if input_adapter is not None:
+            return input_adapter.deployment_errors(config, curve, report,
+                                                  require_authorization=require_authorization)
+        return deployment_errors(config, trajectory_path, curve, report,
+                                 require_authorization=require_authorization)
+
+    blockers = validate_deployment(execute)
     if execute:
-        blockers += execution_blockers(curve, report)
+        blockers += source_gate(curve, report)
     result = {'status': 'blocked', 'motion_sent': False, 'motion_send_attempted': False, 'blockers': blockers,
-              'trajectory_sha256': sha256(trajectory_path), 'deployment_sha256': sha256(deployment_path),
-              'mode': 'execute' if execute else 'check', 'hardware_validated': False}
+              **fingerprints,
+              'mode': 'execute' if execute else 'check', 'hardware_validated': False,
+              'source': curve.record['source'], 'source_warnings': execution_blockers(curve, report)}
+    if curve_transform is not None:
+        curve, curve_blockers, details = curve_transform(curve, config)
+        blockers.extend(curve_blockers)
+        result.update(details)
+    if operator is not None:
+        result['keyboard_control'] = True
     if blockers:
         write_json(output/'run_report.json', result)
         return result
     backend = None
     attempted = False
+
+    def check_operator():
+        if operator is not None:
+            reason = operator.stop_reason()
+            if reason is not None:
+                raise OperatorStop(reason)
+
     with (output/'states.jsonl').open('w', encoding='utf-8', buffering=1) as log:
         try:
+            check_operator()
             backend = backend_factory(config, curve)
             wait_start, stable = now(), None
             while True:
+                check_operator()
                 if execute:
                     backend.heartbeat()
                 state = backend.snapshot()
@@ -222,8 +264,32 @@ def run(trajectory_path, deployment_path, output, backend_factory, *, execute=Fa
             if not execute:
                 result.update(status='read_only_checked', source_blockers=execution_blockers(curve, report))
                 return result
+            if operator is not None:
+                wait_start = now()
+                operator.arm()
+                while True:
+                    check_operator()
+                    backend.heartbeat()
+                    state = backend.snapshot()
+                    log_state(log, dict(stage='waiting_start', wait_elapsed_s=now()-wait_start, **state))
+                    fault = state_fault(state, curve, config)
+                    if fault:
+                        raise RuntimeError(fault)
+                    check_operator()
+                    if operator.start_requested():
+                        break
+                    sleep(config['limits']['poll_s'])
+                result['operator_wait_s'] = now()-wait_start
+                missing = validate_deployment()
+                if missing:
+                    raise RuntimeError('deployment_recheck_failed: '+', '.join(missing))
             # Recheck fingerprints after preflight, immediately before the only send.
-            if (sha256(trajectory_path) != result['trajectory_sha256']
+            if input_adapter is not None:
+                missing = validate_deployment()
+                if missing:
+                    raise RuntimeError('deployment_recheck_failed: '+', '.join(missing))
+                input_adapter.unchanged()
+            elif (sha256(trajectory_path) != result['trajectory_sha256']
                     or sha256(deployment_path) != result['deployment_sha256']
                     or config['authorization']['manifest_sha256'] != sha256(Path(trajectory_path).parent/'source_manifest.json')
                     or config['authorization']['export_report_sha256'] != sha256(Path(trajectory_path).parent/'export_report.json')
@@ -235,15 +301,20 @@ def run(trajectory_path, deployment_path, output, backend_factory, *, execute=Fa
             fault = state_fault(state, curve, config)
             if fault:
                 raise RuntimeError(fault)
+            if before_send is not None:
+                before_send()
+            check_operator()
             attempted = True
             result.update(motion_sent=None, motion_send_attempted=True)
             backend.send(curve)
             result['motion_sent'] = True
             start, last_move, last_progress, stable = now(), now(), 0., None
             while True:
+                check_operator()
                 backend.heartbeat()
                 state = backend.snapshot()
                 log_state(log, dict(wall_elapsed_s=now()-start, **state))
+                check_operator()
                 feedback_pending = state.get('ages', {}).get('feedback', float('inf')) == float('inf')
                 fault = state_fault(state, curve, config, active=not feedback_pending,
                                     final=state.get('action_state') == 'succeeded')
@@ -274,6 +345,17 @@ def run(trajectory_path, deployment_path, output, backend_factory, *, execute=Fa
                 if now()-start > config['limits']['max_run_wall_s']:
                     raise RuntimeError('execution_wall_timeout')
                 sleep(config['limits']['poll_s'])
+        except OperatorStop as error:
+            reason = str(error)
+            result['operator_stop_reason'] = reason
+            if reason == 'operator_space':
+                result['status'] = 'operator_stopped' if attempted else 'cancelled_before_start'
+            else:
+                result.update(status='fault_latched', fault=reason)
+            if backend is not None and attempted:
+                result['stop'] = stop_and_confirm(backend, config, now, sleep, state, log)
+                if reason == 'operator_space' and not result['stop']['confirmed']:
+                    result.update(status='fault_latched', fault='operator_stop_not_confirmed')
         except (Exception, KeyboardInterrupt) as error:
             result.update(status='fault_latched', fault=str(error) or type(error).__name__)
             if backend is not None and attempted:
