@@ -11,7 +11,11 @@ See README.md for geometry gates, legacy resultant mode and current commands.
 of original labelled teeth and the actual tool tip. `contact_model` recomputes
 surface, ray and coverage gates before injection. `scan_guard` checks both the
 executed and privately predicted states against complete original meshes and
-rejects side/bottom contacts. `stages` and `stage_gate` enforce hold -> short ->
+accepts local contacts only within 0.1 mm of their original source patch,
+including side/bottom facets. Contact angles are recorded for diagnosis. Actual and
+predicted states use the same guard. Tool topology is checked before tooth
+patch generation; zero-volume opposed duplicate faces cannot be extruded.
+`stages` and `stage_gate` enforce hold -> short ->
 regional with matching provenance. Local acceptance never certifies an entire
 tooth body, soft tissue or a hardware experiment.
 

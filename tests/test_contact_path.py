@@ -40,8 +40,9 @@ class ContactPathTests(unittest.TestCase):
         with self.assertRaises(ValueError): ContactPath(plan, segments, normals)
 
     def test_limit_configuration_rejects_above_3_N_and_bad_normals(self):
-        with self.assertRaises(ValueError): ContactPathConfig().validate(ForceControlConfig(force_stop_N=3.1))
-        with self.assertRaises(ValueError): ContactPathConfig(predictive_force_N=3.).validate(ForceControlConfig())
+        with self.assertRaises(ValueError): ContactPathConfig().validate(ForceControlConfig(force_stop_N=5.1))
+        ContactPathConfig().validate(ForceControlConfig())
+        with self.assertRaises(ValueError): ContactPathConfig(predictive_force_N=5.1).validate(ForceControlConfig())
         with self.assertRaises(ValueError): ContactPathConfig(max_duration_s=float('nan')).validate(ForceControlConfig())
         plan, segments, normals = example()
         normals[1] = [0., 0., 0.]
@@ -85,15 +86,16 @@ class ContactPathTests(unittest.TestCase):
         for _ in range(200): path.update(1., 0., .001)
         self.assertGreater(path.source_time, paused)
 
-    def test_soft_force_guard_unloads_and_hard_limit_latches_fault(self):
+    def test_force_above_target_pulls_out_until_5_N_stop(self):
         path = ContactPath(*example())
         path.stage = 'trace'
         path.admittance.displacement = 0.
         for _ in range(100): state = path.update(2.1, 0., .001)
-        self.assertEqual(state['force_target_N'], 0.)
+        self.assertEqual(state['force_target_N'], 1.)
         self.assertGreater(float(state['offset_world_m']@path.normal), 0.)
+        self.assertFalse(path.fault_reason)
         self.assertEqual(state['path_rate'], 0.)
-        self.assertIn('hard limit', path.update(3., 0., .001)['fault_reason'])
+        self.assertIn('hard limit', path.update(5., 0., .001)['fault_reason'])
 
     def test_release_must_separate_before_changing_tooth(self):
         path = ContactPath(*example())

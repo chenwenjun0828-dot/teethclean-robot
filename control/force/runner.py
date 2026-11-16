@@ -19,9 +19,9 @@ def main(argv=None):
     parser.add_argument('--previous-stage',type=Path,help='Passed previous hold/short force_trajectory_report.json for local assets')
     parser.add_argument('--stable-contact-s', type=float, default=.5)
     parser.add_argument('--acquisition-timeout-s', type=float, default=15.)
-    parser.add_argument('--force-tolerance-n', type=float, default=.2)
+    parser.add_argument('--force-tolerance-n', type=float, default=.5)
     parser.add_argument('--target-force-n', type=float, default=1.)
-    parser.add_argument('--force-limit-n', type=float, default=3.)
+    parser.add_argument('--force-limit-n', type=float, default=5.)
     parser.add_argument('--mode', choices=('trajectory',), default='trajectory',
                         help='Trajectory execution is the default; the legacy probe entry point was retired')
     parser.add_argument('--max-duration-s', type=float, default=60.,

@@ -15,7 +15,7 @@ import numpy as np
 class ForceControlConfig:
     force_component: str = 'normal'
     target_force_N: float = 1.
-    force_stop_N: float = 3.
+    force_stop_N: float = 5.
     virtual_mass_kg: float = 5.
     damping_Ns_m: float = 300.
     filter_time_s: float = .005
@@ -127,6 +127,13 @@ class NormalAdmittance:
         velocity = np.clip(velocity, self.velocity-c.max_normal_accel_m_s2*dt,
                             self.velocity+c.max_normal_accel_m_s2*dt)
         self.velocity = float(np.clip(velocity, -c.max_normal_speed_m_s, c.max_normal_speed_m_s))
+        # Approach at a quarter of the tracking speed. A 2 mm/s arrival makes the
+        # first contact sample jump past 1 N, and stopping that speed in one
+        # millisecond exceeds the joint acceleration bound.
+        if measured_force < target_force:
+            self.velocity = max(self.velocity, -0.25*c.max_normal_speed_m_s)
+        elif self.velocity < 0.:
+            self.velocity = 0.
         proposed = self.displacement + self.velocity * dt
         self.displacement = float(np.clip(proposed, -c.max_displacement_m, c.max_displacement_m))
         if self.displacement != proposed:

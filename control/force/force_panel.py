@@ -28,12 +28,20 @@ PHASES = {'transfer': '转移', 'acquire': '建立接触', 'trace': '沿线洁�
 
 @lru_cache(maxsize=4)
 def _font(size):
-    path = next((str(p) for p in (Path('C:/Windows/Fonts/msyh.ttc'),
-        Path('C:/Windows/Fonts/simhei.ttf')) if p.exists()), None)
-    return ImageFont.truetype(path, size) if path else ImageFont.load_default(size=size)
+    # Pillow's default font does not include Chinese glyphs on Linux.
+    candidates = (
+        ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', 2),  # Simplified Chinese
+        ('/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf', 0),
+        ('C:/Windows/Fonts/msyh.ttc', 0),
+        ('C:/Windows/Fonts/simhei.ttf', 0),
+    )
+    for path, index in candidates:
+        if Path(path).exists():
+            return ImageFont.truetype(path, size, index=index)
+    return ImageFont.load_default(size=size)
 
 
-def panel_rows(row, force, path, timestep, progress, status='运行中', peak=None):
+def panel_rows(row, force, path, timestep, progress, status='运行中', peak=None, stage='regional'):
     """Prepare display values without modifying the controller or its log row."""
     def value(key, unit='', digits=3):
         v = row.get(key)
@@ -42,8 +50,9 @@ def panel_rows(row, force, path, timestep, progress, status='运行中', peak=No
     return [
         ('运行', None),
         ('状态', status),
-        ('阶段 / 牙 ID', f"{PHASES.get(phase, phase or '--')} / {row.get('tooth', '--')}"),
-        ('路径段 / 进度', f"{int(row.get('segment', -1))+1} / {100*progress:.1f}%"),
+        ('阶段 / 牙 ID', f"{('单点保持' if stage == 'hold' and phase == 'trace' else PHASES.get(phase, phase or '--'))} / {row.get('tooth', '--')}"),
+        ('保持进度' if stage == 'hold' else '路径段 / 进度',
+         f'{100*progress:.1f}%' if stage == 'hold' else f"{int(row.get('segment', -1))+1} / {100*progress:.1f}%"),
         ('仿真时间', value('time_s', ' s')),
         ('力传感器', None),
         ('补偿后接触合力', value('compensated_force_N', ' N')),
@@ -132,7 +141,8 @@ def render_panel(rows, width=520, height=980, alarm=False, history=None, window_
     draw.text((20, 51), f'碰撞开启 · 牙模固定 · 最近 {window_s:g} 秒 · 参数只读', font=_font(15), fill='#93aeca')
     line(79, '状态', values.get('状态', '--'))
     line(107, values.get('阶段 / 牙 ID', '--'), '时间 '+values.get('仿真时间', '--'))
-    line(135, '路径段 / 进度', values.get('路径段 / 进度', '--'))
+    progress_label = '保持进度' if '保持进度' in values else '路径段 / 进度'
+    line(135, progress_label, values.get(progress_label, '--'))
     for i, (label, key) in enumerate([('接触合力', '补偿后接触合力'), ('当前目标', '当前目标力'), ('全程峰值', '未滤波历史峰值')]):
         x = 16+i*184
         draw.rounded_rectangle((x, 169, x+176, 237), radius=8, fill='#20334a')
@@ -170,23 +180,33 @@ class ForcePanel:
         from .force_history import ForceHistory
         self.history = ForceHistory()
 
-    def set_config(self, force, path, timestep):
+    def set_config(self, force, path, timestep, stage='regional'):
         self.force, self.path, self.timestep = force, path, timestep
+        self.experiment_stage = stage
         from .force_history import ForceHistory
         self.history = ForceHistory(sample_rate_hz=1/timestep)
         self.thresholds = [(path.soft_force_N, f'{path.soft_force_N:g} N', '#ccb55f'),
                            (path.predictive_force_N, f'{path.predictive_force_N:g} N', '#ffad62'),
                            (force.force_stop_N, f'{force.force_stop_N:g} N', '#ff757c')]
 
-    def open(self, model, data, jaw):
+    def open(self, model, data, jaw, focus=None):
         from mujoco import viewer
         self.model, self.data = copy.copy(model), mujoco.MjData(model)
         _copy_display_state(self.data, self.model, data)
         self.viewer = viewer.launch_passive(self.model, self.data, show_left_ui=False, show_right_ui=False)
         with self.viewer.lock():
-            self.viewer.cam.lookat[:] = data.xpos[model.body('dental_'+jaw).id]
-            self.viewer.cam.distance = .45
-            self.viewer.cam.azimuth, self.viewer.cam.elevation = 100, -20
+            if focus is None:
+                self.viewer.cam.lookat[:] = data.xpos[model.body('dental_'+jaw).id]
+                self.viewer.cam.distance = .28
+                self.viewer.cam.azimuth, self.viewer.cam.elevation = 100, -20
+            else:
+                root = data.body('dental_teeth_root')
+                direction = root.xmat.reshape(3, 3)[:, 2]
+                self.viewer.cam.lookat[:] = focus
+                self.viewer.cam.distance = .12
+                self.viewer.cam.azimuth = np.degrees(np.arctan2(direction[1], direction[0])) + 180.
+                self.viewer.cam.elevation = -np.degrees(np.arcsin(np.clip(direction[2], -1., 1.)))
+                self.viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT] = True
 
     def is_running(self):
         return self.viewer is not None and self.viewer.is_running()
@@ -202,7 +222,12 @@ class ForcePanel:
             return
         self.last_draw = now
         self.alarm = max(row['compensated_force_N'], row['applied_command_force_N']) >= self.path.soft_force_N or status.startswith('已停止')
-        self.rows = panel_rows(row, self.force, self.path, self.timestep, progress, status, self.peak)
+        if self.experiment_stage == 'hold' and row.get('phase') == 'trace':
+            progress = min(1., max(0., (row['time_s']-self.hold_start_time)/5.)) if hasattr(self, 'hold_start_time') else 0.
+            if not hasattr(self, 'hold_start_time'):
+                self.hold_start_time = row['time_s']
+        self.rows = panel_rows(row, self.force, self.path, self.timestep, progress, status, self.peak,
+                               self.experiment_stage)
         if not running:
             return
         with self.viewer.lock():
@@ -225,7 +250,7 @@ class ForcePanel:
                         '用户关闭窗口' if 'viewer closed' in reason else
                         '碰撞保护' if 'collision' in reason.lower() else
                         '力保护' if 'force' in reason.lower() else '保护触发')
-        status = ('路径完成 / 验收通过' if report['force_control_passed'] else '路径完成 / 力控未达标') if report['execution_completed'] else '已停止 / '+short_reason
+        status = ('路径完成 / 验收通过' if report['stage_passed'] else '路径完成 / 力控未达标') if report['execution_completed'] else '已停止 / '+short_reason
         self.update(data, row, report['retained_path_progress_fraction'], status, force_draw=True)
         if self.rows:
             Image.fromarray(render_panel(self.rows, 580, 1000, self.alarm, self.history.arrays(), self.history.window_s, self.thresholds)).save(output/'force_panel.png')

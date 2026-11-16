@@ -6,14 +6,15 @@ from .local_surface import adjacency
 
 def validate_evidence(info, z):
     recipe = info['recipe']
-    expected = dict(normal_correction_mm=3.,tool_radius_mm=3.,boundary_margin_mm=1.,thickness_mm=.5,
+    expected = dict(normal_correction_mm=3.,tool_radius_mm=3.,boundary_margin_mm=1.,thickness_mm=.05,
                     initial_patch_scale_mm=1.,minimum_patch_scale_mm=.25,patch_tolerance_mm=.05,final_tolerance_mm=.1)
     if any(recipe[k] != v for k,v in expected.items()): raise ValueError('Local contact recipe changed')
     radius = sum(recipe[k] for k in ('nominal_standoff_mm','normal_correction_mm','tool_radius_mm','boundary_margin_mm'))
     tri = z['vertices'][z['faces']]; centers = tri.mean(1)
     tr = np.linalg.norm(tri-centers[:,None],axis=2).max(1)
     distance = cKDTree(z['work_points']).query(centers)[0]
-    required = set(np.flatnonzero((distance-tr <= radius) & (z['labels']>0)))
+    target = np.isin(z['labels'],info['selected_teeth']) if info.get('asset_scope') in ('first_tooth_hold','first_tooth_line') else z['labels']>0
+    required = set(np.flatnonzero((distance-tr <= radius) & target))
     if required != set(z['band_ids'].tolist()): raise ValueError('Work-band boundary is not covered')
     qa=set(np.flatnonzero((distance<=radius-1.-tr)&np.isin(z['labels'],info['selected_teeth'])))
     if not qa or qa!=set(z['qa_ids'].tolist()): raise ValueError('Operational ray coverage is incomplete')
@@ -58,7 +59,17 @@ def validate_evidence_sources(info,z):
     spec=mujoco.MjSpec.from_file(str(DENTAL_MODEL_PATH));spec.compile()
     geom=spec.geom('ur_end_scaler_geom'); rotation=np.empty(9);mujoco.mju_quat2Mat(rotation,geom.quat)
     vertices=np.asarray(tool.vertices)@rotation.reshape(3,3).T+np.asarray(geom.pos)*1000
-    if (not np.array_equal(np.asarray(tool.triangles),z['tool_faces'])
+    raw_faces=np.asarray(tool.triangles)
+    if info.get('asset_scope') in ('first_tooth_hold','first_tooth_line'):
+        from .local_surface import filtered_tool_faces
+        expected, removed, deviation=filtered_tool_faces(vertices,raw_faces,z['tip'])
+        if (not np.array_equal(raw_faces,z['tool_original_faces'])
+                or not np.array_equal(np.flatnonzero(~np.isin(np.arange(len(raw_faces)),removed)),z['tool_original_face_ids'])
+                or info.get('tool_filter',{}).get('removed_original_face_ids')!=removed.tolist()
+                or not np.isclose(info['tool_filter']['maximum_source_deviation_mm'],deviation,atol=1e-6)):
+            raise ValueError('Filtered tool provenance changed')
+    else: expected=raw_faces
+    if (not np.array_equal(expected,z['tool_faces'])
             or not np.allclose(vertices,z['tool_vertices'],rtol=0,atol=1e-9)
             or not np.allclose(np.asarray(spec.site('ur_scaler_tcp').pos)*1000,z['tip'],rtol=0,atol=1e-9)):
         raise ValueError('Saved contact evidence disagrees with actual tool geometry/transform')

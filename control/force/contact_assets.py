@@ -150,11 +150,13 @@ def first_hit_error(original, pieces, samples, band_radius_mm=5.):
                 inward_maximum_error_mm=(float(errors[1].max()) if np.isfinite(errors[1]).all() else None))
 
 
-def build(source, output, tolerance_mm=.1, threshold_mm=.05, max_mesh_seconds=120., method='local_surface'):
+def build(source, output, tolerance_mm=.1, threshold_mm=.05, max_mesh_seconds=120., method='local_surface', scope='regional', hold_face_id=None, line_candidate=None):
     """Decompose single teeth and the real tool; never modify the source plan."""
     if method == 'local_surface':
         from .local_assets import build as local_build
-        return local_build(source, output)
+        return local_build(source, output, scope=scope, hold_face_id=hold_face_id, line_candidate=line_candidate)
+    if scope != 'regional': raise ValueError('Single-tooth hold scope requires local_surface')
+    if hold_face_id is not None: raise ValueError('Hold face requires local_surface')
     if method != 'coacd': raise ValueError('Unknown contact asset method')
     import mujoco
     from planning.motion_planning.execution import load_verified
@@ -254,10 +256,14 @@ def main(argv=None):
     parser.add_argument('--out',type=Path,required=True)
     parser.add_argument('--threshold-mm',type=float,default=.05)
     parser.add_argument('--method',choices=('local_surface','coacd'),default='local_surface')
+    parser.add_argument('--scope',choices=('regional','first_tooth_hold','first_tooth_line'),default='regional')
+    parser.add_argument('--hold-face-id',type=int,help='Original scan triangle on first tooth for a new hold point')
+    parser.add_argument('--line-candidate',type=Path,help='Saved original-face candidate for first_tooth_line')
     parser.add_argument('--max-mesh-seconds',type=float,default=120.)
     args=parser.parse_args(argv)
     try:
-        report=build(args.source,args.out,threshold_mm=args.threshold_mm,max_mesh_seconds=args.max_mesh_seconds,method=args.method)
+        report=build(args.source,args.out,threshold_mm=args.threshold_mm,max_mesh_seconds=args.max_mesh_seconds,method=args.method,
+                     scope=args.scope,hold_face_id=args.hold_face_id,line_candidate=args.line_candidate)
         print('Contact asset status:',report['status'])
         return 0 if report['status']=='verified' else 2
     except (ValueError,RuntimeError,OSError) as error:

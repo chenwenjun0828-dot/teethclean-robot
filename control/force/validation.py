@@ -47,6 +47,54 @@ def signal_metrics(rows, target_N, tolerance_N, contact_threshold_N, force_compo
             if len(values) else 0.}
 
 
+LINE_BAND_MM = 1.05
+MIN_TRACE_ARC_MM = 1.5
+
+
+def line_band_values(world_line, contacts, tips):
+    """Apply the contact band and actual motion requirement to recorded positions."""
+    from scipy.spatial import cKDTree
+    distances = cKDTree(world_line).query(contacts)[0]*1000
+    arc = float(np.linalg.norm(np.diff(tips,axis=0),axis=1).sum()*1000)
+    return dict(contact_samples=len(contacts), max_contact_to_gingival_line_mm=float(distances.max()),
+                line_band_mm=LINE_BAND_MM, min_trace_arc_mm=MIN_TRACE_ARC_MM,
+                contact_samples_outside_1mm=int(np.sum(distances > LINE_BAND_MM)),
+                actual_trace_tcp_arc_mm=arc,
+                actual_trace_tcp_endpoint_displacement_mm=float(np.linalg.norm(tips[-1]-tips[0])*1000),
+                passed=bool(np.all(distances <= LINE_BAND_MM) and arc >= MIN_TRACE_ARC_MM))
+
+
+def line_band_metrics(output, source, rows):
+    """Measure recorded tooth contacts against the original extracted gingival line."""
+    from planning.motion_planning.contract import load_sweep_reference
+
+    saved = json.loads((source/'planning_report.json').read_text(encoding='utf-8'))
+    reference = load_sweep_reference(source, saved)
+    parameters = np.linspace(0., reference.parts[0]['end'], 10001)
+    scan_line = np.array([reference.evaluate(float(s)) for s in parameters])
+    transform = np.asarray(saved['world_from_scan_m'], float)
+    world_line = scan_line@transform[:3, :3].T+transform[:3, 3]
+    trace = [row for row in rows if row['phase'] == 'trace']
+    if not trace:
+        return dict(passed=False, reason='No trace samples were recorded')
+    first, last = float(trace[0]['time_s']), float(trace[-1]['time_s'])
+    with (output/'trajectory_contacts.csv').open(encoding='utf-8-sig', newline='') as stream:
+        hits = [hit for hit in csv.DictReader(stream)
+                if first <= float(hit['time_s']) <= last and hit['allowed'] == 'True'
+                and float(hit['normal_force_N']) > 0.]
+    if not hits:
+        raise ValueError('Line audit requires recorded target tooth contacts')
+    contacts = np.array([[float(hit[k]) for k in ('x_m','y_m','z_m')] for hit in hits])
+    tips = np.array([[float(row[k]) for k in ('actual_tcp_x_m','actual_tcp_y_m','actual_tcp_z_m')]
+                     for row in trace])
+    if not np.isfinite(contacts).all() or not np.isfinite(tips).all():
+        raise ValueError('Line audit contains nonfinite contact or TCP positions')
+    return dict(original_gingival_line_file=fingerprint(source/'sweep_reference.json'),
+                contacts_file=fingerprint(output/'trajectory_contacts.csv'),
+                sample_spacing_mm=float(np.linalg.norm(np.diff(world_line,axis=0),axis=1).max()*1000),
+                **line_band_values(world_line, contacts, tips))
+
+
 def audit(output, *, checker=None, scan_tolerance_mm=.1):
     """Replay actual joints against both original triangle meshes, without hulls."""
     output = Path(output)
@@ -126,6 +174,9 @@ def audit(output, *, checker=None, scan_tolerance_mm=.1):
                            prediction['time_s'], 'rejected_prediction', True)
     present = [r for r in measured if r['force_N'] >= fc['contact_threshold_N'] and r['phase'] == 'trace']
     surface_passed = bool(present and all(r['surface_contact_consistent'] for r in present))
+    line_band = (line_band_metrics(output, source, rows) if
+                 report.get('contact_model_manifest',{}).get('asset_scope') == 'first_tooth_line'
+                 and report.get('experiment_stage') == 'short' else None)
     summary = {'simulation_only': True, 'method': 'FCL original tool / original scanned jaw triangle meshes',
                'sample_period_s': .01, 'scan_contact_tolerance_mm': scan_tolerance_mm,
                'extra_samples': 'phase boundaries, force extrema, first/last force-present sample',
@@ -137,9 +188,11 @@ def audit(output, *, checker=None, scan_tolerance_mm=.1):
                'force_present_trace_scan_gap_range_mm': [min(r['scan_mesh_tool_gap_mm'] for r in present),
                                                         max(r['scan_mesh_tool_gap_mm'] for r in present)] if present else None,
                'scanned_surface_contact_passed': surface_passed,
+               'line_band': line_band,
                'rejected_prediction': predicted,
                'contact_trajectory_passed': bool(report['force_tracking_passed'] and surface_passed
-                                                  and signal_match and inputs_match),
+                                                  and signal_match and inputs_match
+                                                  and (line_band is None or line_band['passed'])),
                'clinical_or_hardware_validation': False}
     summary['reason'] = ('No force-controlled trace samples' if not present else
                          'Force-producing convex-hull contacts do not all match localized scanned-surface contact'
@@ -147,3 +200,38 @@ def audit(output, *, checker=None, scan_tolerance_mm=.1):
     dump(output/'contact_validation.json', summary)
     write_csv(output/'scan_contact_audit.csv', measured+([predicted] if predicted else []))
     return summary
+
+
+def reaccept(output):
+    """Recompute acceptance from an existing run; does not re-simulate."""
+    output = Path(output).resolve()
+    report = json.loads((output/'force_trajectory_report.json').read_text(encoding='utf-8'))
+    independent = audit(output)
+    report.update(signal_audit_passed=bool(independent['signals_match_report'] and independent['source_fingerprints_match']),
+                  scanned_surface_contact_passed=independent['scanned_surface_contact_passed'],
+                  contact_trajectory_passed=independent['contact_trajectory_passed'],
+                  force_control_passed=independent['contact_trajectory_passed'],
+                  contact_validation_file=fingerprint(output/'contact_validation.json'))
+    report['stage_passed'] = bool(report['force_control_passed'] and report.get('contact_model_manifest') is not None)
+    report['contact_model_gate_passed'] = report.get('contact_model_manifest') is not None
+    report['regional_force_control_passed'] = bool(report.get('experiment_stage') == 'regional' and report['stage_passed'])
+    report['force_control_passed'] = report['regional_force_control_passed']
+    dump(output/'force_trajectory_report.json', report)
+    return report
+
+
+def main(argv=None):
+    import argparse
+    parser = argparse.ArgumentParser(description='Re-audit a saved force run without re-simulating')
+    parser.add_argument('--run', type=Path, required=True, help='Existing force output directory')
+    args = parser.parse_args(argv)
+    report = reaccept(args.run)
+    print(json.dumps({key: report.get(key) for key in
+                      ('status', 'stage_passed', 'force_tracking_passed', 'contact_trajectory_passed',
+                       'scanned_surface_contact_passed', 'signal_audit_passed', 'stop_reason')},
+                     ensure_ascii=False))
+    return 0 if report.get('stage_passed') else 2
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

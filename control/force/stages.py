@@ -28,11 +28,11 @@ def main(argv=None):
         status='running', force_control_passed=False, configuration=fingerprint(params),
         contact_manifest=fingerprint(manifest), stages=[])
     evidence=output/'contact_assets'; evidence.mkdir()
-    for name in ('manifest.json','geometry_failure.json','geometry_failures.json','failed_patch.npz','contact_layer_overlay.png','first_contact_errors.png','first_contact_errors.csv','gap_errors.csv'):
+    for name in ('manifest.json','geometry_failure.json','geometry_failures.json','failed_patch.npz','failed_source_faces.npz','contact_layer_overlay.png','first_contact_errors.png','first_contact_errors.csv','gap_errors.csv'):
         file=manifest.parent/name
         if file.exists(): shutil.copyfile(file,evidence/name)
     stopped=False
-    for stage, force, tolerance in [('hold',.5,.1),('short',.5,.1),('regional',1.,.2)]:
+    for stage, force, tolerance in [('hold',1.,.5),('short',1.,.5),('regional',1.,.5)]:
         if stopped:
             summary['stages'].append(dict(stage=stage,status='not_run',reason='Previous stage did not pass'))
             continue

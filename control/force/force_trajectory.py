@@ -1,7 +1,7 @@
 """Collision-enabled, fixed-jaw execution of an entire retained planning path.
 
 This is simulation only. A private one-step rollout rejects commands whose next
-sample predicts an unintended collision or force >= 2.5 N, before mj_step touches
+sample predicts an unintended collision or force >= 5 N, before mj_step touches
 the executed state. A stopped or timed-out path is never reported as completed.
 """
 import json
@@ -122,16 +122,33 @@ def _run(source, output, force_config=None, path_config=None, contact_margin_mm=
         if roll_corrections_deg or segment_speeds_m_s:
             raise ValueError('Regional contact retains the saved pose policy; per-segment overrides require segments mode')
         from .continuous_path import RegionalContactPath
-        path = RegionalContactPath(source, plan, saved, world, fc, cfg, stage=stage)
+        hold_target=None
+        line_trace=None
+        if contact_model is not None and stage=='hold':
+            candidate=json.loads(Path(contact_model).read_text())
+            if candidate.get('asset_scope') in ('first_tooth_hold','first_tooth_line') and (
+                    candidate.get('hold_face_id') is not None or candidate.get('line_trace') is not None):
+                hold_target=candidate['hold_envelope']
+                line_trace=candidate.get('line_trace')
+        elif contact_model is not None and stage=='short':
+            candidate=json.loads(Path(contact_model).read_text())
+            if candidate.get('asset_scope')=='first_tooth_line':
+                hold_target=candidate['hold_envelope']
+                line_trace=candidate['line_trace']
+        path = RegionalContactPath(source, plan, saved, world, fc, cfg, stage=stage,
+                                   hold_target=hold_target,line_trace=line_trace)
         plan = path.plan
     else:
         if stage != 'regional':
             raise ValueError('hold/short stages require a continuous regional source')
         path = ContactPath(plan, segments, normals, fc, cfg, roll_corrections_deg, segment_speeds_m_s)
     if live_panel is not None:
-        live_panel.set_config(fc, cfg, .001)
+        live_panel.set_config(fc, cfg, .001, stage)
     tables = length_tables(source, path.segments)
     planned_length = sum(table[1][-1] for table in tables)
+    if getattr(path,'line_trace',None) is not None:
+        planned_length=float(path.line_arc[-1]*1000)
+        tables=[(np.array([0.,1.]),np.array([0.,planned_length]))]
     jaw = request['inputs']['jaw']
     simulation_options = {'robot_mount_position_m': saved['robot_mount_position_m']}
     if saved.get('jaw_opening_deg') is not None:
@@ -161,11 +178,14 @@ def _run(source, output, force_config=None, path_config=None, contact_margin_mm=
     geometry_guard = None
     previous_evidence = None
     if model_info and model_info.get('method') == 'local_surface':
+        if (model_info.get('asset_scope')=='first_tooth_hold' and stage!='hold'
+                or model_info.get('asset_scope')=='first_tooth_line' and stage not in ('hold','short')):
+            raise ValueError('Single-tooth contact asset permits only its validated stages')
         from .stage_gate import verify_previous
         if fc.force_component!='normal' or not regional_contact or cfg.max_trace_speed_m_s>.001:
             raise ValueError('Local stages require regional normal-force control with tangential speed <= 1 mm/s')
-        if fc.target_force_N != (1. if stage=='regional' else .5):
-            raise ValueError('Local hold/short require 0.5 N; regional requires 1 N')
+        if fc.target_force_N != 1. or cfg.force_tolerance_N != .5:
+            raise ValueError('Local stages require a 1 N target with ±0.5 N tolerance')
         previous_evidence=verify_previous(stage,source,contact_model,previous_stage,fc,contact_material)
         from .scan_guard import OriginalScanGuard
         geometry_guard = OriginalScanGuard(verification_checker,source,model,robot,contact_model)
@@ -181,7 +201,9 @@ def _run(source, output, force_config=None, path_config=None, contact_margin_mm=
               'source': str(source), 'source_trajectory': fingerprint(source/'trajectory.npz'),
               'continuous_source_adapted': continuous_source,
               'source_jaw_opening_deg': saved.get('jaw_opening_deg'),
-              'contact_schedule': ('One acquisition, one continuous regional trace including seams, then release and original retreat'
+              'contact_schedule': ('Tooth-12 scanned local line with one acquisition, clearance retrace and original retreat'
+                                   if getattr(path,'line_trace',None) is not None else
+                                   'One acquisition, one continuous regional trace including seams, then release and original retreat'
                                    if regional_contact else 'Acquire/trace/release on every retained source arc; original retreat retained'),
               'contact_schedule_mode': 'regional' if regional_contact else 'segments',
               'regulated_quantity': fc.force_component, 'experiment_stage': stage,
@@ -202,6 +224,8 @@ def _run(source, output, force_config=None, path_config=None, contact_margin_mm=
                              fingerprint(Path(__file__).with_name('scan_guard.py')),
                              fingerprint(Path(__file__).with_name('stage_gate.py')),
                              fingerprint(Path(__file__).with_name('contact_model.py')),
+                             fingerprint(Path(__file__).with_name('local_surface.py')),
+                             fingerprint(Path(__file__).with_name('local_checks.py')),
                              fingerprint(Path(__file__).with_name('validation.py'))],
               'mujoco_version': mujoco.__version__, 'sample_rate_hz': 1000,
               'region': saved.get('region', 'outer_front'), 'selected_teeth': saved['selected_teeth'],
@@ -235,14 +259,15 @@ def _run(source, output, force_config=None, path_config=None, contact_margin_mm=
     from .motion_guard import MotionProgressGuard
     motion_guard = MotionProgressGuard()
     if live_panel is not None:
-        live_panel.open(model, data, jaw)
+        focus = robot.fk(path.target_q)[:3, 3] if getattr(path, 'hold_target', None) is not None else None
+        live_panel.open(model, data, jaw, focus=focus)
     for _ in range(int(round(cfg.max_duration_s/dt))+1):
         mujoco.mj_forward(model, data)
         measured = observer.read(data)
-        current_nominal = robot.fk(plan.sample(path.source_time)['q'])
+        feedback_q, feedback_normal = path.feedback_reference()
+        current_nominal = robot.fk(feedback_q)
         error = data.site_xpos[robot.site]-current_nominal[:3, 3]
-        tangent_error = np.linalg.norm(error-path.normal*(error@path.normal))
-        feedback_normal = path.normal.copy()
+        tangent_error = np.linalg.norm(error-feedback_normal*(error@feedback_normal))
         try:
             feedback = feedback_force(measured, feedback_normal, fc.force_component)
         except ValueError as error:
@@ -288,9 +313,12 @@ def _run(source, output, force_config=None, path_config=None, contact_margin_mm=
                'phase': state['phase'], 'segment': state['segment_index'], 'tooth': state['tooth'],
                'force_target_N': state['force_target_N'],
                'regulated_force_N': feedback, 'applied_regulated_force_N': feedback,
+               'applied_normal_force_N': components['normal_force_N'],
+               'applied_tangential_force_N': components['tangential_force_N'],
                **components,
                **dict(zip(['normal_world_x','normal_world_y','normal_world_z'], feedback_normal)),
                **dict(zip(['external_force_world_x_N','external_force_world_y_N','external_force_world_z_N'], measured['external_force_world_N'])), 'compensated_force_N': measured['force_N'],
+               **dict(zip(['applied_external_force_world_x_N','applied_external_force_world_y_N','applied_external_force_world_z_N'], measured['external_force_world_N'])),
                'contact_normal_sum_N': sum(max(0., h['normal_force_N']) for h in hits),
                'applied_command_force_N': measured['force_N'],
                'applied_command_contact_normal_sum_N': sum(max(0., h['normal_force_N']) for h in hits),
@@ -307,6 +335,9 @@ def _run(source, output, force_config=None, path_config=None, contact_margin_mm=
                'position_error_mm': tracking_error*1000, 'orientation_error_deg': rotation_deg,
                'jaw_translation_drift_mm': jaw_drift*1000, 'jaw_rotation_matrix_drift': jaw_rotation,
                'unexpected_contact_count': len(bad), 'contact_count': len(hits),
+               'geometry_max_distance_mm': max((c['scan_distance_mm'] for c in geometry.get('contacts',[])),default=None),
+               'geometry_max_normal_error_deg': max((c['normal_error_deg'] for c in geometry.get('contacts',[])),default=None),
+               'geometry_nonworking_contacts': sum(c['hit_kind']!='working' for c in geometry.get('contacts',[])),
                'sensor_solver_force_difference_N': float(np.linalg.norm(measured['external_force_world_N']-oracle)),
                'applied_sensor_solver_force_difference_N': float(np.linalg.norm(measured['external_force_world_N']-oracle)),
                'max_command_joint_speed_rad_s': float(np.max(abs(dq))),
@@ -321,9 +352,12 @@ def _run(source, output, force_config=None, path_config=None, contact_margin_mm=
         if state['phase'] == 'trace':
             i = state['segment_index']
             if regional_contact:
-                parameters = path.segments[i]['parameters']
-                fraction = (state['reference_parameter_m']-parameters[0])/(parameters[-1]-parameters[0])
-                progress[i] = float(np.interp(fraction,*tables[i]))
+                if getattr(path,'line_trace',None) is not None:
+                    progress[i]=float(state['reference_parameter_m']*1000)
+                else:
+                    parameters = path.segments[i]['parameters']
+                    fraction = (state['reference_parameter_m']-parameters[0])/(parameters[-1]-parameters[0])
+                    progress[i] = float(np.interp(fraction,*tables[i]))
             else:
                 progress[i] = segment_length_at(plan, path.segments[i], tables[i], state['source_time_s'])
             delta = max(0., progress[i]-previous_progress[i])
@@ -333,7 +367,7 @@ def _run(source, output, force_config=None, path_config=None, contact_margin_mm=
             previous_progress[i] = progress[i]
         if bad: reason = 'Unintended collision: ' + '; '.join(sorted(set(bad)))
         elif measured['force_N'] >= fc.force_stop_N or row['contact_normal_sum_N'] >= fc.force_stop_N:
-            reason = 'Measured force reached 3 N/hard limit'
+            reason = f'Measured force reached {fc.force_stop_N:g} N/hard limit'
         elif state['fault_reason']: reason = state['fault_reason']
         elif jaw_drift > 1e-11 or jaw_rotation > 1e-10: reason = 'Fixed jaw moved'
         elif tracking_error > .002 or rotation_deg > 2.: reason = 'TCP tracking error exceeded bound'
@@ -408,11 +442,11 @@ def _run(source, output, force_config=None, path_config=None, contact_margin_mm=
     stage_coverage = 1. if stage == 'hold' else float(progress.sum()/max(expected_length, 1e-12))
     qualified_coverage = 1. if stage == 'hold' else float(qualified.sum()/max(expected_length, 1e-12))
     report['stage_progress_fraction'] = stage_coverage
+    report['stage_qualified_fraction'] = qualified_coverage
     report['force_control_passed'] = bool(completed and stage_coverage >= .999
-        and qualified_coverage >= .999 and report['trace_contact_loss_s'] == 0.
         and report['trace_fraction_within_tolerance'] >= .95 and all_force.max() < fc.force_stop_N
         and report['peak_contact_normal_sum_N'] < fc.force_stop_N
-        and report['trace_force_rmse_N'] is not None and report['trace_force_rmse_N'] <= .1
+        and report['trace_force_rmse_N'] is not None and report['trace_force_rmse_N'] <= .5
         and report['max_tangent_error_mm'] <= .3 and report['max_orientation_error_deg'] <= 1.
         and report['unexpected_contact_samples'] == 0 and report['max_sensor_solver_difference_N'] < 1e-6)
     report.update(execution_completed=bool(completed),

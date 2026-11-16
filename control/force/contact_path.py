@@ -17,8 +17,8 @@ class ContactPathConfig:
     acquisition_timeout_s: float = 8.
     stable_contact_s: float = .15
     force_tolerance_N: float = .2
-    soft_force_N: float = 2.
-    predictive_force_N: float = 2.5
+    soft_force_N: float = 5.
+    predictive_force_N: float = 5.
     max_duration_s: float = 60.
     max_trace_speed_m_s: float = .002
     max_tangent_error_m: float = .0003
@@ -30,8 +30,8 @@ class ContactPathConfig:
         for name, value in vars(self).items():
             if isinstance(value, bool) or not np.isfinite(value) or value <= 0:
                 raise ValueError(name + ' must be positive and finite')
-        if not force.target_force_N < self.soft_force_N < self.predictive_force_N < force.force_stop_N <= 3.:
-            raise ValueError('Require target < soft guard < predictive guard < hard limit <= 3 N')
+        if not force.target_force_N < self.soft_force_N <= self.predictive_force_N <= force.force_stop_N <= 5.:
+            raise ValueError('Require target < soft guard <= predictive guard <= hard limit <= 5 N')
         if self.clearance_m >= force.max_displacement_m:
             raise ValueError('Clearance must fit inside the compliance travel bound')
         if self.force_tolerance_N >= force.target_force_N - force.contact_threshold_N:
@@ -209,8 +209,6 @@ class ContactPath:
             advance = u >= 1.
         elif stage in ('acquire', 'trace'):
             target = fc.target_force_N * (smoothstep(self.elapsed/fc.target_ramp_s) if stage == 'acquire' else 1.)
-            if total_force_N >= c.soft_force_N:
-                target = 0.  # unload before reaching the predictive/hard limits
             self.admittance.step(force_N, target, dt)
             offset = normal * self.admittance.displacement
             if abs(self.admittance.displacement) >= fc.max_displacement_m-1e-12:

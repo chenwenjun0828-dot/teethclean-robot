@@ -10,7 +10,7 @@ import numpy as np
 from control.force.compliance import ForceControlConfig
 from control.force.contact_path import ContactPathConfig
 from control.force.force_history import CHANNELS, ForceHistory, peak_envelope
-from control.force.force_panel import ForcePanel, panel_rows, render_panel
+from control.force.force_panel import ForcePanel, _font, panel_rows, render_panel
 
 
 def sample(t=0., force=1.):
@@ -22,6 +22,34 @@ def sample(t=0., force=1.):
 
 
 class ForcePanelTests(unittest.TestCase):
+    def test_linux_panel_uses_chinese_font_when_available(self):
+        from pathlib import Path
+        if Path('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc').exists():
+            self.assertEqual(_font(18).getname()[0], 'Noto Sans CJK SC')
+
+    def test_hold_viewer_focuses_contact_and_shows_contact_points(self):
+        model = mujoco.MjModel.from_xml_string('''<mujoco><worldbody>
+          <body name="dental_mandibular"><geom type="sphere" size=".01"/></body>
+          <body name="dental_teeth_root"><geom type="sphere" size=".01"/></body>
+          </worldbody></mujoco>''')
+        data = mujoco.MjData(model)
+        mujoco.mj_forward(model, data)
+        viewer = SimpleNamespace(cam=SimpleNamespace(lookat=np.zeros(3)),
+                                 opt=SimpleNamespace(flags=np.zeros(32, bool)),
+                                 lock=nullcontext, is_running=lambda: True, close=lambda: None)
+        panel = ForcePanel()
+        with patch('mujoco.viewer.launch_passive', return_value=viewer):
+            panel.open(model, data, 'mandibular', focus=np.array([.1, .2, .3]))
+        np.testing.assert_allclose(viewer.cam.lookat, [.1, .2, .3])
+        self.assertEqual(viewer.cam.distance, .12)
+        self.assertTrue(viewer.opt.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT])
+        panel.close()
+
+        rows = panel_rows(sample(35., .5), ForceControlConfig(), ContactPathConfig(),
+                          .001, .4, stage='hold')
+        self.assertEqual(dict(rows)['阶段 / 牙 ID'], '单点保持 / 10')
+        self.assertEqual(dict(rows)['保持进度'], '40.0%')
+
     def test_closed_window_still_prepares_accurate_final_snapshot(self):
         panel = ForcePanel()
         panel.set_config(ForceControlConfig(), ContactPathConfig(), .001)
@@ -59,7 +87,7 @@ class ForcePanelTests(unittest.TestCase):
         path = ContactPathConfig()
         rows = panel_rows(row, force, path, .001, .5, peak=3.7)
         values = dict(rows)
-        self.assertEqual(values['设定目标 / 硬停止'], '0.9 / 3 N')
+        self.assertEqual(values['设定目标 / 硬停止'], '0.9 / 5 N')
         self.assertIn('250', values['虚拟质量 / 阻尼'])
         self.assertEqual(values['原始 Fx / Fy / Fz [N]'], '-4.000 / 0.000 / 6.000')
         self.assertEqual(values['补偿后接触合力'], '3.700 N')

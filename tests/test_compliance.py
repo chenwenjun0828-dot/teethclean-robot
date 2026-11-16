@@ -33,6 +33,17 @@ class AdmittanceTests(unittest.TestCase):
                 errors.append(force-1.)
         self.assertLess(max(abs(np.asarray(errors))), .01)
 
+    def test_raw_overshoot_stops_intrusion_before_the_filter_catches_up(self):
+        control = NormalAdmittance(ForceControlConfig())
+        for _ in range(400):
+            control.step(0., 1., .001)
+        pressed = control.displacement
+        self.assertLess(control.velocity, 0.)
+        self.assertGreaterEqual(control.velocity, -0.25*ForceControlConfig().max_normal_speed_m_s)
+        control.step(1.7, 1., .001)
+        self.assertGreaterEqual(control.velocity, 0.)
+        self.assertGreaterEqual(control.displacement, pressed)
+
     def test_travel_limit_prevents_windup_and_reverses_when_force_rises(self):
         cfg = ForceControlConfig(max_displacement_m=.0001)
         control = NormalAdmittance(cfg)
@@ -43,7 +54,7 @@ class AdmittanceTests(unittest.TestCase):
         self.assertGreater(control.displacement, -cfg.max_displacement_m)
 
     def test_invalid_force_limits_and_sampling_are_rejected(self):
-        for kwargs in ({'target_force_N': 0.}, {'target_force_N': 3.}, {'force_stop_N': .5},
+        for kwargs in ({'target_force_N': 0.}, {'target_force_N': 5.}, {'force_stop_N': .5},
                        {'virtual_mass_kg': float('nan')}, {'damping_Ns_m': -1.}):
             with self.assertRaises(ValueError): ForceControlConfig(**kwargs)
         control = NormalAdmittance(ForceControlConfig())
@@ -94,7 +105,7 @@ class SensorCompensationTests(unittest.TestCase):
         observation = {'force_N': 4., 'external_force_world_N': np.array([0., 0., 4.])}
         with tempfile.TemporaryDirectory() as temp, patch.object(SensorContactForce, 'read', return_value=observation):
             report, rows = run_probe(model, robot, 'mandibular', 1, probe, Path(temp),
-                                    force_limit=3., force_config=ForceControlConfig())
+                                    force_limit=3., force_config=ForceControlConfig(force_stop_N=3.))
             self.assertEqual(report['status'], 'stopped')
             self.assertIn('stop limit', report['stop_reason'])
             self.assertEqual(report['recorded_duration_s'], 0.)
