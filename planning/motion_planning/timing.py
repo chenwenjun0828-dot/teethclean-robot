@@ -34,7 +34,8 @@ def run(source_dir, output, duration_s=90., *, jaw_opening_deg=None,
     output.mkdir(parents=True, exist_ok=True)
     for name in ('geometry.json', 'geometry.npz', 'tooth_planes.json', 'tooth_lookup.npz',
                  'tooth_face_ids.npy', 'sweep_reference.json', 'perception_reference.json',
-                 'pose_targets_world_m.npy', 'pose_joints_rad.npy', 'pose_parameters_m.npy', 'pose_search_report.json'):
+                 'pose_targets_world_m.npy', 'pose_joints_rad.npy', 'pose_parameters_m.npy', 'pose_search_report.json',
+                 'tool_contact_manifest.json', 'transfer_reference.json'):
         if (source_dir/name).exists():
             shutil.copy2(source_dir/name, output/name)
     profile = {'duration_s': duration_s, 'trace_speed_mm_s': trace_speed_mm_s,
@@ -45,21 +46,37 @@ def run(source_dir, output, duration_s=90., *, jaw_opening_deg=None,
     if (output/'perception_reference.json').is_file():
         reference_file = fingerprint(output/'perception_reference.json')
         request['perception_reference_file'] = report['perception_reference_file'] = reference_file
-    for key in ('trace_audit', 'motion_audit', 'motion', 'trajectory_file', 'trace_velocity_scale',
+    if (output/'tool_contact_manifest.json').is_file():
+        manifest_file = fingerprint(output/'tool_contact_manifest.json')
+        request['tool_contact_manifest_file'] = report['tool_contact_manifest_file'] = manifest_file
+    if (output/'transfer_reference.json').is_file():
+        reference_file = fingerprint(output/'transfer_reference.json')
+        request['transfer_reference_file'] = report['transfer_reference_file'] = reference_file
+    for key in ('trace_audit', 'transfer_audit', 'motion_audit', 'motion', 'trajectory_file', 'trace_velocity_scale',
                 'spin_audit', 'fast_dynamics_verified', 'fast_execution_summary',
                 'execution_report_file', 'dynamics_validation_file', 'retime_attempts',
                 'downsampling', 'adaptive_trace_nodes_added'):
         report.pop(key, None)
     report.update(config=asdict(cfg), execution_ready=False, status='building_fixed_path',
                   retime_source=source_record, target_duration_s=duration_s, timing_profile=profile,
-                  timing_method=TIMING_METHOD, schema_version=7,
+                  timing_method=TIMING_METHOD,
                   **cfg.motion_description())
     dump(output/'request.json', request)
     dump(output/'planning_report.json', report)
     try:
         print(f'Fixed spline: {len(original.times)} retained waypoints; target {duration_s:g} s', flush=True)
+        free_blocks = None
+        if report.get('transfer_policy') is not None:
+            from .free_motion import load_transfer_record
+            record = load_transfer_record(output, report, request)
+            free_blocks = []
+            for segment in record['segments']:
+                a, b = segment['start_waypoint'], segment['end_waypoint']
+                free_blocks.append({'start_waypoint': a, 'end_waypoint': b,
+                    'joints': original.joints[a:b+1], 'coefficients': original.coefficients[a:b],
+                    'dt': np.diff(original.times)[a:b]})
         plan = build(original.joints, original.phases, original.teeth, checker.robot, cfg,
-                     duration_s, fixed_trace=original.constant_trace)
+                     duration_s, fixed_trace=original.constant_trace, free_blocks=free_blocks)
         np.save(output/'trajectory_tcp_world_m.npy',
                 [checker.robot.fk(q, full=True) for q in plan.joints])
         plan, report = validate(output, plan, report, checker.robot, checker, cfg)

@@ -2,8 +2,14 @@
 
 from .protocol import HardwareBackend, HardwareState
 from .mock import MockHardwareBackend
-from .simulation import MujocoHardwareBackend
 from .ur_robot import URRobotBackend
+
+
+def __getattr__(name):
+    if name == 'MujocoHardwareBackend':
+        from .simulation import MujocoHardwareBackend
+        return MujocoHardwareBackend
+    raise AttributeError(name)
 
 __all__ = [
     'HardwareBackend',

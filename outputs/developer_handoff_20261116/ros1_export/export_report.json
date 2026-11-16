@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "source": {
+    "check_mode": "geometry_only",
+    "execution_ready": false,
+    "simulation_only": true,
+    "robot_execution_allowed": false,
+    "camera_verified": false,
+    "camera_frame_status": "optical_frame_hypothesis_live_tf_unverified",
+    "status": "geometry_only_verified"
+  },
+  "load_verified_passed": false,
+  "trajectory_sha256": "7b335304c5bd2efd20fd01072d763205c5ed40a5e4af003e1be3eeda85d0e259",
+  "manifest_sha256": "888b16e8c5b22e4c2d9e458b0624d93ccb39b629280e025e7c5682db51db3ac1",
+  "interpolation_audit": {
+    "source_position_error_mm": 1.1785832500501829e-09,
+    "source_orientation_error_deg": 3.4150945850063755e-06,
+    "tcp_reference_error_mm": 0.0004710896924672863,
+    "tcp_reference_angle_deg": 2.146353664868225e-05,
+    "max_joint_speed_rad_s": 0.1266435337025267,
+    "max_joint_accel_rad_s2": 0.6518944285256363,
+    "passed": true,
+    "failed_intervals": [],
+    "intervals": 16005,
+    "interior_samples_per_interval": 3,
+    "rate_bounds": "Bernstein polynomial hull",
+    "scope": "sampled FK equivalence; not a continuous collision certificate"
+  },
+  "trace_audit": {
+    "position_error_mm": 3.820791611479603e-05,
+    "normal_angle_error_deg": 4.958234704588449e-06,
+    "frame_error_deg": 5.853177225625916e-06,
+    "rotation_error_deg": 5.882858776050262e-06,
+    "position_passed": true,
+    "orientation_passed": true,
+    "orientation_enforced": true,
+    "passed": true,
+    "actual_time_interpolant": true,
+    "samples": 16668,
+    "motion": {
+      "source_position_error_mm": 1.1785832500501829e-09,
+      "source_orientation_error_deg": 3.4150945850063755e-06,
+      "tcp_reference_error_mm": 0.0004710896924672863,
+      "tcp_reference_angle_deg": 2.146353664868225e-05,
+      "max_joint_speed_rad_s": 0.1266435337025267,
+      "max_joint_accel_rad_s2": 0.6518944285256363,
+      "passed": true,
+      "failed_intervals": [],
+      "intervals": 16005,
+      "interior_samples_per_interval": 3,
+      "rate_bounds": "Bernstein polynomial hull",
+      "scope": "sampled FK equivalence; not a continuous collision certificate"
+    },
+    "full_fk": true,
+    "planning_mode": "continuous",
+    "continuous_trace_blocks": 1,
+    "trace_start_waypoint": 119,
+    "trace_end_waypoint": 1971,
+    "retreats_inside_sweep": 0,
+    "transfers_inside_sweep": 0,
+    "region": "outer_front",
+    "selected_teeth": [
+      12,
+      11,
+      10,
+      9,
+      1,
+      2,
+      3
+    ],
+    "all_selected_teeth": true,
+    "failed_intervals": [],
+    "measured_normal_angle_min_deg": 39.66844978669471,
+    "measured_normal_angle_max_deg": 39.66845903689139,
+    "measured_normal_angle_median_deg": 39.66845407865672
+  },
+  "transfer_audit": {
+    "version": "straight_tcp_home_return_v1",
+    "passed": true,
+    "actual_time_interpolant": true,
+    "verification_scope": "sampled timed FK; not an exact continuous-line certificate",
+    "segments": [
+      {
+        "phase": "transfer",
+        "max_position_error_mm": 0.00011373231824257522,
+        "max_orientation_error_deg": 3.543621475690954e-05,
+        "monotonic_finite_segment": true,
+        "samples": 1083,
+        "passed": true
+      },
+      {
+        "phase": "retreat",
+        "max_position_error_mm": 4.533918281201293e-06,
+        "max_orientation_error_deg": 9.16434897240039e-08,
+        "monotonic_finite_segment": true,
+        "samples": 1008,
+        "passed": true
+      }
+    ]
+  },
+  "ros_motion_audit": null,
+  "points": 16006,
+  "duration_s": 124.879636567,
+  "slowdown": 1.0,
+  "refinements": 0,
+  "time_quantization_s": 1e-09,
+  "clock_merge_tolerance_s": 1e-06,
+  "execution_blockers": [
+    "source.check_mode",
+    "source.execution_ready",
+    "source.simulation_only",
+    "source.robot_execution_allowed",
+    "source.camera_verified",
+    "full_load_verified_missing",
+    "ros_full_motion_audit_missing"
+  ],
+  "hardware_execution_ready": false
+}

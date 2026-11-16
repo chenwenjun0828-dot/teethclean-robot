@@ -1,0 +1,24 @@
+{
+  "version": "straight_tcp_home_return_v1",
+  "passed": true,
+  "actual_time_interpolant": true,
+  "verification_scope": "sampled timed FK; not an exact continuous-line certificate",
+  "segments": [
+    {
+      "phase": "transfer",
+      "max_position_error_mm": 0.00011373231824257522,
+      "max_orientation_error_deg": 3.543621475690954e-05,
+      "monotonic_finite_segment": true,
+      "samples": 1083,
+      "passed": true
+    },
+    {
+      "phase": "retreat",
+      "max_position_error_mm": 4.533918281201293e-06,
+      "max_orientation_error_deg": 9.16434897240039e-08,
+      "monotonic_finite_segment": true,
+      "samples": 1008,
+      "passed": true
+    }
+  ]
+}

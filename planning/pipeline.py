@@ -15,7 +15,8 @@ from .motion_planning.validation import validate
 
 
 def run(inputs, output, cfg=None, geometry_only=False, mount_position_m=None,
-        world_from_scan=None, sweep_options=None, model_data=None, jaw_opening_deg=None, duration_s=None):
+        world_from_scan=None, sweep_options=None, model_data=None, jaw_opening_deg=None,
+        duration_s=None, session_info=None):
     from pipeline.simulation import create_simulation, DENTAL_MODEL_PATH
     prepared = PreparedRegion.load(inputs) if isinstance(inputs, (str, Path)) else inputs
     if not isinstance(prepared, PreparedRegion):
@@ -37,6 +38,8 @@ def run(inputs, output, cfg=None, geometry_only=False, mount_position_m=None,
                'scene': fingerprint(DENTAL_MODEL_PATH),
                'robot_model': fingerprint(ROOT/'assets/simulation/robot/ur7e_with_tool.xml'),
                'oral_settings': fingerprint(ROOT/'config/oral_settings.py')}
+    if session_info is not None:
+        request['perception_session'] = session_info
     dump(output/'request.json', request)
     if sweep_options is not None:
         request.update(path_kind=continuous_path_kind(cfg.region), sweep_options=asdict(sweep_options))
@@ -63,6 +66,8 @@ def run(inputs, output, cfg=None, geometry_only=False, mount_position_m=None,
                   'config': asdict(cfg), 'timings_wall_s': {
                       'geometry_import_s': geometry_wall_time_s},
                   **cfg.motion_description()}
+        if session_info is not None:
+            report['perception_session'] = session_info
         dump(output/'planning_report.json', report)
         return geometry, None, report, None
     planning_setup_started = perf_counter()
@@ -84,7 +89,13 @@ def run(inputs, output, cfg=None, geometry_only=False, mount_position_m=None,
         print('Collision checking disabled (check_mode=geometry_only): '
               'poses, IK connectivity and path geometry only', flush=True)
     else:
-        checker = CollisionChecker(robot, {inputs.jaw: world}, {inputs.jaw: inputs.scan})
+        contact_policy = cfg.tool_contact_policy()
+        collision_options = {'contact_policy': contact_policy} if contact_policy is not None else {}
+        checker = CollisionChecker(robot, {inputs.jaw: world}, {inputs.jaw: inputs.scan}, **collision_options)
+        if contact_policy is not None:
+            dump(output/'tool_contact_manifest.json', checker.contact_manifest)
+            request['tool_contact_manifest_file'] = fingerprint(output/'tool_contact_manifest.json')
+            dump(output/'request.json', request)
     planning_setup_wall_time_s = perf_counter() - planning_setup_started
     motion_planning_started = perf_counter()
     plan, report = plan_sweep(geometry, robot, checker, world, cfg, output, sweep_options,
@@ -96,6 +107,11 @@ def run(inputs, output, cfg=None, geometry_only=False, mount_position_m=None,
     report['check_mode'] = cfg.check_mode
     report['collision_checking_enabled'] = not cfg.geometry_only
     report['collision_queries'] = checker.calls
+    if session_info is not None:
+        report['perception_session'] = session_info
+    if 'tool_contact_manifest_file' in request:
+        report['tool_contact_manifest_file'] = request['tool_contact_manifest_file']
+        report['collision_method'] = 'FCL original meshes with conservative local working-surface contact verification'
     dump(output/'planning_report.json', report)
     motion_planning_wall_time_s = perf_counter() - motion_planning_started
     validation_started = perf_counter()

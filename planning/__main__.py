@@ -15,6 +15,7 @@ from .config import (Config, SweepOptions, REGIONS, PLANNING_MODES, CHECK_MODES,
                      GEOMETRY_ONLY, resolve_pose_angles)
 from .pipeline import run
 from perception.regions import PreparedRegion, prepare_region
+from perception.session import CAMERA_FRAMES, DEFAULT_SESSION_CAMERA_FRAME
 from perception.regions.result import resolve_regional_dataset, validate_region_inputs
 from pipeline.oral import jaw_overrides, load_jaw_settings
 from pipeline.contracts import OutputPolicy
@@ -27,7 +28,9 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument('--jaw', choices=['mandibular', 'maxillary'], default='mandibular')
     parser.add_argument('--region', choices=REGIONS, default='outer_front')
     parser.add_argument('--planning-mode', choices=PLANNING_MODES, default='simple',
-                        help='continuous: follow local surface frame; simple: regional fixed frame with +/-5 degree corrections')
+                        help='simple: regional fixed frame; local_surface: follow local tooth surface with +/-5 degree corrections; continuous: strict local angles')
+    parser.add_argument('--local-angle-search', action=argparse.BooleanOptionalAction, default=True,
+                        help='Allow per-position bounded corrections after common angle candidates fail')
     parser.add_argument('--simple-angles-deg', type=float, nargs=2, default=(-75., -33.),
                         metavar=('TANGENT', 'LOCAL_Y'), help=argparse.SUPPRESS)
     parser.add_argument('--pose-angles-deg', type=float, nargs=3, metavar=('ANGLE', 'AZIMUTH', 'FLIP'),
@@ -38,6 +41,11 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument('--prediction-dir', type=Path)
     parser.add_argument('--perception-result', type=Path,
                         help='Prepared perception region directory or perception_region.json')
+    parser.add_argument('--perception-session', type=Path,
+                        help='Checked-in real-camera session directory (controller_base, metres)')
+    parser.add_argument('--session-camera-frame', choices=CAMERA_FRAMES,
+                        default=DEFAULT_SESSION_CAMERA_FRAME,
+                        help='Session hand-eye frame interpretation (default: %(default)s); color_optical is an unverified optical-frame hypothesis')
     parser.add_argument('--regional-dataset', type=Path,
                         help='Six-region source dataset, used during perception preprocessing')
     parser.add_argument('--world-from-scan', type=Path)
@@ -53,6 +61,12 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument('--flip-deg', '--fixed-roll-deg', dest='fixed_roll_deg', type=float, help='Flip about tool +X, in degrees')
     parser.add_argument('--motion-mode', choices=['non-contact', 'contact'])
     parser.add_argument('--standoff-mm', type=float)
+    parser.add_argument('--working-segment-radius-mm', type=float, default=1.,
+                        help='Contact-mode working sphere radius around TCP (default: 1 mm)')
+    parser.add_argument('--contact-tolerance-mm', type=float, default=.05,
+                        help='Contact-mode numerical working-surface tolerance (default: 0.05 mm)')
+    parser.add_argument('--nonworking-clearance-mm', type=float, default=0.,
+                        help='Contact-mode minimum forbidden-part separation, strictly greater (default: 0 mm)')
     parser.add_argument('--angle-deg', '--tilt-deg', dest='tilt_deg', type=float, default=15., help='Angle about fixed projected-gravity Z')
     parser.add_argument('--azimuth-deg', '--tilt-azimuth-deg', dest='tilt_azimuth_deg', type=float, default=0.,
                         help='Angle about fixed inward-normal cross Z')
@@ -110,6 +124,26 @@ def main(argv=None):
             setattr(inputs, name, value.resolve())
     try:
         prepared = None
+        session_region = None
+        session_info = None
+        session_scene = None
+        camera_frame_supplied = ('session_camera_frame' in args._file_parameters or
+                                any(value.split('=', 1)[0] == '--session-camera-frame'
+                                    for value in supplied))
+        if camera_frame_supplied and args.perception_session is None:
+            raise ValueError('--session-camera-frame requires --perception-session')
+        if args.perception_session is not None:
+            if any(value is not None for value in
+                   (args.perception_result, args.scan, args.topology, args.prediction_dir,
+                    args.regional_dataset, args.world_from_scan)):
+                raise ValueError('--perception-session cannot be combined with other perception inputs')
+            if args.jaw_opening_deg is not None:
+                raise ValueError('--perception-session supplies measured jaw poses; do not override --jaw-opening-deg')
+            from perception.session import load_session_region
+            session_region = load_session_region(args.perception_session, args.jaw, args.region,
+                                                 camera_frame=args.session_camera_frame)
+            prepared = session_region.prepared
+            inputs = prepared.inputs
         if args.perception_result is not None:
             if any(value is not None for value in (args.scan, args.topology, args.prediction_dir, args.regional_dataset)):
                 raise ValueError('--perception-result cannot be combined with raw scan/path inputs')
@@ -127,7 +161,11 @@ def main(argv=None):
                                                 tilt_azimuth_deg=args.tilt_azimuth_deg,
                                                 fixed_roll_deg=args.fixed_roll_deg)
         cfg = Config(motion_mode=args.motion_mode, standoff_mm=args.standoff_mm,
+                     working_segment_radius_mm=args.working_segment_radius_mm,
+                     contact_tolerance_mm=args.contact_tolerance_mm,
+                     nonworking_clearance_mm=args.nonworking_clearance_mm,
                      planning_mode=args.planning_mode, check_mode=args.check_mode,
+                     local_angle_search=args.local_angle_search,
                      simple_angle_deg=args.simple_angles_deg[0], simple_angle2_deg=args.simple_angles_deg[1],
                      pose_spacing_mm=args.pose_spacing_mm,
                      speed_profile=args.speed_profile, orientation_audit=args.orientation_audit,
@@ -152,23 +190,40 @@ def main(argv=None):
                               'jaw': args.jaw, 'jaw_opening_deg': jaw_settings.opening_deg,
                               'region': cfg.region, 'config': asdict(cfg),
                               'planning_mode': cfg.planning_mode,
+                              'session_camera_frame': (args.session_camera_frame
+                                                       if session_region is not None else None),
                               'target_duration_s': args.duration,
                               'sweep_options': asdict(options) if options is not None else None}, indent=2))
             return 0
         mount = None if args.mount_position_mm is None else np.asarray(args.mount_position_mm) * .001
         world = None if args.world_from_scan is None else np.load(args.world_from_scan, allow_pickle=False)
-        if prepared is None:
+        if session_region is not None:
+            from planning.session import build_session_simulation
+            session_region, model, data, world_base, _, session_info = build_session_simulation(
+                args.perception_session, args.jaw, args.region,
+                jaw_settings=jaw_settings, robot_mount_position_m=mount,
+                camera_frame=args.session_camera_frame)
+            prepared = session_region.with_world_base(world_base)
+            session_scene = (model, data)
+            world = prepared.world_from_scan
+            if args.execute:
+                raise ValueError('--execute is disabled for real-camera session data; use planning/replay only')
+        elif prepared is None:
             dataset = resolve_regional_dataset(inputs, args.regional_dataset)
             prepared = prepare_region(inputs, cfg, options, world_from_scan=world, regional_dataset=dataset)
         if args.no_output:
             with tempfile.TemporaryDirectory(prefix='dental_planning_') as directory:
                 _, plan, report, scene = run(prepared, Path(directory), cfg, args.geometry_only,
                                              mount, world, options,
-                                             jaw_opening_deg=jaw_settings.opening_deg, duration_s=args.duration)
+                                             model_data=session_scene,
+                                             jaw_opening_deg=jaw_settings.opening_deg, duration_s=args.duration,
+                                             session_info=session_info)
         else:
             _, plan, report, scene = run(prepared, args.out, cfg, args.geometry_only,
                                          mount, world, options,
-                                         jaw_opening_deg=jaw_settings.opening_deg, duration_s=args.duration)
+                                         model_data=session_scene,
+                                         jaw_opening_deg=jaw_settings.opening_deg, duration_s=args.duration,
+                                         session_info=session_info)
         print(json.dumps({k: report[k] for k in ('status', 'coverage_fraction',
                                                   'region', 'jaw_opening_deg',
                                                   'selected_teeth', 'pose_mode', 'planning_mode',

@@ -8,7 +8,7 @@ from planning.infrastructure.poses import unit, TCP_FRAME_ID
 from planning.infrastructure.robot import rotation_error
 from planning.infrastructure.audit import audit_motion
 from ..pose_search.constraints import normal_angle, tool_rotation, axis_convention, gravity_frame
-from ..config import Config, CONTINUOUS_PATH_KINDS
+from ..config import Config, CONTINUOUS_PATH_KINDS, BOUNDED_PLANNING_MODES
 
 
 def audit_trace(directory, trajectory, robot, raise_on_failure=True):
@@ -54,9 +54,9 @@ def audit_trace(directory, trajectory, robot, raise_on_failure=True):
                 measured_angle = normal_angle(actual[:3, :3], world[:3, :3]@normal)
                 roll0, roll1 = segment['rolls_deg'][j:j+2]
                 roll = roll0+fraction*((roll1-roll0+180)%360-180)
-                if config.planning_mode == 'simple':
+                if config.planning_mode in BOUNDED_PLANNING_MODES:
                     target_r = world[:3, :3]@sweep.rotation(parameter)
-                    deviation = abs(sweep.measured_offset(world[:3, :3].T@actual[:3, :3]))
+                    deviation = abs(sweep.measured_offset(world[:3, :3].T@actual[:3, :3], parameter))
                     maximum_regional_offsets = np.maximum(maximum_regional_offsets, deviation)
                     t_error = abs(measured_angle-normal_angle(target_r, world[:3, :3]@normal))
                     expected_x = target_r[:, 0]
@@ -88,11 +88,12 @@ def audit_trace(directory, trajectory, robot, raise_on_failure=True):
     maximum['orientation_enforced'] = cfg.get('orientation_audit', 'strict') == 'strict'
     maximum['passed'] = maximum['position_passed'] and (
         maximum['orientation_passed'] or not maximum['orientation_enforced'])
-    if config.planning_mode == 'simple':
-        maximum['regional_angle_limit_deg'] = 5.
-        maximum['maximum_regional_angle_offsets_deg'] = maximum_regional_offsets.tolist()
-        maximum['regional_angle_bounds_passed'] = bool(np.all(maximum_regional_offsets <= 5.+1e-5))
-        maximum['passed'] = maximum['passed'] and maximum['regional_angle_bounds_passed']
+    if config.planning_mode in BOUNDED_PLANNING_MODES:
+        scope = 'local_surface' if config.planning_mode == 'local_surface' else 'regional'
+        maximum[f'{scope}_angle_limit_deg'] = 5.
+        maximum[f'maximum_{scope}_angle_offsets_deg'] = maximum_regional_offsets.tolist()
+        maximum[f'{scope}_angle_bounds_passed'] = bool(np.all(maximum_regional_offsets <= 5.+1e-5))
+        maximum['passed'] = maximum['passed'] and maximum[f'{scope}_angle_bounds_passed']
     angles = np.asarray(rows)[:, 3]
     maximum.update(actual_time_interpolant=True, samples=len(rows), motion=trajectory.limits(), full_fk=True,
                    planning_mode=config.planning_mode,
@@ -104,8 +105,8 @@ def audit_trace(directory, trajectory, robot, raise_on_failure=True):
     np.savetxt(directory/'trace_audit.csv', rows, delimiter=',', comments='',
                header='tooth,stroke,parameter,measured_normal_angle_deg,position_error_mm,normal_angle_error_deg,frame_error_deg,rotation_error_deg')
     if not maximum['passed'] and raise_on_failure:
-        regional = (f'; regional angle offsets {maximum_regional_offsets.tolist()} / +/-5 deg'
-                    if config.planning_mode == 'simple' else '')
+        regional = (f'; reference angle offsets {maximum_regional_offsets.tolist()} / +/-5 deg'
+                    if config.planning_mode in BOUNDED_PLANNING_MODES else '')
         raise RuntimeError('Independent trace audit failed: '
                            f'position {maximum["position_error_mm"]:.4f} / {cfg["interpolation_position_mm"]:g} mm, '
                            f'rotation {maximum["rotation_error_deg"]:.3f} / {cfg["interpolation_angle_deg"]:g} deg{regional}; '

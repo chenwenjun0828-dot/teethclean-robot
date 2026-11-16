@@ -2,6 +2,11 @@
 
 本项目提供从仿真 RGB-D 采集、口扫配准和牙龈线处理，到器械姿态选择、轨迹规划、位置控制与恒力实验的模块化工作流。
 
+**2026-11-16 开发交接：**优先阅读[几何轨迹、力控与真机接入使用说明](docs/integration/2026-11-16-developer-handoff.md)，
+其中列出当前真实采集 session、`35/-20/15°` 几何轨迹复现、力控代码与接入缺口、ROS 1 部署流程。
+当前轨迹仅通过几何检查，尚不可执行；下文原仿真教程及历史验收不能替代当前 session 的碰撞、恒力或实机验收。
+本次已附[轨迹与 ROS 导出快照](outputs/developer_handoff_20261116/)，使用说明包含直接读取及在新目录复现的方法。
+
 ```text
 彩色口扫 + 仿真 RGB-D + 匹配的六区域源线/牙齿分割预测
   -> perception：提取、配准、分区曲线和牙面法向
@@ -83,7 +88,8 @@ CLI 三角度为 **度**，关节角为 **rad**，时间为 **s**，力为 **N**
 更换扫描必须同时准备匹配的分割预测和区域数据，不能复用本例数据或修改哈希绕过检查。
 采集、配准、规划和实验示例的输出目录应是**新的空目录**；重复实验请更换目录名。
 回放和执行的 `--plan` / `--source` 必须指向已有规划目录，导图会更新指定位置的同名图片。
-`outputs/` 默认不纳入 Git，克隆后需要按下面步骤生成，不能直接假设示例产物已经存在。
+`outputs/` 默认不纳入 Git；本次明确发布的 `outputs/developer_handoff_20261116/` 是例外。
+下文其他旧教程产物仍需按步骤生成，不能假设已经存在。
 
 ## 2. 执行完整 Pipeline
 
@@ -783,7 +789,8 @@ MuJoCo 凸包接触代理与原扫描表面不一致，出现力信号不能单�
 
 planning API 只接受 `PreparedRegion` 或其保存路径；拟合、裁剪和牙位归属属于 perception。
 模块通过产物、单位与指纹交接，修改算法后先验证本模块，再运行下游。
-真实 D405 使用 [真实相机指南](perception/REAL_CAMERA.md)；真实机器人后端当前为传输接口预留，以上命令仅执行仿真。
+真实 D405 使用 [真实相机指南](perception/REAL_CAMERA.md)；ROS 1 离线导出、只读核对和受保护位置回放代码见
+[硬件模块](control/hardware/README.md)。上述控制命令仅执行 MuJoCo，当前 session 禁止真机执行；真机恒力接口尚未实现。
 
 ```powershell
 & $py -m unittest discover -s tests -p 'test_*.py' -q
@@ -807,6 +814,7 @@ planning API 只接受 `PreparedRegion` 或其保存路径；拟合、裁剪和�
 
 提交代码、配置、依赖文件，以及运行必需的 `assets/simulation/`、彩色扫描、`assets/perception/` 和 `assets/regional_paths/`。
 保留机器人资产附带的许可证。`.gitignore` 已排除环境、`outputs/`、缓存和本地 `.env`；
+本次仅定向加入 `outputs/developer_handoff_20261116/` 的已核验交接快照，其他运行输出继续忽略。
 本页图片保存在 `docs/images/`，克隆后可直接显示。
 `.gitattributes` 保留资产原始字节，避免 Git 的换行转换破坏来源哈希校验；请保留此文件。
 

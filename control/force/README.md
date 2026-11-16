@@ -1,5 +1,11 @@
 # Force Control
 
+当前真实 session 的几何轨迹、复现命令和力控接入说明见
+[开发交接指南](../../docs/integration/2026-11-16-developer-handoff.md)。
+当前 geometry_only 轨迹不能通过本模块的 `load_verified` 门槛；现有实验循环还会重新创建
+非 session 仿真场景，且直接依赖 MuJoCo 传感器和 actuator，尚无真机恒力切换入口。
+接入 session 场景或真实后端属于后续核心改动，需先按 `AGENTS.md` 提交具体方案审核。
+
 The force stage contains the compliant contact configuration, predictive force
 guard, contact-path runner, force history, and force-panel visualisation. The
 implementations live together in this subpackage; `runner.py` is the stable

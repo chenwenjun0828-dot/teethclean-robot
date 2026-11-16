@@ -11,7 +11,7 @@ button:hover { background: #eaf0ef; }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #187e71; outline-offset: 2px; }
 button:disabled { opacity: .45; cursor: wait; }
 button svg { width: 17px; height: 17px; }
-main { display: grid; grid-template-columns: minmax(0, 1fr) 310px; height: calc(100dvh - 60px); }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; height: calc(100dvh - 60px); }
 #viewport { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: #edf1f2; }
 canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 aside { background: #fff; border-left: 1px solid #d8dfe0; padding: 22px 20px; overflow: auto; }
@@ -43,6 +43,26 @@ dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; lin
 #loading[hidden] { display: none; }
 #scene-status { position: absolute; bottom: 16px; left: 18px; right: 18px; color: #5b6a6d; font-size: 12px; pointer-events: none; }
 #error { margin-top: 16px; padding: 10px 0; color: #a42c32; line-height: 1.6; overflow-wrap: anywhere; }
+.source-status { color: #58676d; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; margin-bottom: 16px; }
+.planning { border-top: 1px solid #d8dfe0; margin-top: 16px; padding-top: 16px; }
+h2 { font-size: 15px; margin: 0 0 16px; font-weight: 600; }
+h2 span { font-size: 12px; color: #58676d; margin-left: 8px; font-weight: 400; }
+details { margin: 12px 0; min-width: 0; }
+summary { cursor: pointer; font-size: 12px; color: #58676d; padding: 5px 0; }
+details .field { margin-top: 12px; }
+.check-field { display: flex; align-items: center; font-size: 12px; margin: 12px 0; }
+.plan-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 34px 34px; gap: 6px; margin-top: 16px; }
+.plan-actions button { gap: 5px; font-size: 12px; padding: 0 5px; white-space: nowrap; }
+.plan-actions button svg { flex-shrink: 0; width: 14px; height: 14px; }
+#plan-full { background: #176d5b; color: white; border-color: #176d5b; }
+#plan-status { margin-top: 12px; min-height: 20px; line-height: 1.5; font-size: 13px; }
+#plan-stale { color: #936111; margin-top: 6px; font-size: 12px; }
+#plan-error { color: #a42c32; font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+#plan-result dl { padding-top: 12px; margin-top: 12px; }
+#plan-result dl div { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 8px; }
+#plan-result dt { flex-shrink: 0; }
+#plan-result dd { text-align: right; }
+pre, #plan-directory { display: block; max-width: 100%; max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; line-height: 1.6; background: #f4f6f6; padding: 8px; }
 @media (max-width: 720px) {
   header { height: 54px; padding: 0 12px; gap: 9px; }
   h1 { font-size: 17px; } .status { font-size: 11px; }
@@ -53,4 +73,6 @@ dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; lin
   .legend { top: 12px; left: 12px; gap: 10px; }
   .field { margin-bottom: 12px; } select { width: 58%; }
   .slider-field { margin-bottom: 18px; } fieldset { margin: 18px 0; }
+  .plan-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 30px 30px; gap: 4px; }
+  .plan-actions button { min-width: 0; font-size: 11px; gap: 3px; }
 }

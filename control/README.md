@@ -28,3 +28,7 @@ surface. See `docs/integration/2026-11-11-contact-force-validation.md`.
 
 The force implementation is contained in `control/force/`; the old root-level forwarding modules have been
 removed. Hardware backends remain under `control/hardware/`.
+
+ROS 1 UR7e saved-trajectory export, read-only checks and protected action execution
+also live under `control/hardware/`. See [hardware setup](hardware/README.md).
+Simulation readiness does not authorize hardware motion.

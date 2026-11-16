@@ -13,5 +13,6 @@ The `simple` planner first tries a constant regional orientation. If the full pa
 reachable, it searches bounded corrections of ±5 degrees for each angle and then uses smooth local corrections.
 Every selected pose still passes joint-step, orientation-step, full-tool collision and trajectory audits.
 
-`continuous` keeps the local surface reference frame and is an explicit alternative. Both modes use the same
-IK graph and motion-planning validation.
+`local_surface` applies the same bounded search relative to the local tooth surface frame at each position.
+Corrections never accumulate along the path. `continuous` keeps strict local surface angles without correction
+search. All three modes use the same IK graph and motion-planning validation.

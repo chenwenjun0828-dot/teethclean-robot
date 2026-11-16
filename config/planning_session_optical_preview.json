@@ -1,0 +1,10 @@
+{
+  "perception_session": "assets/perception/sessions/20261113_220209",
+  "session_camera_frame": "color_optical",
+  "jaw": "mandibular",
+  "region": "outer_front",
+  "planning_mode": "simple",
+  "geometry_only": true,
+  "execute": false,
+  "out": "outputs/planning/session_optical_preview"
+}

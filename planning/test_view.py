@@ -136,6 +136,18 @@ class ViewerLoadingTests(unittest.TestCase):
         self.write_report()
         self.assertEqual(view.saved_jaw_opening(self.report), 25.)
 
+    def test_session_replay_distinguishes_saved_opening_from_explicit_override(self):
+        (self.root/'trajectory.npz').touch()
+        (self.root/'request.json').write_text(json.dumps({'perception_session': {'session_id': 'test'}}))
+        model = SimpleNamespace(ngeom=0)
+        scene = (model, object(), sample_trajectory(), SimpleNamespace(robot=object()))
+        with patch('planning.motion_planning.execution.load_verified', return_value=scene) as verified, \
+                patch.object(view, 'preview_curves', return_value=[]):
+            view.load_scene(self.root)
+            verified.assert_called_once_with(self.root, jaw_opening_deg=None)
+            view.load_scene(self.root, jaw_opening_deg=0.)
+            self.assertEqual(verified.call_args.kwargs['jaw_opening_deg'], 0.)
+
     def test_failed_verification_is_not_bypassed_and_jaw_error_is_actionable(self):
         (self.root/'trajectory.npz').touch()
         for message in ('Trajectory lacks a matching validation fingerprint', 'Dental pose changed since planning'):

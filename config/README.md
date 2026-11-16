@@ -22,6 +22,8 @@
 | --- | --- | --- |
 | `python -m planning` | `planning_outer_front.json` | 读取感知结果，进行完整规划与验收 |
 | `python -m planning.visualization.pose_angles` | `planning_pose_angles.json` | 三角度交互滑块选角 |
+| `python -m planning` | `planning_local_surface.json` | 局部牙面参考，50/0/50°，允许各角 ±5° 修正 |
+| `python -m planning.visualization.pose_angles` | `planning_pose_angles_local_surface.json` | 同一局部牙面参考与参数的姿态预览 |
 | `python -m planning.view` | `planning_view.json` | 轨迹回放、截图或 GIF |
 | `python -m planning.preview` | `planning_preview.json` | 连续参考与 TCP 轨迹诊断图 |
 | `python -m planning.sweep_preview` | `planning_preview.json` | 直接导出同一连续路径诊断图 |

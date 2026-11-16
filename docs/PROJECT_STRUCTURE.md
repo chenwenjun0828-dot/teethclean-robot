@@ -15,11 +15,13 @@
 | `planning/visualization/` | 交互式角度滑块、已保存轨迹回放和诊断图，含离线网页依赖 |
 | `control/position/` | 已验证轨迹的位置控制仿真 |
 | `control/force/` | 独立恒力和接触轨迹验证 |
-| `control/hardware/` | Mock、MuJoCo 和预留真机后端接口 |
+| `control/hardware/` | Mock、MuJoCo、预留逐点真机接口，以及 ROS 1 轨迹导出/核对/受保护位置回放 |
 | `pipeline/` | 完整 pipeline、阶段适配器、口腔设置和输出策略 |
 | `assets/simulation/` | MuJoCo 场景、机器人、牙颌、口腔和工具网格 |
 | `assets/source_cad/` | 英文命名的源 CAD 与扫描网格 |
 | `assets/perception/` | 固定牙龈线、分割预测和来源证明 |
+| `assets/perception/sessions/` | 真实采集规划快照、区域、拍摄关节与变换链，保留真机执行限制 |
+| `assets/calibration/` | 有日期的手眼与相机标定归档，不包含工具 TCP 标定 |
 | `assets/regional_paths/` | 六区域有序路径和坐标变换 |
 | `config/` | 配准、口腔和六区域主流程参数 |
 | `docs/integration/` | 当前合并、力控和零 offset 验证记录 |

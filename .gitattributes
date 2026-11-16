@@ -1,5 +1,8 @@
 # Asset provenance uses byte-level hashes; preserve original line endings.
 assets/** -text
 
+# Published trajectory snapshots contain byte-level provenance hashes.
+outputs/developer_handoff_20261116/** -text
+
 # Preserve upstream formatting in bundled third-party browser dependencies.
 planning/visualization/pose_angles_web/vendor/** -whitespace

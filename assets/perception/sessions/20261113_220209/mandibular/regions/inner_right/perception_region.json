@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "module": "perception",
+  "jaw": "mandibular",
+  "path_base": "manifest",
+  "region": "inner_right",
+  "units": {
+    "position": "m",
+    "source": "mm"
+  },
+  "inputs": {
+    "jaw": "mandibular",
+    "scan": "../../../../../../source_cad/teeth/mandibular_scan.ply",
+    "topology": "../../../../../mandibular/gingival_line_segments.obj",
+    "prediction": "../../../../../tooth_segmentation/crosstooth_mandibular"
+  },
+  "world_from_scan_m": [
+    [
+      0.4025709269275834,
+      0.9076107439198811,
+      0.11907709524664652,
+      0.07423051900491469
+    ],
+    [
+      0.04744494416111046,
+      -0.15059689397777706,
+      0.9874561205750498,
+      -0.792117511812757
+    ],
+    [
+      0.9141584064489527,
+      -0.39187151284641886,
+      -0.10368747231283298,
+      0.3634933919771895
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "files": {
+    "geometry.json": "ef6c5a4d9765ded14f34126bcd6b1b04371f600b9258156547da92d27d99e082",
+    "geometry.npz": "6a6f38d623aff25c3221ccb8cbed302de4ec58e4a6e96ea094bac0f62e203375",
+    "tooth_planes.json": "f448de0faf18612f5307ab0f16b8245e889a801d2e10558613809303b9fddfd9",
+    "tooth_lookup.npz": "9c684b293336882b15c79d6c7f1b2553dd99321403e612c136298b6cad11d822",
+    "region_mesh.npz": "9ce661eee27d11151d225f0cf01222070d50114930a4fddaa042df36d8f407a3",
+    "continuous_gingival_line.json": "9f1116577f9d8bf534ad3df1bd2dbdc0bbefb9882d0becd06ab36e2e8a38f9f7",
+    "continuous_gingival_line.npz": "663024167c70af536ae1d3fd833c34addea49e318dfdd56ded9cae725a681b6d"
+  },
+  "artifact_paths": {
+    "region_mesh.npz": "../../shared/region_mesh.npz"
+  }
+}

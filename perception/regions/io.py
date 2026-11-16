@@ -26,6 +26,20 @@ def fingerprint(path):
     return {'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
+def manifest_path(value, folder, path_base=None):
+    """Resolve a path stored in a perception manifest.
+
+    Current manifests store paths relative to their own directory; older
+    outputs used absolute paths and remain supported.
+    """
+    if path_base not in (None, 'manifest'):
+        raise ValueError(f'Unsupported perception path base: {path_base}')
+    path = Path(value)
+    if path_base == 'manifest' and not path.is_absolute():
+        path = Path(folder) / path
+    return path.resolve()
+
+
 @dataclass
 class Inputs:
     jaw: str

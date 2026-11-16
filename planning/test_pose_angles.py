@@ -33,10 +33,10 @@ class PoseAnglePreviewTests(unittest.TestCase):
     def test_both_modes_match_planner_targets_at_path_ends_and_midpoint(self):
         p = self.preview
         prepared = p.get_region('outer_front')
-        for mode in ('simple', 'continuous'):
+        for mode in ('simple', 'continuous', 'local_surface'):
             cfg = Config(planning_mode=mode, tilt_deg=6.37, tilt_azimuth_deg=13.26, standoff_mm=1.8)
             reference = (orient_reference(prepared.reference, prepared.geometry, cfg,
-                         SweepOptions(fixed_roll_deg=-.4), world=p.world) if mode == 'simple'
+                         SweepOptions(fixed_roll_deg=-.4), world=p.world) if mode in ('simple', 'local_surface')
                          else prepared.reference)
             for station in (0., prepared.reference.end/2, prepared.reference.end):
                 with self.subTest(mode=mode, station=station):
@@ -45,6 +45,17 @@ class PoseAnglePreviewTests(unittest.TestCase):
                     np.testing.assert_allclose(result['world_from_tcp_m'],
                         target_at(reference, station, -.4, p.world, cfg), atol=1e-12)
                     self.assertFalse(result['execution_ready'])
+
+    def test_local_surface_50_0_50_matches_strict_local_preview(self):
+        p = self.preview
+        prepared = p.get_region('outer_front')
+        for station in np.linspace(0., prepared.reference.end, 21):
+            values = dict(region='outer_front', angles=(50., 0., 50.), standoff_mm=1.8,
+                          station_mm=station*1000)
+            bounded = p.pose(**values, mode='local_surface')
+            strict = p.pose(**values, mode='continuous')
+            np.testing.assert_allclose(bounded['world_from_tcp_m'], strict['world_from_tcp_m'], atol=1e-12)
+            np.testing.assert_allclose(bounded['reference_frame_world'], strict['reference_frame_world'], atol=1e-12)
 
     def test_display_coordinates_reconstruct_world_tcp(self):
         p = self.preview

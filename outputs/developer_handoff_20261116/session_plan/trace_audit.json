@@ -1,0 +1,42 @@
+{
+  "position_error_mm": 3.820791611479603e-05,
+  "normal_angle_error_deg": 4.958234690377594e-06,
+  "frame_error_deg": 5.853177225625916e-06,
+  "rotation_error_deg": 5.882858769840916e-06,
+  "position_passed": true,
+  "orientation_passed": true,
+  "orientation_enforced": true,
+  "passed": true,
+  "actual_time_interpolant": true,
+  "samples": 16668,
+  "motion": {
+    "max_joint_speed_rad_s": 0.12658671487757622,
+    "max_joint_accel_rad_s2": 0.6518944392304533,
+    "tcp_angular_speed_bound_deg_s": 14.99997000004496,
+    "moving_internal_waypoints": 2080,
+    "stops_at_waypoints": false,
+    "continuity": "C2 fixed joint cubic with C2 scalar clock; stopped free transfers"
+  },
+  "full_fk": true,
+  "planning_mode": "continuous",
+  "continuous_trace_blocks": 1,
+  "trace_start_waypoint": 119,
+  "trace_end_waypoint": 1971,
+  "retreats_inside_sweep": 0,
+  "transfers_inside_sweep": 0,
+  "region": "outer_front",
+  "selected_teeth": [
+    12,
+    11,
+    10,
+    9,
+    1,
+    2,
+    3
+  ],
+  "all_selected_teeth": true,
+  "failed_intervals": [],
+  "measured_normal_angle_min_deg": 39.66844978669468,
+  "measured_normal_angle_max_deg": 39.66845903689139,
+  "measured_normal_angle_median_deg": 39.668454078656715
+}

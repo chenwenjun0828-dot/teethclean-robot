@@ -59,24 +59,24 @@ class MountAndPoseTests(unittest.TestCase):
         self.assertAlmostEqual(selected[0]['q'][0],.1)
 
     def test_direct_initial_approach_needs_no_offset(self):
-        start, end = np.zeros(6), np.ones(6)*.01
-        robot = SimpleNamespace(home=start)
-        checker = SimpleNamespace(edge=lambda *args: SimpleNamespace(valid=True,clearance_m=.002))
+        model, data = create_simulation()
+        robot = Robot(model, data)
+        end = robot.home+.01
+        checker = SimpleNamespace(check=lambda *args: SimpleNamespace(valid=True, pair=''),
+                                  edge=lambda *args: SimpleNamespace(valid=True, pair=''))
         result = initial_approach(robot,checker,Config(),end,np.array([0,0,1]))
         self.assertEqual(result['retreat_mm'],0)
         self.assertEqual(result['segments'][0][0],'transfer')
 
-    def test_initial_approach_tries_smallest_valid_offset(self):
-        start, end = np.zeros(6), np.ones(6)*.01
-        robot = SimpleNamespace(fk=lambda q: np.eye(4), home=start, lower=-np.ones(6), upper=np.ones(6))
-        checker = SimpleNamespace(edge=lambda a,b,*args: SimpleNamespace(
-            valid=not np.array_equal(b,end),clearance_m=.002))
-        def straight(robot,checker,q,target,cfg):
-            if target[2,3] < .005-1e-10: return None
-            return [q,q+.01]
-        with patch('planning.infrastructure.transfer.straight_tcp_motion',side_effect=straight):
-            result = initial_approach(robot,checker,Config(),end,np.array([0,0,1]))
-        self.assertEqual(result['retreat_mm'],5.)
+    def test_initial_approach_fails_when_straight_connection_is_blocked(self):
+        model, data = create_simulation()
+        robot = Robot(model, data)
+        checker = SimpleNamespace(check=lambda *args: SimpleNamespace(valid=False, pair='blocked'),
+                                  edge=lambda *args: SimpleNamespace(valid=False, pair='blocked'))
+        with self.assertRaisesRegex(RuntimeError, 'straight_transfer'), \
+                patch('planning.infrastructure.transfer.search_transfer') as search:
+            initial_approach(robot, checker, Config(), robot.home+.01, np.array([0, 0, 1]))
+        search.assert_not_called()
 
 
 class ContinuousMotionTests(unittest.TestCase):

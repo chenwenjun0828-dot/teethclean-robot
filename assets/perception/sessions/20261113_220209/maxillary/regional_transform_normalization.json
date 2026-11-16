@@ -1,0 +1,5 @@
+{
+  "reason": "SDK float32 rotation roundoff; regional validator requires exact orthogonality",
+  "max_rotation_entry_change": 1.6636878985565318e-08,
+  "translation_unchanged": true
+}

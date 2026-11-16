@@ -32,6 +32,13 @@ def validate(output, plan, report, robot, checker, cfg):
         print('Checking fixed spline geometry and motion rates'
               + (' (collision checking disabled)' if geometry_only else ' and collision'), flush=True)
         trace = audit_trace(output, plan, robot)
+        from .free_motion import load_transfer_record, audit_transfers
+        import json
+        request_file = output/'request.json'
+        request = json.loads(request_file.read_text(encoding='utf-8')) if request_file.exists() else {}
+        transfer_record = load_transfer_record(output, report, request)
+        if transfer_record is not None:
+            report['transfer_audit'] = audit_transfers(plan, robot, cfg, transfer_record)
         motion = audit_motion(plan, robot, checker, cfg)
         if (motion['max_trace_tcp_speed_mm_s'] > cfg.speed_mm_s+1e-8
                 or motion['max_free_tcp_speed_mm_s'] > cfg.transfer_speed_mm_s+1e-8):
@@ -74,6 +81,8 @@ def validate(output, plan, report, robot, checker, cfg):
         mujoco.mj_forward(robot.model, data)
         started = perf_counter()
         execution = execute(robot.model, data, plan, checker, output, headless=True)
+        if cfg.tool_contact_policy() is not None and not execution.get('working_contact_verified'):
+            raise RuntimeError('Working-surface contact validation is missing or failed')
         if execution['status'] != 'completed' or execution['minimum_actual_clearance_mm'] <= 0:
             raise RuntimeError('Fixed-path dynamics did not complete with positive clearance')
         dump(output/'dynamics_validation.json', execution)

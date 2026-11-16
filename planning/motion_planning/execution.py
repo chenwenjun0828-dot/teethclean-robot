@@ -38,10 +38,15 @@ def validate_motion_config(request, report, geometry):
         raise ValueError('Selected region differs from validated geometry/metadata; replan')
     if (cfg.motion_mode != original.motion_mode or cfg.standoff_mm != original.standoff_mm):
         raise ValueError('Motion mode or standoff differs from validated geometry; replan')
+    if cfg.clearance_mm != original.clearance_mm:
+        raise ValueError('Clearance differs from validated geometry; replan')
     if (cfg.tilt_deg != original.tilt_deg or cfg.tilt_azimuth_deg != original.tilt_azimuth_deg):
         raise ValueError('Tool tilt or azimuth differs from validated geometry; replan')
     if not np.allclose(cfg.gravity_world, original.gravity_world, atol=1e-12):
         raise ValueError('Gravity direction differs from validated geometry; replan')
+    for name in ('working_segment_radius_mm', 'contact_tolerance_mm', 'nonworking_clearance_mm'):
+        if getattr(cfg, name) != getattr(original, name):
+            raise ValueError('Working contact configuration changed: '+name+'; replan')
     for saved in (request, report):
         for key in ('motion_mode', 'standoff_mm'):
             if key in saved and saved[key] != getattr(cfg, key):
@@ -73,7 +78,12 @@ def load_verified(directory, *, jaw_opening_deg=None):
     directory = Path(directory)
     report = json.loads((directory/'planning_report.json').read_text(encoding='utf-8'))
     request = json.loads((directory/'request.json').read_text(encoding='utf-8'))
-    jaw_opening_deg = resolve_jaw_opening(report, request, jaw_opening_deg)
+    session_info = request.get('perception_session') or report.get('perception_session')
+    if session_info is not None:
+        if jaw_opening_deg is not None:
+            raise ValueError('Jaw opening override is incompatible with a measured perception session')
+    else:
+        jaw_opening_deg = resolve_jaw_opening(report, request, jaw_opening_deg)
     if report.get('planner') != 'planning':
         raise ValueError('Expected planning report')
     if report.get('check_mode', 'full') != 'full' or report.get('collision_checking_enabled') is False:
@@ -102,12 +112,26 @@ def load_verified(directory, *, jaw_opening_deg=None):
             raise ValueError('Scene/configuration changed since planning: '+key)
     geometry = json.loads((directory/'geometry.json').read_text(encoding='utf-8'))
     cfg = validate_motion_config(request, report, geometry)
+    contact_policy = cfg.tool_contact_policy()
+    contact_manifest = None
+    if contact_policy is not None:
+        manifest_file = directory/'tool_contact_manifest.json'
+        if not manifest_file.is_file():
+            raise ValueError('Working contact partition manifest is missing; replan')
+        digest = fingerprint(manifest_file)['sha256']
+        if any(saved.get('tool_contact_manifest_file', {}).get('sha256') != digest
+               for saved in (request, report)):
+            raise ValueError('Working contact partition manifest changed; replan')
+        contact_manifest = json.loads(manifest_file.read_text(encoding='utf-8'))
+        if not report.get('motion_audit', {}).get('working_contact_verified'):
+            raise ValueError('Working contact trajectory verification is missing; replan')
     if report['trace_audit'].get('orientation_enforced', True) != (cfg.orientation_audit == 'strict'):
         raise ValueError('Orientation audit policy differs from its validation report; replan')
-    if cfg.planning_mode == 'simple' and (
-            not report['trace_audit'].get('regional_angle_bounds_passed')
-            or report['trace_audit'].get('regional_angle_limit_deg') != 5.):
-        raise ValueError('Regional +/-5 degree FK validation is missing or failed; replan')
+    if cfg.planning_mode in ('simple', 'local_surface'):
+        scope = 'local_surface' if cfg.planning_mode == 'local_surface' else 'regional'
+        if (not report['trace_audit'].get(f'{scope}_angle_bounds_passed')
+                or report['trace_audit'].get(f'{scope}_angle_limit_deg') != 5.):
+            raise ValueError('Reference +/-5 degree FK validation is missing or failed; replan')
     if 'timing_profile' in report or report.get('timing_method') in SAVED_SPLINE_METHODS:
         if request.get('timing_profile') != report.get('timing_profile'):
             raise ValueError('Request/report timing profile changed; retime')
@@ -119,6 +143,11 @@ def load_verified(directory, *, jaw_opening_deg=None):
         if (dynamics != report.get('fast_execution_summary') or dynamics.get('status') != 'completed'
                 or dynamics.get('minimum_actual_clearance_mm', 0) <= 0):
             raise ValueError('Timed plan dynamics validation failed; retime')
+        if contact_policy is not None:
+            from dataclasses import asdict
+            if (not dynamics.get('working_contact_verified')
+                    or dynamics.get('tool_contact_policy') != asdict(contact_policy)):
+                raise ValueError('Working contact dynamics policy is missing or changed; replan')
     for key, saved in geometry['inputs'].items():
         if fingerprint(saved['path'])['sha256'] != saved['sha256']:
             raise ValueError('Geometry source changed since planning: '+key)
@@ -131,7 +160,12 @@ def load_verified(directory, *, jaw_opening_deg=None):
     if jaw_opening_deg is not None:
         from pipeline.oral import jaw_overrides, load_jaw_settings
         simulation_options['jaw_settings'] = jaw_overrides(load_jaw_settings(), jaw_opening_deg)
-    model, data = create_simulation(**simulation_options)
+    if session_info is None:
+        model, data = create_simulation(**simulation_options)
+    else:
+        from planning.session import rebuild_session_simulation
+        _, model, data, _, _, _ = rebuild_session_simulation(
+            session_info, robot_mount_position_m=report['robot_mount_position_m'])
     mount = model.body('robot_mount').id
     if (not np.allclose(model.body_pos[mount], report['robot_mount_position_m'], atol=1e-10)
             or not np.allclose(model.body_quat[mount], report['robot_mount_quaternion'], atol=1e-10)):
@@ -141,9 +175,18 @@ def load_verified(directory, *, jaw_opening_deg=None):
             raise ValueError('Dental pose changed since planning')
     robot = Robot(model, data)
     jaw = request['inputs']['jaw']
+    collision_options = {'contact_policy': contact_policy} if contact_policy is not None else {}
     checker = CollisionChecker(robot, {k: np.asarray(v) for k, v in report['tooth_world_transforms'].items()},
-                                {jaw: Path(request['inputs']['scan'])})
+                                {jaw: Path(request['inputs']['scan'])}, **collision_options)
+    if contact_policy is not None and checker.contact_manifest != contact_manifest:
+        raise ValueError('Working contact geometry or TCP transform changed; replan')
     trajectory = Trajectory.load(directory/'trajectory.npz')
+    from .free_motion import load_transfer_record, audit_transfers
+    transfer_record = load_transfer_record(directory, report, request)
+    if transfer_record is not None:
+        if not report.get('transfer_audit', {}).get('passed'):
+            raise ValueError('Straight transfer audit is missing or failed; replan')
+        audit_transfers(trajectory, robot, cfg, transfer_record)
     if (report.get('timing_method') in SAVED_SPLINE_METHODS) != (trajectory.constant_trace is not None):
         raise ValueError('Saved interpolation method differs from its validation report')
     if trajectory.constant_trace is not None:

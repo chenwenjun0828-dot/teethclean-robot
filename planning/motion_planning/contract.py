@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 from planning.infrastructure.io import fingerprint
 from perception.regions.continuous import SweepPath
-from ..config import Config, SweepOptions, continuous_path_kind
+from ..config import Config, SweepOptions, continuous_path_kind, BOUNDED_PLANNING_MODES
 
 
 def load_sweep_reference(directory, report):
@@ -30,13 +30,14 @@ def load_sweep_reference(directory, report):
     if reference_options.fixed_roll_deg != report_options.fixed_roll_deg:
         raise ValueError('Continuous reference/report fixed roll changed; replan')
     config = Config.from_saved(report['config'])
-    if config.planning_mode == 'simple':
-        from ..simple import SimplePath
-        path = SimplePath(record, config)
+    if config.planning_mode in BOUNDED_PLANNING_MODES:
+        from ..simple import SimplePath, LocalSurfacePath
+        path_type = LocalSurfacePath if config.planning_mode == 'local_surface' else SimplePath
+        path = path_type(record, config)
     else:
         path = SweepPath(record)
     validate_planning_mode(report, path)
-    if config.planning_mode == 'simple' and 'world_from_scan_m' in report:
+    if config.planning_mode in BOUNDED_PLANNING_MODES and 'world_from_scan_m' in report:
         gravity_scan = np.asarray(report['world_from_scan_m'])[:3, :3].T@config.gravity_world
         if not np.allclose(path.gravity_scan, gravity_scan, atol=1e-10):
             raise ValueError('Regional reference gravity differs from the saved world transform; replan')
@@ -52,6 +53,10 @@ def validate_planning_mode(report, path):
         from ..simple import SimplePath
         if not isinstance(path, SimplePath):
             raise ValueError('Simple planning requires its saved regional orientation reference')
+    elif mode == 'local_surface':
+        from ..simple import LocalSurfacePath
+        if not isinstance(path, LocalSurfacePath):
+            raise ValueError('Local surface planning requires its saved bounded orientation reference')
     return mode
 
 
@@ -82,7 +87,7 @@ def validate_sweep_contract(trajectory, report, path):
         raise ValueError('Incomplete or inconsistent continuous sweep reference mapping')
     fixed_roll = SweepOptions.from_saved(report.get('sweep_options', {})).fixed_roll_deg
     expected_rolls = (np.array([path.base_angles[2]+path.angle_offset(s)[2] for s in u])
-                      if report['config'].get('planning_mode') == 'simple' else fixed_roll)
+                      if report['config'].get('planning_mode') in BOUNDED_PLANNING_MODES else fixed_roll)
     if np.any(abs((rolls-expected_rolls+180)%360-180) > 1e-6):
         raise ValueError('Target roll differs from the requested fixed roll')
     expected = np.array([path.tooth((a+b)/2) for a, b in zip(u[:-1], u[1:])])

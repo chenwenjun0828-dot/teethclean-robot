@@ -1,0 +1,18 @@
+{
+  "status": "completed",
+  "pose_spacing_mm": 0.05,
+  "planning_mode": "continuous",
+  "pose_count": 1853,
+  "targets_file": {
+    "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\outputs\\developer_handoff_20261116\\session_plan\\pose_targets_world_m.npy",
+    "sha256": "badd4eb2e1eccb6455b470dbdf5d4c5843a0379cce81e7b5227d449d9b9729ba"
+  },
+  "joints_file": {
+    "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\outputs\\developer_handoff_20261116\\session_plan\\pose_joints_rad.npy",
+    "sha256": "2f8e35c846c84347a8c8a3d868bf0c27b46d0cfe9033382846a7d343603f437e"
+  },
+  "parameters_file": {
+    "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\outputs\\developer_handoff_20261116\\session_plan\\pose_parameters_m.npy",
+    "sha256": "75aab1516d1bc246c4012faf53b71b1af239fceac8bc00cc3aa5c44730e9b7bb"
+  }
+}

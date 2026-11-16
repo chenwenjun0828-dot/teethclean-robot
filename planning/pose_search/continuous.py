@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation
 from .constraints import pose_at, target_at
-from ..config import SweepOptions
+from ..config import SweepOptions, BOUNDED_PLANNING_MODES
 
 
 class SweepFailure(RuntimeError):
@@ -68,6 +68,8 @@ def whole_path_search(nodes, cfg, edge_valid, seed, node_valid=None):
                     if i: transitions[i-1][:, index] = np.inf
                     if i < len(transitions): transitions[i][index, :] = np.inf
                     failed = True
+                    if i == 0:
+                        break
             if failed: continue
         for i, (a, b) in enumerate(zip(selected[:-1], selected[1:])):
             key = (i, a, b)
@@ -91,7 +93,7 @@ def candidate_nodes(path, parameters, robot, checker, world, cfg, fixed_roll_deg
         normal = path.normal(s)
         target = target_at(path, s, fixed_roll_deg, world, cfg)
         local_r = world[:3, :3].T@target[:3, :3]
-        if (cfg.geometry_only or cfg.planning_mode == 'simple'
+        if (cfg.geometry_only or cfg.planning_mode in BOUNDED_PLANNING_MODES
                 or (local_r@checker.tool_center_tcp)@normal > .001):
             # Collision is evaluated lazily for globally selected candidates below.
             for q in robot.solutions(target):
@@ -110,7 +112,7 @@ def candidate_nodes(path, parameters, robot, checker, world, cfg, fixed_roll_deg
 
 def solve_sweep(path, parameters, robot, checker, world, cfg, fixed_roll_deg=0.):
     """Select one IK solution per fixed-angle pose, checking full connectivity."""
-    if cfg.planning_mode == 'simple':
+    if cfg.planning_mode in BOUNDED_PLANNING_MODES:
         from ..simple import solve_sweep as solve_regional
         return solve_regional(path, parameters, robot, checker, world, cfg)
     nodes = candidate_nodes(path, parameters, robot, checker, world, cfg, fixed_roll_deg)

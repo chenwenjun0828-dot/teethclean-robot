@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "gates": {
+    "check_mode": "geometry_only",
+    "execution_ready": false,
+    "simulation_only": true,
+    "robot_execution_allowed": false,
+    "camera_verified": false,
+    "camera_frame_status": "optical_frame_hypothesis_live_tf_unverified",
+    "status": "geometry_only_verified"
+  },
+  "snapshots": {
+    "planning_report.json": "b6ac303d27d586be2404204d6e6a0ad69ec6c31019f1eb1990d5b19551c27d87",
+    "request.json": "57043d05408d4afeb25d4c56dd099aed651402c1840ffada8f1f9307a3714de6",
+    "sweep_reference.json": "e3067aa69f90f57dd1ca3ba55bed615a8d0e4d25445bf2cbcb3f00b49cec3338",
+    "perception_reference.json": "0d4f43f65d505cb190386a636babe175affaf94779d665ad028c327fcff2dd3d",
+    "transfer_reference.json": "8faf6d76103ad861f4ccb7f1a408c56bfccd93632bbf15cdc1a93d815f8c0b20"
+  },
+  "source_files": {
+    "geometry.json": "64e639d3f1ad209e2ac9b9c421fcf19f53de126360c1cc72cceea3593202f125",
+    "geometry.npz": "0e8230ed5be59985945114fbce6f8e61da691563b37c88beb4ff647e815c386b",
+    "perception_reference.json": "0d4f43f65d505cb190386a636babe175affaf94779d665ad028c327fcff2dd3d",
+    "planning_report.json": "b6ac303d27d586be2404204d6e6a0ad69ec6c31019f1eb1990d5b19551c27d87",
+    "pose_joints_rad.npy": "2f8e35c846c84347a8c8a3d868bf0c27b46d0cfe9033382846a7d343603f437e",
+    "pose_parameters_m.npy": "75aab1516d1bc246c4012faf53b71b1af239fceac8bc00cc3aa5c44730e9b7bb",
+    "pose_search_report.json": "ef407fa5ac06608c6cfaaf4e199b45d67e259e791be30a57a25f04abf6b9b271",
+    "pose_targets_world_m.npy": "badd4eb2e1eccb6455b470dbdf5d4c5843a0379cce81e7b5227d449d9b9729ba",
+    "request.json": "57043d05408d4afeb25d4c56dd099aed651402c1840ffada8f1f9307a3714de6",
+    "sweep_candidate_1.json": "e3067aa69f90f57dd1ca3ba55bed615a8d0e4d25445bf2cbcb3f00b49cec3338",
+    "sweep_reference.json": "e3067aa69f90f57dd1ca3ba55bed615a8d0e4d25445bf2cbcb3f00b49cec3338",
+    "tooth_face_ids.npy": "2bef64f9fc226c65930104e1b8f272a8f5b2832d2581a5e3ae8bdb7f502b67dc",
+    "tooth_lookup.npz": "3283d51833cfbdc6ee75b283edd632aadc63beaa80046015470b63f13cee776f",
+    "tooth_planes.json": "10d5c2a1fc742907bfe519d4c6dca785f49b8d7c0ad9155bfd8aa2f42d025f38",
+    "trace_audit.csv": "4772a5f02ef88e5c5531854d05b72d364b008b86ee754ad9f595baa8ce094057",
+    "trace_audit.json": "73b62d8e3a36c869a4b1e4519ec0b2116fc6791fa6188a5050353ca03a542f2d",
+    "trajectory.npz": "ee7096bed9e347e2a15bcaccb675eb15a19850b24cd5e409afdcef20ae3be022",
+    "trajectory_tcp_world_m.npy": "3b52d32deabbecc3bf53766ef430693fd861f6a5bd68778a89b30c211a8443a9",
+    "transfer_reference.json": "8faf6d76103ad861f4ccb7f1a408c56bfccd93632bbf15cdc1a93d815f8c0b20"
+  }
+}

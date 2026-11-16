@@ -10,6 +10,9 @@ def audit_trace(directory, trajectory, robot):
 def audit_motion(trajectory, robot, checker, cfg):
     """Validate the polynomial actually executed, including its interior extrema."""
     geometry_only = getattr(cfg, 'geometry_only', False)
+    contact_policy = getattr(checker, 'contact_policy', None)
+    working_minimum = np.inf
+    working_verified = True
     minimum, samples, max_speed, max_angular, max_free_speed = np.inf, 0, 0., 0., 0.
     import mujoco
     trace = trajectory.constant_trace
@@ -29,6 +32,12 @@ def audit_motion(trajectory, robot, checker, cfg):
                 minimum = min(minimum, check.clearance_m); samples += 1
                 if not check.valid:
                     raise RuntimeError('Continuous trajectory collision: '+check.pair)
+                if contact_policy is not None:
+                    working_verified = working_verified and check.contact_verified
+                    if not check.contact_verified:
+                        raise RuntimeError('Continuous trajectory contact_unverifiable: '+check.pair)
+                    if check.working_gap_m is not None:
+                        working_minimum = min(working_minimum, check.working_gap_m)
             robot.fk(state['q'], full=True)
             mujoco.mj_jacSite(robot.model, robot.verify_data, jacp, jacr, robot.site)
             angular = np.degrees(np.linalg.norm(jacr[:, robot.dadr]@state['dq']))
@@ -49,6 +58,11 @@ def audit_motion(trajectory, robot, checker, cfg):
             'max_trace_tcp_speed_mm_s': float(max_speed), 'max_tcp_angular_speed_deg_s': float(max_angular),
             'max_free_tcp_speed_mm_s': float(max_free_speed),
             'sweep_max_joint_step_rad': cfg.sweep_step_rad}
+    if contact_policy is not None and not geometry_only:
+        report.update(working_contact_verified=working_verified,
+                      minimum_working_gap_mm=float(working_minimum*1000) if np.isfinite(working_minimum) else None,
+                      nonworking_clearance_mm=contact_policy.nonworking_clearance_mm,
+                      clearance_scope='nonworking_parts_only')
     if trace is not None and trace.version == 2:
         report['speed_profile'] = {'mode': 'local', 'solver': 'TOPPRA/ECOS',
                                   'path_length_mm': trace.length*1000,

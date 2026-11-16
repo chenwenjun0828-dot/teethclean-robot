@@ -7,7 +7,7 @@ import numpy as np
 from .config import RegionConfig, SweepOptions, REGION_ORDER, continuous_path_kind
 from .continuous import SweepPath
 from .geometry import Geometry, Stroke
-from .io import Inputs, dump, fingerprint, validate_transform
+from .io import Inputs, dump, fingerprint, validate_transform, manifest_path
 
 
 def resolve_regional_dataset(inputs, dataset=None):
@@ -16,7 +16,7 @@ def resolve_regional_dataset(inputs, dataset=None):
     from .io import ROOT
     if not isinstance(dataset, RegionalPaths):
         folder = ROOT/'assets/regional_paths'/inputs.jaw if dataset is None else Path(dataset)
-        if not folder.is_dir():
+        if not folder.is_dir() or not (folder / 'metadata.json').is_file():
             raise FileNotFoundError(f'Matching six-region dataset is required: {folder}')
         dataset = load_regional_paths(folder)
     if dataset.jaw != inputs.jaw or fingerprint(inputs.scan)['sha256'] != dataset.metadata['mesh_sha256']:
@@ -107,10 +107,25 @@ class PreparedRegion:
         if record.get('schema_version') != 1 or record.get('module') != 'perception':
             raise ValueError('Unsupported prepared perception region')
         folder = path.parent
+        artifact_paths = record.get('artifact_paths', {})
+        if set(artifact_paths) - {'region_mesh.npz'}:
+            raise ValueError('Unsupported shared perception artifact')
+
+        def artifact(name):
+            if name in artifact_paths:
+                return manifest_path(artifact_paths[name], folder, 'manifest')
+            return folder / name
+
         for name, digest in record['files'].items():
-            if Path(name).name != name or fingerprint(folder/name)['sha256'] != digest:
+            if Path(name).name != name or fingerprint(artifact(name))['sha256'] != digest:
                 raise ValueError('Prepared perception artifact changed; rerun perception')
         report = json.loads((folder/'geometry.json').read_text(encoding='utf-8'))
+        report_base = report.pop('path_base', None)
+        for item in report.get('inputs', {}).values():
+            item['path'] = str(manifest_path(item['path'], folder, report_base))
+        metadata = report.get('source_metadata', {})
+        if metadata.get('dataset_dir'):
+            metadata['dataset_dir'] = str(manifest_path(metadata['dataset_dir'], folder, report_base))
         planes = {int(k): v for k, v in json.loads((folder/'tooth_planes.json').read_text(encoding='utf-8')).items()}
         with np.load(folder/'geometry.npz', allow_pickle=False) as arrays:
             strokes = []
@@ -119,16 +134,30 @@ class PreparedRegion:
                 strokes.append(Stroke(item['id'], item['curve_id'], item['tooth'], item['region'],
                                       arrays['points_scan_m'][mask], arrays['tangents_scan'][mask],
                                       arrays['u'][mask], arrays['sample_index'][mask]))
-        with np.load(folder/'region_mesh.npz', allow_pickle=False) as mesh:
+        with np.load(artifact('region_mesh.npz'), allow_pickle=False) as mesh:
             geometry = Geometry(strokes, planes, report, mesh['vertices'], mesh['faces'], mesh['labels'])
         with np.load(folder/'tooth_lookup.npz', allow_pickle=False) as arrays:
             lookup = {name: arrays[name] for name in arrays.files}
         values = record['inputs']
-        inputs = Inputs(values['jaw'], *(Path(values[k]) for k in ('scan', 'topology', 'prediction')))
+        inputs = Inputs(values['jaw'], *(manifest_path(values[k], folder, record.get('path_base'))
+                                         for k in ('scan', 'topology', 'prediction')))
         reference = SweepPath(json.loads((folder/'continuous_gingival_line.json').read_text(encoding='utf-8')))
         world = record.get('world_from_scan_m')
         return cls(inputs, geometry, lookup, reference,
                    None if world is None else validate_transform(world), folder).validate(record['region'])
+
+    @classmethod
+    def load_from_manifest(cls, path, region):
+        """Load one region from a manifest whose paths are manifest-relative."""
+        path = Path(path).resolve()
+        record = json.loads(path.read_text(encoding='utf-8'))
+        if record.get('module') != 'perception' or record.get('schema_version') != 1:
+            raise ValueError('Unsupported perception regions manifest')
+        try:
+            value = record['regions'][region]
+        except KeyError as error:
+            raise ValueError(f'Perception manifest has no region: {region}') from error
+        return cls.load(manifest_path(value, path.parent, record.get('path_base')))
 
 
 def prepare_region(inputs, cfg=None, options=None, *, world_from_scan=None, output=None,

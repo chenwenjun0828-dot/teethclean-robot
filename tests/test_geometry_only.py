@@ -167,20 +167,20 @@ class TransferTests(unittest.TestCase):
         self.assertTrue(predicate(np.zeros(6), np.ones(6)))
         self.assertFalse(_edge_valid(Config(planning_mode='continuous'), _BlockingChecker())(np.zeros(6), np.ones(6)))
 
-    def test_direct_approach_is_taken_when_collision_checking_is_off(self):
-        robot = SimpleNamespace(home=np.zeros(6), fk=lambda q: np.eye(4),
-                                lower=-np.ones(6), upper=np.ones(6))
-        result = initial_approach(robot, _BlockingChecker(), Config(planning_mode='continuous', check_mode=GEOMETRY_ONLY),
-                                  np.full(6, .01), np.array([0., 0., 1.]))
-        self.assertEqual(result['method'], 'direct_initial_approach')
-        with patch('planning.infrastructure.transfer.straight_tcp_motion',
-                   return_value=[np.zeros(6), np.full(6, .001), np.full(6, .002)]):
-            retreat = final_retreat(robot, _BlockingChecker(),
-                                    Config(planning_mode='continuous', check_mode=GEOMETRY_ONLY), np.zeros(6),
-                                    np.array([0., 0., 1.]))
-        # Geometry-only keeps the full shortcut: the last node is reached directly.
-        self.assertEqual(len(retreat), 1)
-        np.testing.assert_array_equal(retreat[0], np.full(6, .002))
+    def test_straight_entry_and_home_return_skip_collision_queries_in_geometry_only(self):
+        model, data = create_simulation()
+        robot = Robot(model, data)
+        checker = _SpyChecker(robot)
+        cfg = Config(planning_mode='continuous', check_mode=GEOMETRY_ONLY)
+        goal = robot.home+np.array([.03, -.02, .025, .01, -.01, .02])
+        result = initial_approach(robot, checker, cfg, goal, np.array([0., 0., 1.]))
+        self.assertEqual(result['method'], 'straight_tcp_entry')
+        np.testing.assert_array_equal(result['joints'][-1], goal)
+        retreat = final_retreat(robot, checker, cfg, goal, np.array([0., 0., 1.]))
+        np.testing.assert_array_equal(retreat['joints'][-1], robot.home)
+        self.assertTrue(result['audit']['passed'])
+        self.assertTrue(retreat['audit']['passed'])
+        self.assertEqual(checker.queried, 0)
 
 
 class MotionAuditTests(unittest.TestCase):

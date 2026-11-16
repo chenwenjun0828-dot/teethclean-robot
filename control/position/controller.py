@@ -1,5 +1,6 @@
 """Position-servo execution of a verified planning.trajectory.Trajectory."""
 from pathlib import Path
+from dataclasses import asdict
 import csv
 import time
 import numpy as np
@@ -45,6 +46,8 @@ class GingivalTCPController:
             raise ValueError('Actuator ordering differs from trajectory joint ordering')
         self.last_clearance_check = -np.inf
         self.minimum_clearance_m = float('inf')
+        self.minimum_working_gap_m = float('inf')
+        self.working_contact_verified = True
         self.max_position_mm = 0.
         self.max_rotation_deg = 0.
 
@@ -61,8 +64,14 @@ class GingivalTCPController:
             check = self.checker.check(data.qpos[self.robot.qadr], 0.)
             self.last_clearance_check = elapsed
             self.minimum_clearance_m = min(self.minimum_clearance_m, check.clearance_m)
+            if getattr(self.checker, 'contact_policy', None) is not None:
+                self.working_contact_verified = self.working_contact_verified and check.contact_verified
+                if check.working_gap_m is not None:
+                    self.minimum_working_gap_m = min(self.minimum_working_gap_m, check.working_gap_m)
             if not check.valid:
                 raise RuntimeError('Actual geometry collision: '+check.pair)
+            if not self.working_contact_verified:
+                raise RuntimeError('Actual geometry contact_unverifiable: '+check.pair)
         desired = self.robot.fk(state['q'])
         actual = self.robot.pose(data)
         error = float(np.linalg.norm(actual[:3, 3]-desired[:3, 3])*1000)
@@ -121,6 +130,13 @@ def execute(model, data, plan, checker, output, headless=True):
                       minimum_actual_clearance_mm=(controller.minimum_clearance_m*1000
                           if np.isfinite(controller.minimum_clearance_m) else None),
                       simulation_time_s=float(data.time))
+        contact_policy = getattr(checker, 'contact_policy', None)
+        if contact_policy is not None:
+            report.update(tool_contact_policy=asdict(contact_policy),
+                          working_contact_verified=controller.working_contact_verified,
+                          minimum_actual_working_gap_mm=(controller.minimum_working_gap_m*1000
+                              if np.isfinite(controller.minimum_working_gap_m) else None),
+                          clearance_scope='nonworking_parts_only')
         dump(output/'execution_report.json', report)
         with (output/'execution_trace.csv').open('w', newline='', encoding='utf-8') as stream:
             writer = csv.writer(stream)

@@ -57,6 +57,8 @@ class FixedOnlyTests(unittest.TestCase):
         class Robot:
             joint_names = ['progress']
             home = np.array([-.001])
+            lower = np.array([-1.])
+            upper = np.array([1.])
             initial_qpos = home.copy()
             data = None
             def fk(self, q, full=False):
@@ -65,9 +67,12 @@ class FixedOnlyTests(unittest.TestCase):
                 return pose
             def jacobian(self, q):
                 return np.array([[1.], [0.], [0.], [0.], [0.], [0.]])
+            def solutions(self, pose, seed=None):
+                return [pose[:1, 3].copy()]
         robot = Robot()
         robot.model = model
-        checker = SimpleNamespace(check=lambda *args: SimpleNamespace(valid=True),
+        checker = SimpleNamespace(check=lambda *args: SimpleNamespace(valid=True, pair=''),
+                                  edge=lambda *args: SimpleNamespace(valid=True, pair=''),
                                   calls=0, dental_transforms={})
         def selected(path, parameters, *args):
             return [{'q': np.array([s]), 'roll': -141., 'pose': robot.fk([s])} for s in parameters]
@@ -76,10 +81,7 @@ class FixedOnlyTests(unittest.TestCase):
             dump(output/'geometry.json', {})
             dump(output/'tooth_planes.json', {})
             with patch('planning.motion_planning.continuous.body_transform', return_value=np.eye(4)), \
-                    patch('planning.motion_planning.continuous.solve_sweep', side_effect=selected), \
-                    patch('planning.motion_planning.continuous.final_retreat', return_value=[np.array([.05])]), \
-                    patch('planning.motion_planning.continuous.initial_approach', return_value={
-                        'segments': [('transfer', [np.array([0.])])], 'method': 'direct_initial_approach'}):
+                    patch('planning.motion_planning.continuous.solve_sweep', side_effect=selected):
                 cfg = Config(planning_mode='continuous')
                 options = SweepOptions(fixed_roll_deg=-141.)
                 reference = build_reference(geometry, cfg, options, options.trim_mm)
@@ -89,7 +91,13 @@ class FixedOnlyTests(unittest.TestCase):
             self.assertIsNotNone(trajectory)
             self.assertIsNotNone(trajectory.constant_trace)
             self.assertEqual(report['adaptive_trace_nodes_added'], 0)
-            self.assertEqual(len(trajectory.times), report['input_pose_count']+2)
+            self.assertEqual(trajectory.constant_trace.end-trajectory.constant_trace.start+1,
+                             report['input_pose_count'])
+            np.testing.assert_array_equal(trajectory.joints[-1], robot.home)
+            from .motion_planning.free_motion import audit_transfers
+            import json
+            transfer = json.loads((output/'transfer_reference.json').read_text(encoding='utf-8'))
+            self.assertTrue(audit_transfers(trajectory, robot, cfg, transfer)['passed'])
             import json
             pose_report = json.loads((output/'pose_search_report.json').read_text(encoding='utf-8'))
             self.assertEqual(pose_report['pose_count'], report['input_pose_count'])

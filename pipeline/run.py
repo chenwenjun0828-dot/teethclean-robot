@@ -35,7 +35,9 @@ def run_pipeline(jaw='mandibular', scan=None, config_path=None, output_dir=None,
                  pose_spacing_mm=Config().pose_spacing_mm, speed_profile='local',
                  orientation_audit='strict', transfer_speed_mm_s=150., planning_mode='simple',
                  simple_angles_deg=(-75., -33.), check_mode='full',
-                 regional_dataset=None, prediction_dir=None):
+                 regional_dataset=None, prediction_dir=None,
+                 working_segment_radius_mm=1., contact_tolerance_mm=.05, nonworking_clearance_mm=0.,
+                 local_angle_search=True):
     """Extract, capture, register manually or automatically, and simulate one jaw."""
     if jaw not in ('mandibular', 'maxillary'):
         raise ValueError('Jaw must be mandibular or maxillary')
@@ -51,7 +53,10 @@ def run_pipeline(jaw='mandibular', scan=None, config_path=None, output_dir=None,
                         else max_orientation_step_deg)
     simple_angles_deg = resolve_simple_angles(simple_angles_deg)
     planning_config = Config(joint_step_rad=joint_step_rad, tilt_deg=tilt_deg, tilt_azimuth_deg=tilt_azimuth_deg,
+           working_segment_radius_mm=working_segment_radius_mm,
+           contact_tolerance_mm=contact_tolerance_mm, nonworking_clearance_mm=nonworking_clearance_mm,
            planning_mode=planning_mode, check_mode=check_mode,
+           local_angle_search=local_angle_search,
            simple_angle_deg=simple_angles_deg[0], simple_angle2_deg=simple_angles_deg[1],
            pose_spacing_mm=pose_spacing_mm,
            speed_profile=speed_profile, orientation_audit=orientation_audit,
@@ -90,6 +95,7 @@ def run_pipeline(jaw='mandibular', scan=None, config_path=None, output_dir=None,
                 'path_source': 'regional', 'geometry_owner': 'perception',
                 'model': str(model_path), 'registration_method': method,
                 'planning_mode': planning_mode, 'fixed_roll_deg': fixed_roll_deg,
+                'local_angle_search': local_angle_search,
                 'check_mode': check_mode, 'collision_checking_enabled': check_mode != GEOMETRY_ONLY,
                 'pose_angles_deg': [tilt_deg, tilt_azimuth_deg, fixed_roll_deg],
                 'joint_step_rad': joint_step_rad,
@@ -99,6 +105,9 @@ def run_pipeline(jaw='mandibular', scan=None, config_path=None, output_dir=None,
                 'max_orientation_step_deg': orientation_step,
                 'sweep_trim_mm': sweep_trim_mm,
                 'standoff_mm': offset_mm,
+                'working_segment_radius_mm': working_segment_radius_mm,
+                'contact_tolerance_mm': contact_tolerance_mm,
+                'nonworking_clearance_mm': nonworking_clearance_mm,
                 'target_duration_s': duration_s,
                 'tilt_deg': tilt_deg, 'tilt_azimuth_deg': tilt_azimuth_deg}
     if no_output:
@@ -119,7 +128,10 @@ def run_pipeline(jaw='mandibular', scan=None, config_path=None, output_dir=None,
                 speed_profile=speed_profile, orientation_audit=orientation_audit,
                 transfer_speed_mm_s=transfer_speed_mm_s, planning_mode=planning_mode,
                 simple_angles_deg=simple_angles_deg, check_mode=check_mode,
-                regional_dataset=regional_dataset, prediction_dir=prediction_dir)
+                regional_dataset=regional_dataset, prediction_dir=prediction_dir,
+                working_segment_radius_mm=working_segment_radius_mm,
+                contact_tolerance_mm=contact_tolerance_mm, nonworking_clearance_mm=nonworking_clearance_mm,
+                local_angle_search=local_angle_search)
     output_dir = Path(output_dir) if output_dir else (
         PROJECT_ROOT / 'outputs' / 'pipeline' / datetime.now().strftime('%Y%m%d_%H%M%S_%f')
     )
@@ -134,6 +146,7 @@ def run_pipeline(jaw='mandibular', scan=None, config_path=None, output_dir=None,
               'path_source': 'regional', 'geometry_owner': 'perception',
               'registration_method': method,
               'planning_mode': planning_mode,
+              'local_angle_search': local_angle_search,
               'pose_angles_deg': [tilt_deg, tilt_azimuth_deg, fixed_roll_deg],
               'fixed_roll_deg': fixed_roll_deg,
               'joint_step_rad': joint_step_rad,
@@ -143,6 +156,9 @@ def run_pipeline(jaw='mandibular', scan=None, config_path=None, output_dir=None,
               'max_orientation_step_deg': orientation_step,
               'sweep_trim_mm': sweep_trim_mm,
               'standoff_mm': offset_mm,
+              'working_segment_radius_mm': working_segment_radius_mm,
+              'contact_tolerance_mm': contact_tolerance_mm,
+              'nonworking_clearance_mm': nonworking_clearance_mm,
               'target_duration_s': duration_s,
               'tilt_deg': tilt_deg, 'tilt_azimuth_deg': tilt_azimuth_deg,
               'scan': str(scan), 'collision_mode': collision_mode,
@@ -208,7 +224,10 @@ def run_pipeline(jaw='mandibular', scan=None, config_path=None, output_dir=None,
                                 speed_profile=speed_profile, orientation_audit=orientation_audit,
                                 transfer_speed_mm_s=transfer_speed_mm_s, planning_mode=planning_mode,
                                 simple_angles_deg=simple_angles_deg, check_mode=check_mode,
-                                perception_result=perception)
+                                perception_result=perception,
+                                working_segment_radius_mm=working_segment_radius_mm,
+                                contact_tolerance_mm=contact_tolerance_mm, nonworking_clearance_mm=nonworking_clearance_mm,
+                                local_angle_search=local_angle_search)
         report['stages']['planning'] = {
             'status': tracking.get('planning_status'),
             'mode': planning_mode,
@@ -295,7 +314,9 @@ def build_argparser():
     parser.add_argument('--jaw', choices=('mandibular', 'maxillary'), default='mandibular')
     parser.add_argument('--region', choices=REGIONS, default='outer_front')
     parser.add_argument('--planning-mode', choices=PLANNING_MODES, default='simple',
-                        help='continuous: follow local surface frame; simple: regional fixed frame with +/-5 degree corrections')
+                        help='simple: regional fixed frame; local_surface: follow local tooth surface with +/-5 degree corrections; continuous: strict local angles')
+    parser.add_argument('--local-angle-search', action=argparse.BooleanOptionalAction, default=True,
+                        help='Allow per-position bounded corrections after common angle candidates fail')
     parser.add_argument('--simple-angles-deg', type=float, nargs=2, default=(-75., -33.),
                         metavar=('TANGENT', 'LOCAL_Y'), help=argparse.SUPPRESS)
     parser.add_argument('--check-mode', choices=CHECK_MODES, default='full',
@@ -317,6 +338,12 @@ def build_argparser():
                              help='Validate inputs and configuration without running simulation')
     parser.add_argument('--offset-mm', type=float, default=1.5,
                         help='Noncontact offset along the reference normal (default: 1.5 mm)')
+    parser.add_argument('--working-segment-radius-mm', type=float, default=1.,
+                        help='Contact-mode working sphere radius around TCP (default: 1 mm)')
+    parser.add_argument('--contact-tolerance-mm', type=float, default=.05,
+                        help='Contact-mode numerical working-surface tolerance (default: 0.05 mm)')
+    parser.add_argument('--nonworking-clearance-mm', type=float, default=0.,
+                        help='Contact-mode minimum forbidden-part separation (default: 0 mm)')
     parser.add_argument('--speed-mm-s', type=float, default=15.,
                         help='Nominal TCP speed along the gingival trace in simulation (mm/s)')
     parser.add_argument('--duration', type=float,
@@ -381,6 +408,10 @@ def main(argv=None):
                               speed_profile=args.speed_profile, orientation_audit=args.orientation_audit,
                               transfer_speed_mm_s=args.transfer_speed_mm_s,
                               planning_mode=args.planning_mode,
+                              local_angle_search=args.local_angle_search,
+                              working_segment_radius_mm=args.working_segment_radius_mm,
+                              contact_tolerance_mm=args.contact_tolerance_mm,
+                              nonworking_clearance_mm=args.nonworking_clearance_mm,
                               simple_angles_deg=args.simple_angles_deg,
                               check_mode=args.check_mode,
                               regional_dataset=args.regional_dataset,

@@ -11,8 +11,60 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DENTAL_MODEL_PATH = PROJECT_ROOT / 'assets' / 'simulation' / 'scene_ur7e_dental.xml'
 
 
+def body_transform(model, data, body_name):
+    """Return a MuJoCo body pose as a world-from-body transform."""
+    body = model.body(body_name).id
+    transform = np.eye(4)
+    transform[:3, :3] = data.xmat[body].reshape(3, 3)
+    transform[:3, 3] = data.xpos[body]
+    return transform
+
+
+def set_body_world_transform(model, data, body_name, transform):
+    """Set a fixed body's local pose so its world pose equals ``transform``."""
+    transform = np.asarray(transform, dtype=float)
+    if transform.shape != (4, 4) or not np.isfinite(transform).all():
+        raise ValueError(f'{body_name} transform must be a finite 4x4 matrix')
+    parent = int(model.body_parentid[model.body(body_name).id])
+    parent_transform = np.eye(4) if parent == 0 else body_transform(model, data, model.body(parent).name)
+    local = np.linalg.inv(parent_transform) @ transform
+    rotation = local[:3, :3]
+    if (not np.allclose(rotation.T @ rotation, np.eye(3), atol=1e-7)
+            or not np.isclose(np.linalg.det(rotation), 1., atol=1e-7)
+            or not np.allclose(local[3], [0., 0., 0., 1.], atol=1e-8)):
+        raise ValueError(f'{body_name} transform is not a rigid pose')
+    quaternion = np.empty(4)
+    mujoco.mju_mat2Quat(quaternion, rotation.reshape(-1))
+    body = model.body(body_name).id
+    model.body_pos[body] = local[:3, 3]
+    model.body_quat[body] = quaternion
+
+
+def apply_dental_transforms(model, data, jaw_transforms_m):
+    """Place the static jaw bodies from scan poses in the MuJoCo world."""
+    if jaw_transforms_m is None:
+        return
+    transforms = {str(jaw): np.asarray(value, dtype=float)
+                  for jaw, value in jaw_transforms_m.items()}
+    unknown = set(transforms) - {'mandibular', 'maxillary'}
+    if unknown:
+        raise ValueError(f'Unknown dental transform(s): {sorted(unknown)}')
+    if not transforms:
+        return
+    # Both jaw bodies share teeth_root. Use one jaw as the root pose, then set
+    # each child local pose so lower/upper can retain independent measured poses.
+    mujoco.mj_forward(model, data)
+    root_pose = transforms.get('mandibular', transforms.get('maxillary'))
+    set_body_world_transform(model, data, 'dental_teeth_root', root_pose)
+    mujoco.mj_forward(model, data)
+    for jaw, transform in transforms.items():
+        set_body_world_transform(model, data, f'dental_{jaw}', transform)
+        mujoco.mj_forward(model, data)
+
+
 def create_simulation(model_path: Path = DENTAL_MODEL_PATH, mouth_settings=None,
-                      jaw_settings=None, robot_mount_position_m=None):
+                      jaw_settings=None, robot_mount_position_m=None,
+                      tooth_transforms_m=None):
     path = Path(model_path).resolve()
     if not path.is_file():
         raise FileNotFoundError(f'MuJoCo model not found: {path}')
@@ -42,6 +94,7 @@ def create_simulation(model_path: Path = DENTAL_MODEL_PATH, mouth_settings=None,
         if position.shape != (3,) or not np.isfinite(position).all():
             raise ValueError('robot_mount_position_m must be a finite 3-vector')
         model.body_pos[mount_id] = position
+    apply_dental_transforms(model, data, tooth_transforms_m)
     mujoco.mj_forward(model, data)
     return model, data
 

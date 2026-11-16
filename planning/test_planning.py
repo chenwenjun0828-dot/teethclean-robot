@@ -96,7 +96,7 @@ class PoseTests(unittest.TestCase):
         self.assertAlmostEqual(normal_angle(changed,[0,1,0]),25.)
 
     def test_configuration_rejects_invalid_geometry_and_speed(self):
-        for kwargs in ({'tilt_deg':181},{'standoff_mm':.1},
+        for kwargs in ({'tilt_deg':181},{'standoff_mm':.1, 'clearance_mm':.15},
                        {'speed_mm_s':float('nan')}, {'transfer_speed_mm_s':0.}):
             with self.assertRaises(ValueError): Config(planning_mode='continuous', **kwargs)
 

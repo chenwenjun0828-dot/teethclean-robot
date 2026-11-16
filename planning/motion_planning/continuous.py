@@ -8,20 +8,23 @@ from copy import deepcopy
 from perception.regions.continuous import SweepPath
 from ..pose_search.constraints import axis_convention
 from ..pose_search.continuous import SweepFailure, sample_sweep, solve_sweep
-from ..config import REGIONS, continuous_path_kind
+from ..config import REGIONS, continuous_path_kind, BOUNDED_PLANNING_MODES
 from .fixed_path import build, TIMING_METHOD
+from .free_motion import TRANSFER_POLICY
 
 
 def plan_sweep(geometry, robot, checker, world, cfg, output, options, jaw_opening_deg=None, duration_s=None,
                *, reference):
     path_kind = continuous_path_kind(cfg.region)
     selected_teeth = list(map(int, geometry.report['regions'][cfg.region]))
-    report = {'schema_version': 7, 'planner': 'planning', 'path_kind': path_kind,
+    report = {'schema_version': 8, 'transfer_policy': TRANSFER_POLICY,
+              'planner': 'planning', 'path_kind': path_kind,
               'status': 'planning_continuous_sweep', 'execution_ready': False, 'simulation_only': True,
               'region': cfg.region, 'selected_teeth': selected_teeth,
               'jaw_opening_deg': jaw_opening_deg,
               'planning_mode': cfg.planning_mode,
-              'pose_mode': 'regional_fixed_bounded' if cfg.planning_mode == 'simple' else 'fixed_angles',
+              'pose_mode': {'simple': 'regional_fixed_bounded', 'local_surface': 'local_surface_bounded',
+                            'continuous': 'fixed_angles'}[cfg.planning_mode],
               'config': asdict(cfg), 'sweep_options': asdict(options),
               **cfg.motion_description(), 'axis_convention': axis_convention(cfg), 'tcp_frame_id': TCP_FRAME_ID,
               'normal_angle_policy': f'{cfg.tilt_deg:g} degrees about fixed projected-gravity Z',
@@ -45,6 +48,9 @@ def plan_sweep(geometry, robot, checker, world, cfg, output, options, jaw_openin
     if cfg.planning_mode == 'simple':
         report['normal_angle_policy'] = 'One representative source frame for the entire selected region'
         report['tilt_azimuth_policy'] = 'Fixed regional gravity Z/Y, then tool-X flip; corrections bounded to +/-5 degrees each'
+    elif cfg.planning_mode == 'local_surface':
+        report['normal_angle_policy'] = 'Local tooth surface normal and projected world gravity at each path position'
+        report['tilt_azimuth_policy'] = 'Local gravity Z/Y, then tool-X flip; corrections bounded to +/-5 degrees each'
     dump(output/'planning_report.json', report)
     if not cfg.geometry_only and not checker.check(robot.home, cfg.clearance_mm*.001).valid:
         raise ValueError('Initial robot configuration is in collision')
@@ -58,19 +64,18 @@ def plan_sweep(geometry, robot, checker, world, cfg, output, options, jaw_openin
             path = SweepPath(deepcopy(reference.record))
             path.record.update(planning_mode=cfg.planning_mode)
             path.record['options']['fixed_roll_deg'] = options.fixed_roll_deg
-            if cfg.planning_mode == 'simple':
+            if cfg.planning_mode in BOUNDED_PLANNING_MODES:
                 from ..simple import orient_reference
                 path = orient_reference(path, geometry, cfg, options, world=world)
-            if cfg.planning_mode == 'simple':
-                report['regional_orientation'] = path.record['regional_orientation']
+                report[path.orientation_key] = path.orientation
             dump(output/f'sweep_candidate_{len(report["attempts"])}.json', path.record)
             parameters = sample_sweep(path, cfg)
             print(f'Continuous sweep: trim {trim:g} mm, {len(parameters)} positions; '
                   f'pose spacing {cfg.pose_spacing_mm:g} mm', flush=True)
             selected = solve_sweep(path, parameters, robot, checker, world, cfg,
                                    options.fixed_roll_deg)
-            if cfg.planning_mode == 'simple':
-                report['regional_orientation'] = path.record['regional_orientation']
+            if cfg.planning_mode in BOUNDED_PLANNING_MODES:
+                report[path.orientation_key] = path.orientation
                 dump(output/f'sweep_candidate_{len(report["attempts"])}.json', path.record)
             print(f'Whole-region IK path found; fitting one fixed joint spline through '
                   f'{len(parameters)} poses', flush=True)
@@ -91,7 +96,6 @@ def plan_sweep(geometry, robot, checker, world, cfg, output, options, jaw_openin
             joints, phases, teeth = [robot.home.copy()], [], []
             for phase, bank in transition['segments']:
                 for q in bank:
-                    if np.max(abs(q-joints[-1])) < 1e-10: continue
                     joints.append(q); phases.append(phase); teeth.append(path.tooth(0.))
             start = len(joints)-1
             if not np.allclose(joints[-1], trace[0][1], atol=1e-8, rtol=0):
@@ -102,8 +106,23 @@ def plan_sweep(geometry, robot, checker, world, cfg, output, options, jaw_openin
             retreat = final_retreat(robot, checker, cfg, joints[-1], world[:3, :3]@path.normal(path.end))
             if retreat is None:
                 raise SweepFailure('no_final_retreat')
-            for q in retreat:
+            for q in retreat['joints'][1:]:
                 joints.append(q); phases.append('retreat'); teeth.append(path.tooth(path.end))
+            free_blocks = [dict(transition, start_waypoint=0, end_waypoint=start),
+                           dict(retreat, start_waypoint=end, end_waypoint=len(joints)-1)]
+            transfer_reference = {'version': TRANSFER_POLICY, 'segments': [
+                dict(block['reference'], phase=phase, start_waypoint=block['start_waypoint'],
+                     end_waypoint=block['end_waypoint'])
+                for block, phase in zip(free_blocks, ('transfer', 'retreat'))]}
+            dump(output/'transfer_reference.json', transfer_reference)
+            report['transfer_reference_file'] = fingerprint(output/'transfer_reference.json')
+            import json
+            request_file = output/'request.json'
+            if request_file.exists():
+                request = json.loads(request_file.read_text(encoding='utf-8'))
+                request.update(schema_version=8, transfer_policy=TRANSFER_POLICY,
+                               transfer_reference_file=report['transfer_reference_file'])
+                dump(request_file, request)
             dump(output/'sweep_reference.json', path.record)
             segment = {'status': 'planned', 'reference_kind': path_kind, 'stroke_id': -1,
                        'tooth': 0, 'teeth': selected_teeth,
@@ -111,18 +130,18 @@ def plan_sweep(geometry, robot, checker, world, cfg, output, options, jaw_openin
                        'rolls_deg': [float(x[2]) for x in trace], 'samples': len(trace),
                        'trace_start_waypoint': start, 'trace_end_waypoint': end,
                        'transfer_method': transition['method'],
-                       'retreat_mm': cfg.retreat_mm}
+                       'retreat_method': 'straight_tcp_return_home', 'retreat_mm': None}
             report['roll_summary'] = {'mode': 'fixed', 'fixed_roll_deg': options.fixed_roll_deg,
                                      'total_roll_variation_deg': 0.}
-            if cfg.planning_mode == 'simple':
+            if cfg.planning_mode in BOUNDED_PLANNING_MODES:
                 rolls = np.asarray([x[2] for x in trace])
-                report['roll_summary'].update(mode=path.record['regional_orientation']['search_mode'],
+                report['roll_summary'].update(mode=path.orientation['search_mode'],
                     total_roll_variation_deg=float(abs(np.diff(rolls)).sum()),
                     maximum_reference_deviation_deg=float(abs(rolls-options.fixed_roll_deg).max()))
             report.update(motion_segments=[segment], per_tooth=path.record['per_tooth'],
                           sweep_reference_file=fingerprint(output/'sweep_reference.json'))
             try:
-                plan = build(joints, phases, teeth, robot, cfg, duration_s)
+                plan = build(joints, phases, teeth, robot, cfg, duration_s, free_blocks=free_blocks)
             except (ValueError, RuntimeError) as error:
                 report.update(status='fixed_path_build_failed', execution_ready=False, error=str(error),
                               timing_method=TIMING_METHOD, input_pose_count=len(parameters),

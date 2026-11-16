@@ -119,7 +119,8 @@
                       diaginertia="0.000157414 0.000171939 0.000258275"/>
                     <geom name="force_sensor_geom" type="mesh" mesh="force_sensor_mesh"
                       pos="-0.0375 -0.0375 0" rgba="0.88 0.55 0.20 1"/>
-                    <body name="end_scaler_link" pos="0 0 0.0405" quat="0 0 0 1">
+                    <!-- Tool mount aligned with sensor +Z; 180-degree roll from the former mounting. -->
+                    <body name="end_scaler_link" pos="0 0 0.0405" quat="1 0 0 0">
                       <inertial mass="0.30" pos="0.011516313 -0.000035074 0.020170779"
                         diaginertia="0.000701646 0.001073208 0.000551428"/>
                       <geom name="end_scaler_geom" type="mesh" mesh="end_scaler_mesh"

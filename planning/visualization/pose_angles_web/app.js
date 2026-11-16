@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
+import { installPlanning } from './planning.js';
 
 const $ = id => document.getElementById(id);
 const names = {outer_left: '外侧 · 左后牙', outer_front: '外侧 · 前牙', outer_right: '外侧 · 右后牙', inner_right: '内侧 · 右后牙', inner_front: '内侧 · 前牙', inner_left: '内侧 · 左后牙'};
@@ -12,7 +13,7 @@ lucide.createIcons();
 
 let data, region, pose, mode, picked = null, poseSequence = 0, regionSequence = 0;
 let renderer, controls, tool, fullTool, workingTool, tooth, jaw, opposing, path;
-let toolAxes, referenceAxes, contact;
+let toolAxes, referenceAxes, contact, actualPath, planning, poseReady = false;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#edf1f2');
 const camera = new THREE.PerspectiveCamera(38, 1, .01, 10000);
@@ -77,6 +78,7 @@ function fit() {
   const box = new THREE.Box3().setFromObject(scope === 'tooth' ? tooth : jaw);
   if (scope === 'both') box.expandByObject(opposing);
   box.expandByObject($('tool-full').checked ? fullTool : workingTool);
+  if (actualPath?.visible) box.expandByObject(actualPath);
   const center = box.getCenter(new THREE.Vector3());
   const radius = box.getSize(new THREE.Vector3()).length()/2;
   const halfFov = Math.min(camera.fov*Math.PI/360, Math.atan(Math.tan(camera.fov*Math.PI/360)*camera.aspect));
@@ -113,6 +115,8 @@ function params() {
 
 async function updatePose() {
   if (!region) return;
+  poseReady = false;
+  planning?.refresh();
   const sequence = ++poseSequence;
   $('copy').disabled = $('save').disabled = true;
   try {
@@ -133,8 +137,31 @@ async function updatePose() {
     $('station').disabled = $('station-number').disabled = Boolean(picked);
     setError(''); draw();
     $('copy').disabled = $('save').disabled = false;
+    poseReady = true;
     window.dispatchEvent(new CustomEvent('pose-updated'));
-  } catch (error) { if (sequence === poseSequence) setError(error.message); }
+  } catch (error) { if (sequence === poseSequence) { setError(error.message); planning?.refresh(); } }
+}
+
+function showActualPath(record, {visible, stale}) {
+  if (record !== null) {
+    if (actualPath) { scene.remove(actualPath); actualPath.geometry.dispose(); actualPath.material.dispose(); actualPath = null; }
+    if (record) {
+      const positions = [], colors = [];
+      const color = phase => new THREE.Color(phase === 'trace' ? '#bd356c' : phase === 'retreat' ? '#4272c5' : '#ab791c');
+      for (let i = 1; i < record.points_world_m.length; i++) {
+        for (const j of [i-1, i]) {
+          positions.push(...record.points_world_m[j].map((value, axis) => (value-data.display_origin_world_m[axis])*1000));
+          colors.push(...color(record.phases[i-1]).toArray());
+        }
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+      actualPath = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({vertexColors: true, transparent: true}));
+      scene.add(actualPath);
+    }
+  }
+  if (actualPath) { actualPath.visible = visible; actualPath.material.opacity = stale ? .3 : 1; draw(); }
 }
 
 function installRegion(record) {
@@ -204,6 +231,7 @@ async function start() {
   });
   $('region').addEventListener('change', async () => {
     const sequence = ++regionSequence; ++poseSequence;
+    poseReady = false; planning?.refresh();
     $('region').disabled = true;
     try {
       const record = await json(`/api/region?region=${encodeURIComponent($('region').value)}`);
@@ -216,6 +244,7 @@ async function start() {
   $('fit').addEventListener('click', fit);
   $('reset').addEventListener('click', () => { angleIds.forEach(id => setPair(id, 0)); updatePose(); });
   $('restore').addEventListener('click', () => { picked = null; setPair('station', region.station_mm); updatePose(); });
+  $('pick').addEventListener('change', () => { if (!$('pick').checked) { picked = null; updatePose(); } planning?.refresh(); });
   $('tool-full').addEventListener('change', () => { fullTool.visible = $('tool-full').checked; workingTool.visible = !fullTool.visible; fit(); });
   $('axes').addEventListener('change', () => { toolAxes.visible = $('axes').checked; draw(); });
   $('reference').addEventListener('change', () => { referenceAxes.visible = $('reference').checked; draw(); });
@@ -259,7 +288,8 @@ async function start() {
   const {width, height} = viewport.getBoundingClientRect();
   camera.aspect = width/height; renderer.setSize(width, height); showScope();
   $('loading').hidden = true;
-  window.posePreview = {get pose() { return pose; }, get region() { return region; }, camera, controls, renderer, scene, tool, fit};
+  planning = installPlanning(data, () => ({pose, picked: picked !== null || $('pick').checked, mode, ready: poseReady && !$('region').disabled}), showActualPath);
+  window.posePreview = {get pose() { return pose; }, get region() { return region; }, get planning() { return planning; }, camera, controls, renderer, scene, tool, fit};
   window.dispatchEvent(new CustomEvent('preview-ready'));
 }
 

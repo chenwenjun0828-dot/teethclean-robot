@@ -3,13 +3,17 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 from planning.infrastructure.poses import unit, TCP_FRAME_ID
 from planning.infrastructure.io import validate_transform
+from ..config import BOUNDED_PLANNING_MODES
 
 AXIS_CONVENTION = 'gravity_fixed_z_y_tool_x_y_down_v3'
 SIMPLE_AXIS_CONVENTION = 'regional_gravity_fixed_z_y_tool_x_y_down_v3'
+LOCAL_SURFACE_AXIS_CONVENTION = 'local_surface_gravity_fixed_z_y_tool_x_y_down_v1'
 WORLD_GRAVITY = (0., 0., -1.)
 
 
 def axis_convention(cfg):
+    if cfg.planning_mode == 'local_surface':
+        return LOCAL_SURFACE_AXIS_CONVENTION
     return SIMPLE_AXIS_CONVENTION if cfg.planning_mode == 'simple' else AXIS_CONVENTION
 
 
@@ -77,7 +81,7 @@ def pose_at(point, tangent, normal, roll, world, cfg):
 
 
 def target_at(path, s, roll, world, cfg):
-    if cfg.planning_mode == 'simple':
+    if cfg.planning_mode in BOUNDED_PLANNING_MODES:
         from ..simple import target_at as simple_target
         return simple_target(path, s, roll, world, cfg)
     return pose_at(path.evaluate(s), unit(path.evaluate(s, 1)), path.normal(s), roll, world, cfg)

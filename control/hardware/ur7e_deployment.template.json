@@ -1,0 +1,69 @@
+{
+  "robot_model": null,
+  "joint_names": null,
+  "controller_interpolation": null,
+  "command_owner": null,
+  "planning_world_from_base_m": null,
+  "identity": {
+    "robot_ip": null,
+    "serial_number": null,
+    "polyscope_version": null,
+    "driver_version": null,
+    "launch_command": null,
+    "kinematic_calibration_sha256": null,
+    "tool_tcp_evidence": null,
+    "payload_evidence": null,
+    "registration_evidence": null,
+    "force_units_compensation_evidence": null,
+    "fk_site_evidence": null,
+    "stop_test_evidence": null,
+    "independent_watchdog_evidence": null,
+    "exclusive_command_evidence": null,
+    "controller_progress_evidence": null
+  },
+  "ros": {
+    "action": null,
+    "controller": null,
+    "list_controllers_service": null,
+    "stop_service": null,
+    "joint_states_topic": null,
+    "wrench_topic": null,
+    "wrench_frame": null,
+    "robot_mode_service": null,
+    "safety_mode_service": null,
+    "program_running_service": null,
+    "speed_scaling_topic": null,
+    "watchdog_ready_topic": null,
+    "heartbeat_topic": null,
+    "base_frame": null,
+    "tip_frame": null,
+    "controller_state_topic": null
+  },
+  "limits": {
+    "start_joint_rad": null,
+    "joint_tracking_rad": null,
+    "tcp_tracking_mm": null,
+    "tcp_angle_deg": null,
+    "stopped_rad_s": null,
+    "max_state_age_s": null,
+    "max_feedback_age_s": null,
+    "max_stall_s": null,
+    "max_run_wall_s": null,
+    "stop_timeout_s": null,
+    "settle_s": null,
+    "poll_s": null,
+    "goal_lead_s": null
+  },
+  "phase_limits": {
+    "transfer": {"force_n": null, "torque_nm": null},
+    "trace": {"force_n": null, "torque_nm": null},
+    "retreat": {"force_n": null, "torque_nm": null}
+  },
+  "authorization": {
+    "trajectory_sha256": null,
+    "manifest_sha256": null,
+    "export_report_sha256": null,
+    "approved_by": null,
+    "expires_utc": null
+  }
+}

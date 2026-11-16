@@ -1,0 +1,1063 @@
+{
+  "inputs": {
+    "jaw": "mandibular",
+    "scan": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\source_cad\\teeth\\mandibular_scan.ply",
+    "topology": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\mandibular\\gingival_line_segments.obj",
+    "prediction": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\tooth_segmentation\\crosstooth_mandibular"
+  },
+  "config": {
+    "spacing_mm": 0.25,
+    "pose_spacing_mm": 0.05,
+    "fit_tolerance_mm": 0.15,
+    "plane_band_mm": 5.0,
+    "plane_rms_limit_mm": 0.8,
+    "assignment_max_distance_mm": 2.0,
+    "tilt_deg": 35.0,
+    "standoff_mm": 0.2,
+    "clearance_mm": 0.0,
+    "min_stroke_mm": 1.5,
+    "min_tooth_coverage": 0.25,
+    "joint_step_rad": 0.15,
+    "max_orientation_step_deg": 20.0,
+    "sweep_step_rad": 0.004,
+    "interpolation_position_mm": 0.1,
+    "interpolation_angle_deg": 1.0,
+    "joint_speed_rad_s": 0.3,
+    "joint_accel_rad_s2": 0.8,
+    "orientation_speed_deg_s": 15.0,
+    "speed_mm_s": 1.0,
+    "retreat_mm": 15.0,
+    "motion_mode": "contact",
+    "transfer_speed_mm_s": 150.0,
+    "tilt_azimuth_deg": -20.0,
+    "region": "outer_front",
+    "speed_profile": "local",
+    "orientation_audit": "strict",
+    "planning_mode": "continuous",
+    "simple_angle_deg": -75.0,
+    "simple_angle2_deg": -33.0,
+    "check_mode": "geometry_only",
+    "gravity_world": [
+      0.0,
+      0.0,
+      -1.0
+    ],
+    "working_segment_radius_mm": 2.0,
+    "contact_tolerance_mm": 0.5,
+    "nonworking_clearance_mm": 0.0,
+    "local_angle_search": true
+  },
+  "planner": "planning",
+  "region": "outer_front",
+  "planning_mode": "continuous",
+  "check_mode": "geometry_only",
+  "jaw_opening_deg": 0.0,
+  "target_duration_s": null,
+  "motion_mode": "contact",
+  "standoff_mm": 0.2,
+  "contact_force_control": false,
+  "contact_policy": "Collision checking is disabled by check_mode=geometry_only: clearance, clearance_mm, transport speed and plan clearance records are diagnostic only and this plan is never execution-ready.",
+  "working_contact_enabled": false,
+  "scene": {
+    "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\simulation\\scene_ur7e_dental.xml",
+    "sha256": "a1796f6b416d3cbf23487814b0a0185312e090e82753b454f25b04eddf5539cc"
+  },
+  "robot_model": {
+    "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\simulation\\robot\\ur7e_with_tool.xml",
+    "sha256": "a0c2da4e9bcfdd4052d026f6ab8bfd81ca9d3af86a107d6d04c19d35c1ad74eb"
+  },
+  "oral_settings": {
+    "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\config\\oral_settings.py",
+    "sha256": "2de0ce216746382afecdbd09fc0c2cdf22ce07e548b7f06a12ac74b458889803"
+  },
+  "perception_session": {
+    "source": "wyh_session",
+    "session_id": "20261113_220209",
+    "session_root": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209",
+    "manifest_file": {
+      "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\planning_input_manifest.json",
+      "sha256": "671fe10247532950fdbc21d92205ab369162666af5753b934f5269f6d1bb9c17"
+    },
+    "jaw": "mandibular",
+    "region": "outer_front",
+    "coordinate_frame": "controller_base",
+    "position_unit": "m",
+    "frame_adapter_version": "ur_base_to_controller_base_rz_pi_v1",
+    "camera_frame": "color_optical",
+    "camera_frame_version": "session_camera_frame_interpretation_v1",
+    "camera_frame_status": "optical_frame_hypothesis_live_tf_unverified",
+    "T_ur_base_controller_base_m": [
+      [
+        -1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        -1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "T_world_controller_base_m": [
+      [
+        0.0,
+        -1.0000000000000002,
+        0.0,
+        0.6959828478597841
+      ],
+      [
+        1.0000000000000002,
+        0.0,
+        0.0,
+        -0.9912957693238451
+      ],
+      [
+        0.0,
+        0.0,
+        1.0000000000000002,
+        0.77
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "robot_joint_names": [
+      "shoulder_pan_joint",
+      "shoulder_lift_joint",
+      "elbow_joint",
+      "wrist_1_joint",
+      "wrist_2_joint",
+      "wrist_3_joint"
+    ],
+    "robot_joint_positions_rad": [
+      1.3662437384611612,
+      -0.803025988842591,
+      1.1346385467215137,
+      -4.774522701755688,
+      0.5082398781807488,
+      -0.33283428835531864
+    ],
+    "robot_joint_pose_source": "user transcribed teach pendant joint positions",
+    "jaw_scan_transforms_controller_base_m": {
+      "mandibular": [
+        [
+          -0.12329859511389085,
+          0.5447391378071443,
+          -0.8294918493777199,
+          0.32683575019532707
+        ],
+        [
+          -0.9921661644915116,
+          -0.08459303109757374,
+          0.0919256282433143,
+          -0.568516656467184
+        ],
+        [
+          -0.020093742337950218,
+          0.8343280474914248,
+          0.5509019428972841,
+          0.15363837746972583
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "maxillary": [
+        [
+          -0.017947134386381444,
+          0.8339157970250177,
+          -0.5515998040603786,
+          0.3272815833347785
+        ],
+        [
+          -0.9992280355938674,
+          -0.03424216305155093,
+          -0.019256353568952722,
+          -0.5731688031105937
+        ],
+        [
+          -0.03494614786408779,
+          0.5508283922799199,
+          0.833886592413969,
+          0.18158993484713265
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "jaw_scan_transforms_published_controller_base_m": {
+      "mandibular": [
+        [
+          0.4025709269275834,
+          0.9076107439198811,
+          0.11907709524664652,
+          0.07423051900491469
+        ],
+        [
+          0.04744494416111046,
+          -0.15059689397777706,
+          0.9874561205750498,
+          -0.792117511812757
+        ],
+        [
+          0.9141584064489527,
+          -0.39187151284641886,
+          -0.10368747231283298,
+          0.3634933919771895
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "maxillary": [
+        [
+          0.4302071071918947,
+          0.7532575808729794,
+          0.49751870495386324,
+          0.09932287469941914
+        ],
+        [
+          -0.05470377779941333,
+          -0.5283606757473243,
+          0.8472558604213395,
+          -0.781117704973688
+        ],
+        [
+          0.9010712189477893,
+          -0.3917116454500921,
+          -0.18609848253741185,
+          0.35624710116007996
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "jaw_scan_transform_chain_m": {
+      "mandibular": [
+        [
+          0.40257093382482967,
+          0.9076107582604568,
+          0.11907709573752508,
+          0.07423051900491467
+        ],
+        [
+          0.047444943621710416,
+          -0.1505968927753601,
+          0.987456101915999,
+          -0.792117511812757
+        ],
+        [
+          0.9141584220276797,
+          -0.39187151896544575,
+          -0.10368747301181953,
+          0.3634933919771895
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "maxillary": [
+        [
+          0.43020710719189437,
+          0.7532575808729794,
+          0.4975187049538632,
+          0.09932287469941914
+        ],
+        [
+          -0.054703777799413336,
+          -0.5283606757473238,
+          0.8472558604213394,
+          -0.781117704973688
+        ],
+        [
+          0.9010712189477889,
+          -0.39171164545009207,
+          -0.1860984825374119,
+          0.35624710116007996
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "jaw_effective_transform_chain_m": {
+      "mandibular": {
+        "controller_base_from_wrist3": [
+          [
+            0.46966591610604624,
+            -0.044806396994800574,
+            0.8817064783909735,
+            0.10257422315077627
+          ],
+          [
+            -0.00029184885158933056,
+            -0.9987190956429329,
+            -0.05059726101687667,
+            -0.5901421795394489
+          ],
+          [
+            0.8828441776851201,
+            0.023506483924790725,
+            -0.46907739568324675,
+            0.32040604208641954
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "wrist3_from_color_optical": [
+          [
+            -0.0077103960849287945,
+            -0.9999298688102479,
+            0.008989285474069152,
+            0.052784734483046124
+          ],
+          [
+            0.9999680967909247,
+            -0.007728828685051259,
+            -0.0020175746561879302,
+            -0.00890095396872504
+          ],
+          [
+            0.002086909808706978,
+            0.00897344238728511,
+            0.9999575601690167,
+            0.0611502459188928
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "color_optical_from_depth_optical": [
+          [
+            0.9999688267707825,
+            -8.76229751156643e-05,
+            0.007893270812928677,
+            -8.415490810875781e-06
+          ],
+          [
+            9.411187784280628e-05,
+            0.9999996423721313,
+            -0.0008217127178795636,
+            9.505017260380555e-06
+          ],
+          [
+            -0.007893195375800133,
+            0.0008224299526773393,
+            0.9999685287475586,
+            9.999999747378752e-06
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "depth_optical_from_scan": [
+          [
+            0.9967782875971684,
+            0.07132827749955946,
+            -0.036678634159455645,
+            -0.027150499487358794
+          ],
+          [
+            0.06708604998527846,
+            -0.9920837123080218,
+            -0.10615728741120192,
+            0.0969779157243126
+          ],
+          [
+            -0.04396029199436755,
+            0.10335465447708546,
+            -0.9936726362971328,
+            0.21261148196233376
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "maxillary": {
+        "controller_base_from_wrist3": [
+          [
+            0.46966591610604624,
+            -0.044806396994800574,
+            0.8817064783909735,
+            0.10257422315077627
+          ],
+          [
+            -0.00029184885158933056,
+            -0.9987190956429329,
+            -0.05059726101687667,
+            -0.5901421795394489
+          ],
+          [
+            0.8828441776851201,
+            0.023506483924790725,
+            -0.46907739568324675,
+            0.32040604208641954
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "wrist3_from_color_optical": [
+          [
+            -0.0077103960849287945,
+            -0.9999298688102479,
+            0.008989285474069152,
+            0.052784734483046124
+          ],
+          [
+            0.9999680967909247,
+            -0.007728828685051259,
+            -0.0020175746561879302,
+            -0.00890095396872504
+          ],
+          [
+            0.002086909808706978,
+            0.00897344238728511,
+            0.9999575601690167,
+            0.0611502459188928
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "color_optical_from_depth_optical": [
+          [
+            0.9999688267707825,
+            -8.76229751156643e-05,
+            0.007893270812928677,
+            -8.415490810875781e-06
+          ],
+          [
+            9.411187784280628e-05,
+            0.9999996423721313,
+            -0.0008217127178795636,
+            9.505017260380555e-06
+          ],
+          [
+            -0.007893195375800133,
+            0.0008224299526773393,
+            0.9999685287475586,
+            9.999999747378752e-06
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "depth_optical_from_scan": [
+          [
+            0.9978932964248722,
+            8.845433171456762e-05,
+            0.0648765067349714,
+            -0.021991027531776126
+          ],
+          [
+            0.03168536408565048,
+            -0.8732865771640385,
+            -0.4861754743380989,
+            0.07192866620830869
+          ],
+          [
+            0.05661277817826446,
+            0.4872068824646748,
+            -0.8714496239175219,
+            0.20040305216261875
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      }
+    },
+    "jaw_published_transform_chain_m": {
+      "mandibular": {
+        "controller_base_from_wrist3": [
+          [
+            0.46966591610604624,
+            -0.044806396994800574,
+            0.8817064783909735,
+            0.10257422315077627
+          ],
+          [
+            -0.00029184885158933056,
+            -0.9987190956429329,
+            -0.05059726101687667,
+            -0.5901421795394489
+          ],
+          [
+            0.8828441776851201,
+            0.023506483924790725,
+            -0.46907739568324675,
+            0.32040604208641954
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "wrist3_from_color_frame": [
+          [
+            -0.0077103960849287945,
+            -0.9999298688102479,
+            0.008989285474069152,
+            0.052784734483046124
+          ],
+          [
+            0.9999680967909247,
+            -0.007728828685051259,
+            -0.0020175746561879302,
+            -0.00890095396872504
+          ],
+          [
+            0.002086909808706978,
+            0.00897344238728511,
+            0.9999575601690167,
+            0.0611502459188928
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "color_frame_from_depth_optical": [
+          [
+            -0.007893195375800133,
+            0.0008224299526773393,
+            0.9999685287475586,
+            9.999999747378752e-06
+          ],
+          [
+            -0.9999688267707825,
+            8.76229751156643e-05,
+            -0.007893270812928677,
+            8.415490810875781e-06
+          ],
+          [
+            -9.411187784280628e-05,
+            -0.9999996423721313,
+            0.0008217127178795636,
+            -9.505017260380555e-06
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "depth_optical_from_scan": [
+          [
+            0.9967782875971684,
+            0.07132827749955946,
+            -0.036678634159455645,
+            -0.027150499487358794
+          ],
+          [
+            0.06708604998527846,
+            -0.9920837123080218,
+            -0.10615728741120192,
+            0.0969779157243126
+          ],
+          [
+            -0.04396029199436755,
+            0.10335465447708546,
+            -0.9936726362971328,
+            0.21261148196233376
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "maxillary": {
+        "controller_base_from_wrist3": [
+          [
+            0.46966591610604624,
+            -0.044806396994800574,
+            0.8817064783909735,
+            0.10257422315077627
+          ],
+          [
+            -0.00029184885158933056,
+            -0.9987190956429329,
+            -0.05059726101687667,
+            -0.5901421795394489
+          ],
+          [
+            0.8828441776851201,
+            0.023506483924790725,
+            -0.46907739568324675,
+            0.32040604208641954
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "wrist3_from_color_frame": [
+          [
+            -0.0077103960849287945,
+            -0.9999298688102479,
+            0.008989285474069152,
+            0.052784734483046124
+          ],
+          [
+            0.9999680967909247,
+            -0.007728828685051259,
+            -0.0020175746561879302,
+            -0.00890095396872504
+          ],
+          [
+            0.002086909808706978,
+            0.00897344238728511,
+            0.9999575601690167,
+            0.0611502459188928
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "color_frame_from_depth_optical": [
+          [
+            -0.007893195375800133,
+            0.0008224299526773393,
+            0.9999685287475586,
+            9.999999747378752e-06
+          ],
+          [
+            -0.9999688267707825,
+            8.76229751156643e-05,
+            -0.007893270812928677,
+            8.415490810875781e-06
+          ],
+          [
+            -9.411187784280628e-05,
+            -0.9999996423721313,
+            0.0008217127178795636,
+            -9.505017260380555e-06
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "depth_optical_from_scan": [
+          [
+            0.9978932964248722,
+            8.845433171456762e-05,
+            0.0648765067349714,
+            -0.021991027531776126
+          ],
+          [
+            0.03168536408565048,
+            -0.8732865771640385,
+            -0.4861754743380989,
+            0.07192866620830869
+          ],
+          [
+            0.05661277817826446,
+            0.4872068824646748,
+            -0.8714496239175219,
+            0.20040305216261875
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      }
+    },
+    "source_files": {
+      "handeye_25.yaml": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\calibration\\ur7e_d405\\20261113\\handeye_25.yaml",
+        "sha256": "a3959a1ffdeb970044b2a3fba845fc9f26090a3e8c431c0bd5481a23f57633ec"
+      },
+      "handeye_inventory.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\calibration\\ur7e_d405\\20261113\\handeye_inventory.json",
+        "sha256": "4ac9a5b32cbe2e03936b53dc64450e56f61f017f3bcce82cafd19ee11768dfe2"
+      },
+      "camera_extrinsics.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\calibration\\ur7e_d405\\20261113\\camera_extrinsics.json",
+        "sha256": "4f946e74ffe2e24ea0d41196c464a8cd7bccee0ea822234205fb50a7aad974ff"
+      },
+      "robot_joint_observation.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\robot_joint_observation.json",
+        "sha256": "2dab9e73bdbf30c6b679f5fff228fef5cf12c56c220fe8a15f61f74f3bdf2a84"
+      },
+      "fk_report.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\fk_report.json",
+        "sha256": "59cf29b5a3a019d975390be8f35811a60b8ce78d187779d67bb9f5ab1c98701f"
+      },
+      "T_wrist3_color_frame_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_wrist3_color_frame_m.npy",
+        "sha256": "5936db43db6405ed3ea8b2fa157e1fa1e7b2b144cf7469debdcf56a26c64dbee"
+      },
+      "T_color_frame_depth_optical_ros_convention_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_color_frame_depth_optical_ros_convention_m.npy",
+        "sha256": "480b8b22fdaadc873a47a4fc1d5ac0d666cb2e069165748b95dfbab09b36a0f4"
+      },
+      "T_controller_base_wrist3_nominal_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_controller_base_wrist3_nominal_m.npy",
+        "sha256": "ed9571c66c4ba23df7646b5cf0762af475bd7563dab264e490891881926b098e"
+      },
+      "T_controller_base_depth_optical_nominal_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_controller_base_depth_optical_nominal_m.npy",
+        "sha256": "d60d299a536e77c4c60bcadc9d3515a8b3d2245f12648a89d40ce5a6cb5b75bd"
+      },
+      "region_mesh": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\mandibular\\shared\\region_mesh.npz",
+        "sha256": "9ce661eee27d11151d225f0cf01222070d50114930a4fddaa042df36d8f407a3"
+      },
+      "planning_input_manifest": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\planning_input_manifest.json",
+        "sha256": "671fe10247532950fdbc21d92205ab369162666af5753b934f5269f6d1bb9c17"
+      },
+      "controller_base_from_wrist3": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_controller_base_wrist3_nominal_m.npy",
+        "sha256": "ed9571c66c4ba23df7646b5cf0762af475bd7563dab264e490891881926b098e"
+      },
+      "wrist3_from_color_frame": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_wrist3_color_frame_m.npy",
+        "sha256": "5936db43db6405ed3ea8b2fa157e1fa1e7b2b144cf7469debdcf56a26c64dbee"
+      },
+      "color_frame_from_depth_optical": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_color_frame_depth_optical_ros_convention_m.npy",
+        "sha256": "480b8b22fdaadc873a47a4fc1d5ac0d666cb2e069165748b95dfbab09b36a0f4"
+      },
+      "depth_optical_from_scan": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\mandibular\\T_depth_optical_scan_m.npy",
+        "sha256": "1e1f34049932982e531294dd37d1ca842fcd014929e74f73bfb759c7da1aa2af"
+      },
+      "published_transform": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\mandibular\\T_controller_base_scan_nominal_m.npy",
+        "sha256": "9616c32271882cc5f5701e43d6dbf40fa8f76a6061f5ca8ac15c613bdc658f16"
+      },
+      "points_csv": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\mandibular\\regions\\outer_front\\points_controller_base_nominal_m.csv",
+        "sha256": "4350ea062f9736500178754f9cec605351301d6344cee191178bd3805d09aec7"
+      },
+      "geometry_npz": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\mandibular\\regions\\outer_front\\region_controller_base_nominal.npz",
+        "sha256": "816b4a0a262035285a0bb423166ec4eea95f4450498b395aa1c16c2dee18a31f"
+      },
+      "prepared_region": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\mandibular\\regions\\outer_front\\perception_region.json",
+        "sha256": "01a1a8d16dd6eea2c0b2a2f7ab0f20a8613bb33f552ed65920e2404ce391ddc9"
+      },
+      "coordinate_metadata": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\mandibular\\regions\\outer_front\\base_coordinates.json",
+        "sha256": "43e68d88f3cc21b60699ef445983ca148cf2b2db77ea65ef778396b0bc9e9a41"
+      },
+      "mandibular/handeye_25.yaml": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\calibration\\ur7e_d405\\20261113\\handeye_25.yaml",
+        "sha256": "a3959a1ffdeb970044b2a3fba845fc9f26090a3e8c431c0bd5481a23f57633ec"
+      },
+      "mandibular/handeye_inventory.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\calibration\\ur7e_d405\\20261113\\handeye_inventory.json",
+        "sha256": "4ac9a5b32cbe2e03936b53dc64450e56f61f017f3bcce82cafd19ee11768dfe2"
+      },
+      "mandibular/camera_extrinsics.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\calibration\\ur7e_d405\\20261113\\camera_extrinsics.json",
+        "sha256": "4f946e74ffe2e24ea0d41196c464a8cd7bccee0ea822234205fb50a7aad974ff"
+      },
+      "mandibular/robot_joint_observation.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\robot_joint_observation.json",
+        "sha256": "2dab9e73bdbf30c6b679f5fff228fef5cf12c56c220fe8a15f61f74f3bdf2a84"
+      },
+      "mandibular/fk_report.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\fk_report.json",
+        "sha256": "59cf29b5a3a019d975390be8f35811a60b8ce78d187779d67bb9f5ab1c98701f"
+      },
+      "mandibular/T_wrist3_color_frame_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_wrist3_color_frame_m.npy",
+        "sha256": "5936db43db6405ed3ea8b2fa157e1fa1e7b2b144cf7469debdcf56a26c64dbee"
+      },
+      "mandibular/T_color_frame_depth_optical_ros_convention_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_color_frame_depth_optical_ros_convention_m.npy",
+        "sha256": "480b8b22fdaadc873a47a4fc1d5ac0d666cb2e069165748b95dfbab09b36a0f4"
+      },
+      "mandibular/T_controller_base_wrist3_nominal_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_controller_base_wrist3_nominal_m.npy",
+        "sha256": "ed9571c66c4ba23df7646b5cf0762af475bd7563dab264e490891881926b098e"
+      },
+      "mandibular/T_controller_base_depth_optical_nominal_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_controller_base_depth_optical_nominal_m.npy",
+        "sha256": "d60d299a536e77c4c60bcadc9d3515a8b3d2245f12648a89d40ce5a6cb5b75bd"
+      },
+      "mandibular/region_mesh": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\mandibular\\shared\\region_mesh.npz",
+        "sha256": "9ce661eee27d11151d225f0cf01222070d50114930a4fddaa042df36d8f407a3"
+      },
+      "mandibular/planning_input_manifest": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\planning_input_manifest.json",
+        "sha256": "671fe10247532950fdbc21d92205ab369162666af5753b934f5269f6d1bb9c17"
+      },
+      "mandibular/controller_base_from_wrist3": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_controller_base_wrist3_nominal_m.npy",
+        "sha256": "ed9571c66c4ba23df7646b5cf0762af475bd7563dab264e490891881926b098e"
+      },
+      "mandibular/wrist3_from_color_frame": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_wrist3_color_frame_m.npy",
+        "sha256": "5936db43db6405ed3ea8b2fa157e1fa1e7b2b144cf7469debdcf56a26c64dbee"
+      },
+      "mandibular/color_frame_from_depth_optical": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_color_frame_depth_optical_ros_convention_m.npy",
+        "sha256": "480b8b22fdaadc873a47a4fc1d5ac0d666cb2e069165748b95dfbab09b36a0f4"
+      },
+      "mandibular/depth_optical_from_scan": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\mandibular\\T_depth_optical_scan_m.npy",
+        "sha256": "1e1f34049932982e531294dd37d1ca842fcd014929e74f73bfb759c7da1aa2af"
+      },
+      "mandibular/published_transform": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\mandibular\\T_controller_base_scan_nominal_m.npy",
+        "sha256": "9616c32271882cc5f5701e43d6dbf40fa8f76a6061f5ca8ac15c613bdc658f16"
+      },
+      "maxillary/handeye_25.yaml": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\calibration\\ur7e_d405\\20261113\\handeye_25.yaml",
+        "sha256": "a3959a1ffdeb970044b2a3fba845fc9f26090a3e8c431c0bd5481a23f57633ec"
+      },
+      "maxillary/handeye_inventory.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\calibration\\ur7e_d405\\20261113\\handeye_inventory.json",
+        "sha256": "4ac9a5b32cbe2e03936b53dc64450e56f61f017f3bcce82cafd19ee11768dfe2"
+      },
+      "maxillary/camera_extrinsics.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\calibration\\ur7e_d405\\20261113\\camera_extrinsics.json",
+        "sha256": "4f946e74ffe2e24ea0d41196c464a8cd7bccee0ea822234205fb50a7aad974ff"
+      },
+      "maxillary/robot_joint_observation.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\robot_joint_observation.json",
+        "sha256": "2dab9e73bdbf30c6b679f5fff228fef5cf12c56c220fe8a15f61f74f3bdf2a84"
+      },
+      "maxillary/fk_report.json": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\fk_report.json",
+        "sha256": "59cf29b5a3a019d975390be8f35811a60b8ce78d187779d67bb9f5ab1c98701f"
+      },
+      "maxillary/T_wrist3_color_frame_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_wrist3_color_frame_m.npy",
+        "sha256": "5936db43db6405ed3ea8b2fa157e1fa1e7b2b144cf7469debdcf56a26c64dbee"
+      },
+      "maxillary/T_color_frame_depth_optical_ros_convention_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_color_frame_depth_optical_ros_convention_m.npy",
+        "sha256": "480b8b22fdaadc873a47a4fc1d5ac0d666cb2e069165748b95dfbab09b36a0f4"
+      },
+      "maxillary/T_controller_base_wrist3_nominal_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_controller_base_wrist3_nominal_m.npy",
+        "sha256": "ed9571c66c4ba23df7646b5cf0762af475bd7563dab264e490891881926b098e"
+      },
+      "maxillary/T_controller_base_depth_optical_nominal_m": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_controller_base_depth_optical_nominal_m.npy",
+        "sha256": "d60d299a536e77c4c60bcadc9d3515a8b3d2245f12648a89d40ce5a6cb5b75bd"
+      },
+      "maxillary/region_mesh": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\maxillary\\shared\\region_mesh.npz",
+        "sha256": "85fe551a6e1d65cbbdb31c60b7e2b8765855eefd279123de410c6c809e08807a"
+      },
+      "maxillary/planning_input_manifest": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\planning_input_manifest.json",
+        "sha256": "671fe10247532950fdbc21d92205ab369162666af5753b934f5269f6d1bb9c17"
+      },
+      "maxillary/controller_base_from_wrist3": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_controller_base_wrist3_nominal_m.npy",
+        "sha256": "ed9571c66c4ba23df7646b5cf0762af475bd7563dab264e490891881926b098e"
+      },
+      "maxillary/wrist3_from_color_frame": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_wrist3_color_frame_m.npy",
+        "sha256": "5936db43db6405ed3ea8b2fa157e1fa1e7b2b144cf7469debdcf56a26c64dbee"
+      },
+      "maxillary/color_frame_from_depth_optical": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\transforms\\T_color_frame_depth_optical_ros_convention_m.npy",
+        "sha256": "480b8b22fdaadc873a47a4fc1d5ac0d666cb2e069165748b95dfbab09b36a0f4"
+      },
+      "maxillary/depth_optical_from_scan": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\maxillary\\T_depth_optical_scan_m.npy",
+        "sha256": "2d658183d85d996ce741699839279b2580ed85b8fc66254b429acaf3f0234de3"
+      },
+      "maxillary/published_transform": {
+        "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\assets\\perception\\sessions\\20261113_220209\\maxillary\\T_controller_base_scan_nominal_rigid_m.npy",
+        "sha256": "fc52952b2cf2fce8e68558f6be7da3a2ba3092c72ba814f9176a9fc90bd3e875"
+      }
+    },
+    "jaw_transforms_world_m": {
+      "mandibular": [
+        [
+          0.9921661644915118,
+          0.08459303109757375,
+          -0.09192562824331431,
+          1.2644995043269682
+        ],
+        [
+          -0.12329859511389088,
+          0.5447391378071444,
+          -0.8294918493777201,
+          -0.6644600191285179
+        ],
+        [
+          -0.02009374233795022,
+          0.834328047491425,
+          0.5509019428972842,
+          0.9236383774697259
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "maxillary": [
+        [
+          0.9992280355938676,
+          0.034242163051550936,
+          0.019256353568952726,
+          1.269151650970378
+        ],
+        [
+          -0.017947134386381448,
+          0.833915797025018,
+          -0.5515998040603787,
+          -0.6640141859890665
+        ],
+        [
+          -0.0349461478640878,
+          0.55082839227992,
+          0.8338865924139692,
+          0.9515899348471327
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "robot_execution_allowed": false,
+    "region_boundary_status": "session_artifact"
+  },
+  "path_kind": "continuous_outer_front_sweep",
+  "sweep_options": {
+    "trim_mm": 1.0,
+    "fixed_roll_deg": 15.0
+  },
+  "perception_reference_file": {
+    "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\outputs\\developer_handoff_20261116\\session_plan\\perception_reference.json",
+    "sha256": "0d4f43f65d505cb190386a636babe175affaf94779d665ad028c327fcff2dd3d"
+  },
+  "geometry_owner": "perception",
+  "selected_robot_mount_position_m": [
+    0.6959828478597841,
+    -0.9912957693238451,
+    0.77
+  ],
+  "world_transform_source": "supplied_registration",
+  "world_from_scan_m": [
+    [
+      0.9921661644915118,
+      0.08459303109757375,
+      -0.09192562824331431,
+      1.2644995043269682
+    ],
+    [
+      -0.12329859511389088,
+      0.5447391378071444,
+      -0.8294918493777201,
+      -0.6644600191285179
+    ],
+    [
+      -0.02009374233795022,
+      0.834328047491425,
+      0.5509019428972842,
+      0.9236383774697259
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "schema_version": 8,
+  "transfer_policy": "straight_tcp_home_return_v1",
+  "transfer_reference_file": {
+    "path": "C:\\Users\\Administrator\\Desktop\\teethclean robot\\outputs\\developer_handoff_20261116\\session_plan\\transfer_reference.json",
+    "sha256": "8faf6d76103ad861f4ccb7f1a408c56bfccd93632bbf15cdc1a93d815f8c0b20"
+  }
+}

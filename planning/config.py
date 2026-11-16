@@ -4,7 +4,8 @@ import numpy as np
 
 
 from perception.regions.config import REGIONS, SweepOptions, continuous_path_kind
-PLANNING_MODES = ('continuous', 'simple')
+PLANNING_MODES = ('continuous', 'simple', 'local_surface')
+BOUNDED_PLANNING_MODES = ('simple', 'local_surface')
 CONTINUOUS_PATH_KINDS = tuple(f'continuous_{region}_sweep' for region in REGIONS)
 # 'full' runs the FCL/MuJoCo collision pipeline end to end. 'geometry_only' skips
 # every collision query and only answers "are these poses and paths reachable",
@@ -23,7 +24,7 @@ class Config:
     assignment_max_distance_mm: float = 2.
     tilt_deg: float = 15.
     standoff_mm: float | None = None
-    clearance_mm: float = .15
+    clearance_mm: float = 0.
     min_stroke_mm: float = 1.5
     min_tooth_coverage: float = .25
     joint_step_rad: float = .15
@@ -47,14 +48,18 @@ class Config:
     simple_angle2_deg: float = -33.
     check_mode: str = 'full'
     gravity_world: tuple = (0., 0., -1.)
+    working_segment_radius_mm: float = 1.
+    contact_tolerance_mm: float | None = .05
+    nonworking_clearance_mm: float = 0.
+    local_angle_search: bool = True
 
     def __post_init__(self):
         continuous_path_kind(self.region)
         if self.planning_mode not in PLANNING_MODES:
-            raise ValueError('planning_mode must be continuous or simple')
+            raise ValueError('planning_mode must be continuous, simple or local_surface')
         if self.check_mode not in CHECK_MODES:
             raise ValueError('check_mode must be full or geometry_only')
-        if self.planning_mode == 'simple' and (self.simple_angle_deg, self.simple_angle2_deg) != (-75., -33.):
+        if self.planning_mode in BOUNDED_PLANNING_MODES and (self.simple_angle_deg, self.simple_angle2_deg) != (-75., -33.):
             raise ValueError('The old simple two-angle parameters are retired; use pose_angles_deg (angle, azimuth, flip)')
         if self.speed_profile != 'local':
             raise ValueError('Only local TOPPRA timing is supported')
@@ -68,6 +73,20 @@ class Config:
         if self.standoff_mm is None:
             self.standoff_mm = 0. if self.motion_mode == 'contact' else 1.5
         for name, value in asdict(self).items():
+            if name == 'local_angle_search':
+                if not isinstance(value, bool):
+                    raise ValueError('local_angle_search must be a boolean')
+                continue
+            if name in ('clearance_mm', 'working_segment_radius_mm', 'contact_tolerance_mm', 'nonworking_clearance_mm'):
+                if name == 'contact_tolerance_mm' and value is None:
+                    continue
+                if (isinstance(value, (bool, np.bool_))
+                        or not isinstance(value, (int, float, np.integer, np.floating))
+                        or not np.isfinite(value) or value < 0
+                        or (name == 'working_segment_radius_mm' and value == 0)):
+                    raise ValueError(f'{name} must be finite and '
+                                     + ('positive' if name == 'working_segment_radius_mm' else 'nonnegative'))
+                continue
             if name == 'gravity_world':
                 g = np.asarray(value, float)
                 if g.shape != (3,) or not np.isfinite(g).all() or np.linalg.norm(g) < 1e-12:
@@ -102,10 +121,7 @@ class Config:
                 raise ValueError(f'{name} must be positive and finite')
         if self.min_tooth_coverage > 1:
             raise ValueError('coverage must be at most 1')
-        if self.motion_mode == 'contact':
-            if self.standoff_mm != 0:
-                raise ValueError('contact mode requires standoff_mm=0')
-        elif self.clearance_mm >= self.standoff_mm:
+        if self.motion_mode == 'non-contact' and self.clearance_mm >= self.standoff_mm:
             raise ValueError('Non-contact standoff must exceed clearance')
 
     @classmethod
@@ -115,6 +131,9 @@ class Config:
         values.pop('roll_step_deg', None)
         values.setdefault('pose_spacing_mm', values.get('spacing_mm', .25))
         values.setdefault('planning_mode', 'continuous')
+        values.setdefault('clearance_mm', .15)
+        # Old contact plans rejected the complete tool; do not add permission on load.
+        values.setdefault('contact_tolerance_mm', None)
         if values.get('speed_profile', 'local') not in ('local', 'constant'):
             raise ValueError('Unsupported saved speed profile')
         values['speed_profile'] = 'local'
@@ -124,17 +143,32 @@ class Config:
     def geometry_only(self):
         return self.check_mode == GEOMETRY_ONLY
 
+    def tool_contact_policy(self):
+        if self.motion_mode != 'contact' or self.contact_tolerance_mm is None:
+            return None
+        from .infrastructure.contact import ContactPolicy
+        return ContactPolicy(contact_tolerance_mm=self.contact_tolerance_mm,
+                             working_segment_radius_mm=self.working_segment_radius_mm,
+                             nonworking_clearance_mm=self.nonworking_clearance_mm)
+
     def motion_description(self):
         """Zero offset is a geometric target, not a contact-force controller."""
         if self.geometry_only:
             policy = ('Collision checking is disabled by check_mode=geometry_only: '
                       'clearance, clearance_mm, transport speed and plan clearance records are '
                       'diagnostic only and this plan is never execution-ready.')
+        elif self.motion_mode == 'contact' and self.contact_tolerance_mm is not None:
+            policy = ('Only the TCP-centered working mesh may contact either jaw within '
+                      f'{self.contact_tolerance_mm:g} mm numerical tolerance; nonworking parts '
+                      f'require separation greater than {self.nonworking_clearance_mm:g} mm. '
+                      'Ambiguous local contact geometry is rejected.')
         else:
             policy = ('Full-tool collision rejection remains enabled; '
                       'zero offset does not permit mesh penetration.')
         return {'motion_mode': self.motion_mode, 'standoff_mm': self.standoff_mm,
-                'contact_force_control': False, 'contact_policy': policy}
+                'contact_force_control': False, 'contact_policy': policy,
+                'working_contact_enabled': (not self.geometry_only and self.motion_mode == 'contact'
+                                            and self.contact_tolerance_mm is not None)}
 
 
 def resolve_pose_angles(pose_angles_deg=None, *, tilt_deg=15., tilt_azimuth_deg=0.,

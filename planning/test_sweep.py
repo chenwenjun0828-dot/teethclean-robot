@@ -38,7 +38,7 @@ def build_reference(geometry, cfg, options, trim_mm=None, *, world=None):
     if trim_mm is not None:
         options = replace(options, trim_mm=trim_mm)
     path = continuous_regional_reference(geometry, cfg, options)
-    if cfg.planning_mode == 'simple':
+    if cfg.planning_mode in ('simple', 'local_surface'):
         from .simple import orient_reference
         path = orient_reference(path, geometry, cfg, options, world=world)
     return path

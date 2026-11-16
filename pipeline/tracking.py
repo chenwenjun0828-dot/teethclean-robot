@@ -27,7 +27,9 @@ def run_tracking(registration_dir, jaw='mandibular', path_index=0, offset_mm=1.5
                  sweep_trim_mm=1., duration_s=None, jaw_opening_deg=None,
                  pose_spacing_mm=Config().pose_spacing_mm, speed_profile='local',
                  orientation_audit='strict', transfer_speed_mm_s=150., planning_mode='simple',
-                 simple_angles_deg=(-75., -33.), check_mode='full', perception_result=None):
+                 simple_angles_deg=(-75., -33.), check_mode='full', perception_result=None,
+                 working_segment_radius_mm=1., contact_tolerance_mm=.05, nonworking_clearance_mm=0.,
+                 local_angle_search=True):
     if duration_s is not None and (isinstance(duration_s, bool)
             or not np.isfinite(duration_s) or duration_s <= 0):
         raise ValueError('duration_s must be positive and finite')
@@ -41,7 +43,10 @@ def run_tracking(registration_dir, jaw='mandibular', path_index=0, offset_mm=1.5
         max_orientation_step_deg = Config().max_orientation_step_deg
     simple_angles_deg = resolve_simple_angles(simple_angles_deg)
     cfg = Config(standoff_mm=offset_mm, speed_mm_s=speed_mm_s, joint_step_rad=joint_step_rad,
+                 working_segment_radius_mm=working_segment_radius_mm,
+                 contact_tolerance_mm=contact_tolerance_mm, nonworking_clearance_mm=nonworking_clearance_mm,
                  planning_mode=planning_mode, check_mode=check_mode,
+                 local_angle_search=local_angle_search,
                  simple_angle_deg=simple_angles_deg[0], simple_angle2_deg=simple_angles_deg[1],
                  pose_spacing_mm=pose_spacing_mm,
                  speed_profile=speed_profile, orientation_audit=orientation_audit,
@@ -104,6 +109,9 @@ def run_tracking(registration_dir, jaw='mandibular', path_index=0, offset_mm=1.5
     if planning_mode == 'simple':
         print(f'Regional fixed Z-angle/Y-azimuth/X-flip: {[cfg.tilt_deg, cfg.tilt_azimuth_deg, fixed_roll_deg]}; '
               'collision corrections bounded to +/-5 degrees per angle', flush=True)
+    elif planning_mode == 'local_surface':
+        print(f'Local tooth surface Z-angle/Y-azimuth/X-flip: {[cfg.tilt_deg, cfg.tilt_azimuth_deg, fixed_roll_deg]}; '
+              'corrections bounded to +/-5 degrees relative to each local frame', flush=True)
     else:
         print(f'Fixed gravity-Z angle: {cfg.tilt_deg:g} degrees; fixed Y azimuth: {cfg.tilt_azimuth_deg:g} degrees', flush=True)
     print(f'IK orientation step limit: {cfg.max_orientation_step_deg:g} degrees; '

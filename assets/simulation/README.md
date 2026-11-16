@@ -12,3 +12,10 @@ is defined in the scene XML, so native MuJoCo, `pipeline.run`, and standalone
 planning share it unless an entry point explicitly restores or overrides a
 saved mount position. Jaw opening and planning sample spacing are independent
 settings. Changing the scene requires new planning and validation for execution.
+
+The scaler mounting in `robot/ur7e_with_tool.xml` uses the force sensor's
+local +Z axis and a 40.5 mm mounting offset. The `end_scaler_link` orientation
+is identity, a 180-degree roll from the former mounting. Its mesh, inertia,
+TCP, force site and approximate camera move together. Robot joints and the
+sensor mounting remain unchanged. Plans generated with the former mounting
+need new planning and validation; archived hand-eye calibration is unchanged.

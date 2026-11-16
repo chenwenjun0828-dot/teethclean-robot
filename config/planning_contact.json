@@ -1,0 +1,16 @@
+{
+  "perception_result": "outputs/tutorial/manual/regions/outer_front",
+  "region": "outer_front",
+  "planning_mode": "simple",
+  "local_angle_search": false,
+  "pose_angles_deg": [50, 0, 50],
+  "motion_mode": "contact",
+  "standoff_mm": 0,
+  "working_segment_radius_mm": 1.0,
+  "contact_tolerance_mm": 0.05,
+  "nonworking_clearance_mm": 0.0,
+  "jaw_opening_deg": 20,
+  "check_mode": "full",
+  "headless": true,
+  "out": "outputs/planning/contact_front"
+}

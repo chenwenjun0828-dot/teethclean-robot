@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "module": "perception",
+  "jaw": "mandibular",
+  "path_base": "manifest",
+  "coordinate_frame": "controller_base",
+  "region_order": [
+    "outer_left",
+    "outer_front",
+    "outer_right",
+    "inner_right",
+    "inner_front",
+    "inner_left"
+  ],
+  "cross_region_connections": false,
+  "regions": {
+    "outer_left": "outer_left/perception_region.json",
+    "outer_front": "outer_front/perception_region.json",
+    "outer_right": "outer_right/perception_region.json",
+    "inner_right": "inner_right/perception_region.json",
+    "inner_front": "inner_front/perception_region.json",
+    "inner_left": "inner_left/perception_region.json"
+  }
+}

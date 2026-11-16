@@ -20,23 +20,70 @@ class MotionModeTests(unittest.TestCase):
         for cfg, mode, offset in ((Config(planning_mode='continuous'), 'non-contact', 1.5),
                                  (Config(planning_mode='continuous', motion_mode='contact'), 'contact', 0.),
                                  (Config(planning_mode='continuous', standoff_mm=0.), 'contact', 0.),
+                                 (Config(planning_mode='continuous', motion_mode='contact', standoff_mm=.14), 'contact', .14),
                                  (Config(planning_mode='continuous', standoff_mm=2.), 'non-contact', 2.)):
             self.assertEqual((cfg.motion_mode, cfg.standoff_mm), (mode, offset))
             self.assertEqual(asdict(Config(**json.loads(json.dumps(asdict(cfg))))), asdict(cfg))
             self.assertEqual(replace(cfg, speed_mm_s=15.).motion_mode, mode)
-            self.assertEqual(cfg.clearance_mm, .15)
+            self.assertEqual(cfg.clearance_mm, 0.)
         legacy = asdict(Config(planning_mode='continuous'))
         legacy.pop('motion_mode')
         self.assertEqual(Config(**legacy).motion_mode, 'non-contact')
 
     def test_conflicting_modes_and_invalid_offsets_are_rejected(self):
-        for kwargs in ({'motion_mode': 'contact', 'standoff_mm': 1.5},
-                       {'motion_mode': 'non-contact', 'standoff_mm': 0.},
+        for kwargs in ({'motion_mode': 'non-contact', 'standoff_mm': 0.},
                        {'motion_mode': 'unknown'}, {'standoff_mm': -.1},
                        {'standoff_mm': float('nan')}, {'standoff_mm': float('inf')},
-                       {'standoff_mm': False}, {'motion_mode': 'contact', 'clearance_mm': 0.}):
+                       {'standoff_mm': False}, {'motion_mode': 'contact', 'clearance_mm': -.1}):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 Config(planning_mode='continuous', **kwargs)
+
+    def test_zero_clearance_and_saved_margin_compatibility(self):
+        self.assertEqual(Config(standoff_mm=.01).clearance_mm, 0.)
+        for value in (0., .15):
+            saved = asdict(Config(clearance_mm=value))
+            self.assertEqual(Config.from_saved(saved).clearance_mm, value)
+        saved.pop('clearance_mm')
+        self.assertEqual(Config.from_saved(saved).clearance_mm, .15)
+        for value in (-.01, True, float('nan'), float('inf'), '0'):
+            with self.subTest(clearance=value), self.assertRaises(ValueError):
+                Config(clearance_mm=value)
+        with self.assertRaises(ValueError):
+            Config(standoff_mm=.15, clearance_mm=.15)
+
+    def test_saved_clearance_cannot_be_changed_after_geometry_preparation(self):
+        saved = {'path_kind': 'continuous_outer_front_sweep', 'sweep_options': asdict(SweepOptions()),
+                 'config': asdict(Config(planning_mode='continuous', clearance_mm=.15))}
+        changed = {**saved, 'config': {**saved['config'], 'clearance_mm': 0.}}
+        with self.assertRaisesRegex(ValueError, 'Clearance differs'):
+            validate_motion_config(changed, changed, saved)
+
+    def test_zero_clearance_rejects_actual_mesh_contact_and_intersection(self):
+        from itertools import product
+        from types import SimpleNamespace
+        import fcl
+        from .infrastructure.collision import CollisionChecker, bvh
+        triangle = fcl.CollisionObject(bvh(np.array([[-1., -1., 0.], [1., -1., 0.], [0., 1., 0.]]),
+                                          [[0, 1, 2]]))
+        data = SimpleNamespace(ncon=0, contact=[], geom_xmat=np.eye(3).reshape(1, 9),
+                               geom_xpos=np.zeros((1, 3)))
+        def fk(q, full=False):
+            data.geom_xpos[0] = [0., 0., q[0]]
+        checker = object.__new__(CollisionChecker)
+        checker.contact_policy = None
+        checker.cache, checker.calls = {}, 0
+        checker.model = SimpleNamespace(geom=lambda index: SimpleNamespace(name='tool'))
+        checker.robot = SimpleNamespace(fk=fk, verify_data=data)
+        checker.parts = [(0, 0, fcl.CollisionObject(fcl.Sphere(.1)))]
+        checker.part_bounds = {0: np.array(list(product((-.1, .1), repeat=3)))}
+        checker.teeth = [('mandibular', triangle)]
+        checker.tooth_bounds = {'mandibular': (np.array([-1., -1., 0.]), np.array([1., 1., 0.]))}
+        separated = np.array([.1001])
+        self.assertTrue(checker.check(separated, clearance_m=0.).valid)
+        self.assertFalse(checker.check(separated, clearance_m=.00015).valid)
+        for height in (.1, .05):
+            with self.subTest(sphere_center_z_m=height):
+                self.assertFalse(checker.check(np.array([height]), clearance_m=0.).valid)
 
     def test_contact_changes_only_position_under_world_transform(self):
         from scipy.spatial.transform import Rotation
@@ -55,13 +102,14 @@ class MotionModeTests(unittest.TestCase):
         from .__main__ import main
         with tempfile.TemporaryDirectory() as temp:
             for extra, expected in (([], 1.5), (['--motion-mode', 'non-contact'], 1.5),
-                                    (['--motion-mode', 'contact'], 0.), (['--standoff-mm', '0'], 0.)):
+                                    (['--motion-mode', 'contact'], 0.), (['--standoff-mm', '0'], 0.),
+                                    (['--motion-mode', 'contact', '--standoff-mm', '.14'], .14)):
                 with patch('planning.__main__.run', return_value=(None, None, {'status': 'geometry_only'}, None)) as run:
                     self.assertEqual(main(['--out', str(Path(temp) / 'plan'), '--geometry-only', *extra]), 0)
                     self.assertEqual(run.call_args.args[2].standoff_mm, expected)
             with patch('planning.__main__.run') as run:
-                self.assertEqual(main(['--out', str(Path(temp) / 'plan'), '--motion-mode', 'contact',
-                                       '--standoff-mm', '1.5']), 1)
+                self.assertEqual(main(['--out', str(Path(temp) / 'plan'), '--motion-mode', 'non-contact',
+                                       '--standoff-mm', '0']), 1)
                 run.assert_not_called()
 
     def test_saved_mode_cannot_be_switched_without_replanning(self):
@@ -116,7 +164,7 @@ class MotionModeTests(unittest.TestCase):
         with redirect_stdout(io.StringIO()), self.assertRaises(SweepFailure):
             solve_sweep(path, path.samples(.001), robot, checker, np.eye(4), cfg)
         self.assertTrue(clearances)
-        np.testing.assert_allclose(clearances, .00015)
+        np.testing.assert_allclose(clearances, 0.)
 
 
 if __name__ == '__main__':

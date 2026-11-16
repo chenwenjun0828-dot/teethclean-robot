@@ -14,7 +14,7 @@ def phase_durations(plan):
     return {str(phase): float(dt[plan.phases == phase].sum()) for phase in np.unique(plan.phases)}
 
 
-def build(joints, phases, teeth, robot, cfg, duration_s=None, *, fixed_trace=None):
+def build(joints, phases, teeth, robot, cfg, duration_s=None, *, fixed_trace=None, free_blocks=None):
     if duration_s is not None and (isinstance(duration_s, bool)
             or not np.isfinite(duration_s) or duration_s <= 0):
         raise ValueError('Target duration must be positive and finite')
@@ -30,7 +30,22 @@ def build(joints, phases, teeth, robot, cfg, duration_s=None, *, fixed_trace=Non
         raise ValueError('Fixed spline nodes differ from the requested trace')
     c = np.stack([Trajectory._smoothstep_coefficients(a, b) for a, b in zip(q[:-1], q[1:])])
     dt = np.ones(len(phases))
+    prepared = set()
+    if free_blocks is not None:
+        from .free_motion import retime_free
+        for block in free_blocks:
+            a, b = block['start_waypoint'], block['end_waypoint']
+            if (not (0 <= a < b < len(q)) or np.any(phases[a:b] == 'trace')
+                    or not np.array_equal(q[a:b+1], block['joints'])):
+                raise ValueError('Free motion block differs from supplied joint nodes')
+            if any(i in prepared for i in range(a, b)):
+                raise ValueError('Overlapping free motion blocks')
+            c[a:b] = block['coefficients']
+            dt[a:b] = retime_free(block['dt'], c[a:b], q[a:b+1], robot, cfg)
+            prepared.update(range(a, b))
     for i in np.r_[np.arange(start), np.arange(end, len(phases))]:
+        if i in prepared:
+            continue
         delta = abs(q[i+1]-q[i])
         distance = np.linalg.norm(robot.fk(q[i+1])[:3, 3]-robot.fk(q[i])[:3, 3])
         dt[i] = max(.04, 1.875*delta.max()/cfg.joint_speed_rad_s,

@@ -76,14 +76,26 @@ def preview_only_scene(directory, report, request, opening):
     from planning.infrastructure.trajectory import Trajectory
     from pipeline.simulation import create_simulation
     from pipeline.oral import jaw_overrides, load_jaw_settings
+    session_info = request.get('perception_session') or report.get('perception_session')
     options = {'robot_mount_position_m': report.get('robot_mount_position_m')}
-    if opening is not None:
+    if opening is not None and session_info is None:
         options['jaw_settings'] = jaw_overrides(load_jaw_settings(), opening)
-    model, data = create_simulation(**options)
+    if session_info is None:
+        model, data = create_simulation(**options)
+    else:
+        from planning.session import rebuild_session_simulation
+        _, model, data, _, _, _ = rebuild_session_simulation(
+            session_info, robot_mount_position_m=report.get('robot_mount_position_m'))
     for jaw, transform in report.get('scene_tooth_transforms', {}).items():
         if not np.allclose(body_transform(model, data, jaw), transform, atol=1e-9):
             raise ValueError('Dental pose changed; specify the original --jaw-opening-deg')
-    return model, data, Trajectory.load(Path(directory)/'trajectory.npz'), Robot(model, data)
+    trajectory, robot = Trajectory.load(Path(directory)/'trajectory.npz'), Robot(model, data)
+    from planning.motion_planning.free_motion import load_transfer_record, audit_transfers
+    from planning.config import Config
+    record = load_transfer_record(directory, report, request)
+    if record is not None:
+        audit_transfers(trajectory, robot, Config.from_saved(report['config']), record)
+    return model, data, trajectory, robot
 
 
 def load_scene(directory, *, jaw_opening_deg=None):
@@ -108,7 +120,9 @@ def load_scene(directory, *, jaw_opening_deg=None):
         print('Geometry-only plan: collision clearance was never evaluated; preview only', flush=True)
     elif (directory/'trajectory.npz').exists():
         try:
-            model, data, trajectory, checker = load_verified(directory, jaw_opening_deg=opening)
+            session_info = request.get('perception_session') or report.get('perception_session')
+            model, data, trajectory, checker = load_verified(
+                directory, jaw_opening_deg=jaw_opening_deg if session_info is not None else opening)
         except ValueError as error:
             if 'Dental pose changed' in str(error):
                 raise ValueError(f'{error}; specify the original --jaw-opening-deg') from error
@@ -117,10 +131,16 @@ def load_scene(directory, *, jaw_opening_deg=None):
     else:
         from pipeline.simulation import create_simulation
         from pipeline.oral import jaw_overrides, load_jaw_settings
+        session_info = request.get('perception_session') or report.get('perception_session')
         options = {'robot_mount_position_m': report.get('robot_mount_position_m')}
-        if opening is not None:
+        if opening is not None and session_info is None:
             options['jaw_settings'] = jaw_overrides(load_jaw_settings(), opening)
-        model, data = create_simulation(**options)
+        if session_info is None:
+            model, data = create_simulation(**options)
+        else:
+            from planning.session import rebuild_session_simulation
+            _, model, data, _, _, _ = rebuild_session_simulation(
+                session_info, robot_mount_position_m=report.get('robot_mount_position_m'))
         for jaw, transform in report.get('scene_tooth_transforms', {}).items():
             if not np.allclose(body_transform(model, data, jaw), transform, atol=1e-9):
                 raise ValueError('Dental pose changed; specify the original --jaw-opening-deg')

@@ -284,6 +284,14 @@ class TrackingPlanningTests(unittest.TestCase):
         self.assertEqual(result['continuity']['continuous_trace_blocks'], 1)
         self.execute.assert_called_once()
 
+    def test_local_surface_mode_survives_saved_reference_and_execution(self):
+        result = self.track(planning_mode='local_surface', pose_angles_deg=[50., 0., 50.])
+        self.assertEqual(self.planner.call_args.args[2].planning_mode, 'local_surface')
+        self.assertEqual(result['pose_angles_deg'], [50., 0., 50.])
+        self.assertEqual(result['planning_mode'], 'local_surface')
+        self.assertEqual(result['continuity']['continuous_trace_blocks'], 1)
+        self.execute.assert_called_once()
+
     def test_wrong_mode_result_never_reaches_control(self):
         def wrong_mode(*args, **kwargs):
             geometry, plan, report, scene = self.planned(*args, **kwargs)

@@ -1,0 +1,11 @@
+{
+  "perception_result": "outputs/tutorial/manual/regions/outer_front",
+  "region": "outer_front",
+  "planning_mode": "local_surface",
+  "pose_angles_deg": [50, 0, 50],
+  "jaw_opening_deg": 20.0,
+  "standoff_mm": 1.8,
+  "model_scope": "both",
+  "port": 8776,
+  "no_browser": false
+}
