@@ -1,5 +1,6 @@
 # D405 真机采集与配准验证
 
+
 本文保留相机采集、文件格式、离线回放与评价的详细说明；模块职责和两条主流程统一见
 [感知总说明](README.md)，人工配准参数见 [分类接口文档](registration/MANUAL_REAL.md)。
 
@@ -48,6 +49,7 @@ SDK 仅在设备枚举、采集时导入。离线回放、重选 ROI、评价和
 `camera_extrinsics.json` 保存序列号、固件、内参、SDK 原始外参、矩阵及来源；矩阵另存 NPY/TXT，平移单位米。
 
 - `T_color_optical_depth_optical_m` 是设备 SDK 读取的深度光学帧到彩色光学帧转换。
+- 当前本批手眼有效解释为 `color_optical`，组合基座坐标时使用上面的 SDK 光学帧转换，不加入下面的 ROS stream 候选转换。原始手眼 YAML 声明保留供追溯。
 - `T_color_frame_depth_optical_ros_convention_m` 是在此基础上按标准 RealSense ROS 帧轴向推导的候选值。
 - 后者不是现场读取的 ROS TF，报告明确标注未验证；需在手眼标定的 ROS 机器上核对实际帧定义。
 - 这不是相机到机器人基座的外参，不能直接作为 `--extrinsics` 配置。

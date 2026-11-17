@@ -10,6 +10,11 @@ from perception.regions import PreparedRegion, REGION_ORDER
 
 
 def export_jaw(conversion, jaw):
+    conversion = Path(conversion)
+    manifest_path = conversion / 'planning_input_manifest.json'
+    report_path = conversion / 'conversion_report.json'
+    metadata = json.loads((manifest_path if manifest_path.exists() else report_path).read_text(encoding='utf-8')) if (manifest_path.exists() or report_path.exists()) else {}
+    interpretation = metadata.get('handeye_frame_interpretation')
     regions = conversion / jaw / 'regions'
     matrix_path = conversion / jaw / 'T_controller_base_scan_nominal_rigid_m.npy'
     if not matrix_path.exists():
@@ -18,6 +23,8 @@ def export_jaw(conversion, jaw):
     summary = dict(frame='controller_base', units='m', status='nominal_kinematics',
                    robot_execution_allowed=False, cross_region_connections=False,
                    regions={})
+    if interpretation is not None:
+        summary['handeye_frame_interpretation'] = interpretation
     for name in REGION_ORDER:
         folder = regions / name
         prepared = PreparedRegion.load(folder)
@@ -54,6 +61,8 @@ def export_jaw(conversion, jaw):
             transform_source='../../' + matrix_path.name,
             transform_sha256=hashlib.sha256(matrix_path.read_bytes()).hexdigest(),
             note='Different regions are independent. No TCP offset or executable robot poses included.')
+        if interpretation is not None:
+            record['handeye_frame_interpretation'] = interpretation
         (folder / 'base_coordinates.json').write_text(json.dumps(record, indent=2), encoding='utf-8')
         summary['regions'][name] = dict(directory=str(folder.relative_to(conversion)),
             points=len(points), retained_length_mm=record['retained_length_mm'])

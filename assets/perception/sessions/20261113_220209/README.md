@@ -1,5 +1,8 @@
 # 本批正式规划输入：2026-11-13 22:02:09
 
+**坐标修订：`color_optical_v1`。** 已按用户确认移除多余 ROS 轴转换，两颌十二区的位置、法向、切向和矩阵已重算。原始标定声明保留；有效解释见 `handeye_frame_interpretation.json`，修正对比见 `frame_correction_report.json`。两颌区域使用各自 `_rigid_m.npy` 矩阵。历史 outputs 的旧 Base 数据不可混用。
+
+
 **运控/规划读取本目录，不读取 `outputs/`。**
 完整交接说明：[docs/integration/2026-11-13-perception-handoff.md](../../../../docs/integration/2026-11-13-perception-handoff.md)。
 

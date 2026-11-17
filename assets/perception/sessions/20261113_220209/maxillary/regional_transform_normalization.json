@@ -1,5 +1,6 @@
 {
-  "reason": "SDK float32 rotation roundoff; regional validator requires exact orthogonality",
-  "max_rotation_entry_change": 1.6636878985565318e-08,
-  "translation_unchanged": true
+  "reason": "SDK floating-point rotation roundoff; nearest proper rotation for regional geometry",
+  "max_rotation_entry_change": 1.7855485645590363e-08,
+  "translation_unchanged": true,
+  "handeye_frame": "color_optical"
 }

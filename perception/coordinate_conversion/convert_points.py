@@ -8,6 +8,8 @@ from pathlib import Path
 import numpy as np
 import open3d as o3d
 
+from .handeye_frames import MODES, select_handeye_chain
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -42,7 +44,8 @@ def save_cloud(path, cloud, matrix):
         raise RuntimeError('Could not save ' + str(path))
 
 
-def convert(jaw_runs, fk_path, handeye_path, sdk_path, *, handeye_label='25', output=None):
+def convert(jaw_runs, fk_path, handeye_path, sdk_path, *, handeye_label='25',
+            handeye_frame='color_optical', output=None):
     jaw_runs = {jaw: Path(run).resolve() for jaw, run in jaw_runs.items()}
     if not jaw_runs or not set(jaw_runs).issubset({'mandibular', 'maxillary'}):
         raise ValueError('Provide at least one valid jaw registration run')
@@ -52,8 +55,7 @@ def convert(jaw_runs, fk_path, handeye_path, sdk_path, *, handeye_label='25', ou
     if len(matches) != 1:
         raise ValueError('Select exactly one hand-eye calibration label')
     chosen = matches[0]
-    wrist_color = np.array(chosen['T_wrist3_camera_color_frame_m'])
-    color_depth = np.array(sdk['T_color_frame_depth_optical_ros_convention_m'])
+    wrist_color, color_depth, interpretation = select_handeye_chain(chosen, sdk, handeye_frame)
     base_wrist = np.array(fk['T_controller_base_wrist3_nominal_m'])
     ros_wrist = np.array(fk['T_base_link_wrist3_nominal_m'])
     base_depth = base_wrist @ wrist_color @ color_depth
@@ -71,18 +73,19 @@ def convert(jaw_runs, fk_path, handeye_path, sdk_path, *, handeye_label='25', ou
     out.mkdir(parents=True, exist_ok=True)
     for name, matrix in [('T_controller_base_wrist3_nominal_m', base_wrist),
                          ('T_base_link_wrist3_nominal_m', ros_wrist),
-                         ('T_wrist3_color_frame_m', wrist_color),
-                         ('T_color_frame_depth_optical_ros_convention_m', color_depth),
+                         (interpretation['handeye_matrix_name'], wrist_color),
+                         (interpretation['depth_matrix_name'], color_depth),
                          ('T_controller_base_depth_optical_nominal_m', base_depth),
                          ('T_base_link_depth_optical_nominal_m', ros_depth)]:
         save_matrix(out, name, matrix)
     summary = dict(status='converted_with_nominal_kinematics', robot_execution_allowed=False,
         units='m', matrix_convention='p_target = R @ p_source + t', camera_serial=sdk['device']['serial'],
         capture_time_utc=reference_capture['host_received_at_utc'], handeye_label=str(handeye_label),
+        handeye_frame_interpretation=interpretation,
         sources=[fingerprint(p) for p in (fk_path, handeye_path, sdk_path)], jaws={},
         assumptions=['Joint angles correspond to capture pose; robot stationary until angles recorded.',
                      f'Hand-eye result {handeye_label} belongs to the same camera and unchanged mounting.',
-                     'User confirmed camera_color_frame follows the standard ROS convention.'],
+                     interpretation['evidence']],
         limitations=['Factory robot kinematic correction not applied.',
                      'Registration and base coordinates not independently validated.',
                      'Gingival CSV is a point set, not a connected or executable robot trajectory.',
@@ -143,11 +146,13 @@ def main(argv=None):
     parser.add_argument('--handeye-inventory', type=Path, required=True)
     parser.add_argument('--camera-extrinsics', type=Path, required=True)
     parser.add_argument('--handeye-label', default='25')
+    parser.add_argument('--handeye-frame', choices=MODES, default='color_optical',
+                        help='Interpret numeric hand-eye as color optical (default) or archived ROS frame')
     parser.add_argument('--out', type=Path)
     args = parser.parse_args(argv)
     runs = {j: p for j, p in [('mandibular', args.mandibular_run), ('maxillary', args.maxillary_run)] if p is not None}
     convert(runs, args.fk_report, args.handeye_inventory, args.camera_extrinsics,
-            handeye_label=args.handeye_label, output=args.out)
+            handeye_label=args.handeye_label, handeye_frame=args.handeye_frame, output=args.out)
 
 
 if __name__ == '__main__':

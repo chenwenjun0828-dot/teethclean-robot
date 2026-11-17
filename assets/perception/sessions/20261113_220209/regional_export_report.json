@@ -36,6 +36,18 @@
         "points": 417,
         "retained_length_mm": 47.39214503064254
       }
+    },
+    "handeye_frame_interpretation": {
+      "mode": "color_optical",
+      "declared_camera_frame": "camera_color_frame",
+      "effective_camera_frame": "color_optical",
+      "effective_parent_frame": "wrist_3_link",
+      "raw_calibration_modified": false,
+      "ros_optical_to_stream_rotation_applied": false,
+      "evidence": "User confirmed the color_optical result; original calibration TF has not been independently verified.",
+      "handeye_matrix_name": "T_wrist3_color_optical_m",
+      "depth_matrix_name": "T_color_optical_depth_optical_m",
+      "formula": "T_base_wrist3 @ T_wrist3_color_optical @ T_color_optical_depth_optical @ T_depth_optical_scan"
     }
   },
   "maxillary": {
@@ -75,6 +87,18 @@
         "points": 276,
         "retained_length_mm": 41.9625878912767
       }
+    },
+    "handeye_frame_interpretation": {
+      "mode": "color_optical",
+      "declared_camera_frame": "camera_color_frame",
+      "effective_camera_frame": "color_optical",
+      "effective_parent_frame": "wrist_3_link",
+      "raw_calibration_modified": false,
+      "ros_optical_to_stream_rotation_applied": false,
+      "evidence": "User confirmed the color_optical result; original calibration TF has not been independently verified.",
+      "handeye_matrix_name": "T_wrist3_color_optical_m",
+      "depth_matrix_name": "T_color_optical_depth_optical_m",
+      "formula": "T_base_wrist3 @ T_wrist3_color_optical @ T_color_optical_depth_optical @ T_depth_optical_scan"
     }
   }
 }

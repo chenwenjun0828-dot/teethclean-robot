@@ -33,21 +33,29 @@
     }
   },
   "shared_transforms": {
-    "T_wrist3_color_frame_m": {
-      "path": "transforms/T_wrist3_color_frame_m.npy",
-      "sha256": "5936db43db6405ed3ea8b2fa157e1fa1e7b2b144cf7469debdcf56a26c64dbee"
-    },
-    "T_color_frame_depth_optical_ros_convention_m": {
-      "path": "transforms/T_color_frame_depth_optical_ros_convention_m.npy",
-      "sha256": "480b8b22fdaadc873a47a4fc1d5ac0d666cb2e069165748b95dfbab09b36a0f4"
-    },
     "T_controller_base_wrist3_nominal_m": {
       "path": "transforms/T_controller_base_wrist3_nominal_m.npy",
       "sha256": "ed9571c66c4ba23df7646b5cf0762af475bd7563dab264e490891881926b098e"
     },
+    "T_base_link_wrist3_nominal_m": {
+      "path": "transforms/T_base_link_wrist3_nominal_m.npy",
+      "sha256": "5eb60fa740a08a5a947a1cb97f5a31bab6a5bbc7a414888eefc5f2809edce6fb"
+    },
+    "T_wrist3_color_optical_m": {
+      "path": "transforms/T_wrist3_color_optical_m.npy",
+      "sha256": "5936db43db6405ed3ea8b2fa157e1fa1e7b2b144cf7469debdcf56a26c64dbee"
+    },
+    "T_color_optical_depth_optical_m": {
+      "path": "transforms/T_color_optical_depth_optical_m.npy",
+      "sha256": "46abf36104a8d8f4bf680014012c9bab8f07a5c52fa5a73a2845990a536aa674"
+    },
     "T_controller_base_depth_optical_nominal_m": {
       "path": "transforms/T_controller_base_depth_optical_nominal_m.npy",
-      "sha256": "d60d299a536e77c4c60bcadc9d3515a8b3d2245f12648a89d40ce5a6cb5b75bd"
+      "sha256": "9b5aee9a5305647abf7798524493ceab15ad6fdca355646da789046adfd73331"
+    },
+    "T_base_link_depth_optical_nominal_m": {
+      "path": "transforms/T_base_link_depth_optical_nominal_m.npy",
+      "sha256": "baf0e247b489c6d279a18238e061f8c3d992682ef5ea1c122fbf1d82940ad06c"
     }
   },
   "jaws": {
@@ -70,19 +78,19 @@
           "files": {
             "points_csv": {
               "path": "mandibular/regions/outer_left/points_controller_base_nominal_m.csv",
-              "sha256": "7ea6019f918ede1be4ded486f73f741710f7ddbbfa14c23fce81536ea8521258"
+              "sha256": "c2fd275d9095946a3f343c8add80bdda935ba3963dc69064c3a195790eac4fa5"
             },
             "geometry_npz": {
               "path": "mandibular/regions/outer_left/region_controller_base_nominal.npz",
-              "sha256": "fc0576f1674b61f31287b3da6527e5af8857bb9d256a88fe1a52075c556cdf14"
+              "sha256": "5f28a575dae4f87c5fbefea52abd147c9494bcfac1310a6361253667ecd0b924"
             },
             "prepared_region": {
               "path": "mandibular/regions/outer_left/perception_region.json",
-              "sha256": "5b3191ebd125d9d2682b7eababc6b10b641c9cac6dff928aef26176d3236f75c"
+              "sha256": "687bc7bf08aac07ca405a9da367a95d674027232b9accd92a68f8596ffd6e8e1"
             },
             "coordinate_metadata": {
               "path": "mandibular/regions/outer_left/base_coordinates.json",
-              "sha256": "991122346ed8ce2ce806d74052378243baa9c5159a22a2557801c823d72319e1"
+              "sha256": "3f4526c2481bdaa68b473fd5e948c335c202f1c8ef8a45da044b2af5acb3f1d3"
             }
           }
         },
@@ -95,19 +103,19 @@
           "files": {
             "points_csv": {
               "path": "mandibular/regions/outer_front/points_controller_base_nominal_m.csv",
-              "sha256": "4350ea062f9736500178754f9cec605351301d6344cee191178bd3805d09aec7"
+              "sha256": "02411a2b7ef56c65ba44d6ed9ae08a186700fd8bb70b444aaafcc9bf49ea867a"
             },
             "geometry_npz": {
               "path": "mandibular/regions/outer_front/region_controller_base_nominal.npz",
-              "sha256": "816b4a0a262035285a0bb423166ec4eea95f4450498b395aa1c16c2dee18a31f"
+              "sha256": "3df867aa6e59086292a1a914ad718fed316003b7445d5bbc794fa5dcf6b4eeb5"
             },
             "prepared_region": {
               "path": "mandibular/regions/outer_front/perception_region.json",
-              "sha256": "01a1a8d16dd6eea2c0b2a2f7ab0f20a8613bb33f552ed65920e2404ce391ddc9"
+              "sha256": "bb8a66f157fc925215ab0fba9aabc0b5314fe0e2171c39d230d6dd7a97e97296"
             },
             "coordinate_metadata": {
               "path": "mandibular/regions/outer_front/base_coordinates.json",
-              "sha256": "43e68d88f3cc21b60699ef445983ca148cf2b2db77ea65ef778396b0bc9e9a41"
+              "sha256": "3599d26903cdae1a2ecbcecc593fa61bc0833de561765dadc2b50c9fb302ea0f"
             }
           }
         },
@@ -120,19 +128,19 @@
           "files": {
             "points_csv": {
               "path": "mandibular/regions/outer_right/points_controller_base_nominal_m.csv",
-              "sha256": "7fa70b10c24ad7948031e2798f9ab495e116de39cbfca26c188cff4e642b3f38"
+              "sha256": "ab67668c55f54ebb2ab02b928b79a4d9643247de020a6cb413f5f76506fd6f3f"
             },
             "geometry_npz": {
               "path": "mandibular/regions/outer_right/region_controller_base_nominal.npz",
-              "sha256": "9024defb64d264f91503350441a7ca7bab2efbc371904a5478b240b35a7c85ff"
+              "sha256": "4d9b03a11be05e38da4689a36d0e0400f5a2ebb2b7c42b0641559eff269d1e18"
             },
             "prepared_region": {
               "path": "mandibular/regions/outer_right/perception_region.json",
-              "sha256": "c4c5ec23d70ccac89d0706706e352cf57427876be444f59247ba81188ad2561c"
+              "sha256": "d63f91247896682aba7383b67de08a461f035e1280a7f44a6762b4aea2118387"
             },
             "coordinate_metadata": {
               "path": "mandibular/regions/outer_right/base_coordinates.json",
-              "sha256": "f1d52818d8361fded284d89cf279f76e77e5ead6c07c5e92f6204d281b402116"
+              "sha256": "65acf03b2c1f72abbeb0075f53af3d2795d20a0f3ba9ea57fb00a3e2a707fc51"
             }
           }
         },
@@ -145,19 +153,19 @@
           "files": {
             "points_csv": {
               "path": "mandibular/regions/inner_right/points_controller_base_nominal_m.csv",
-              "sha256": "4657eaf93974203873cd4b2ab14005ae7da0ae18c0e59794a8c7abf2aeb6f6b4"
+              "sha256": "dd934099efec41dbf94dd023b4d1f4b46432ab9b85625641e209eb9f0c2c62d6"
             },
             "geometry_npz": {
               "path": "mandibular/regions/inner_right/region_controller_base_nominal.npz",
-              "sha256": "ed103fdefa451e757d4b67ecc4f3ce9d7a9d6686b72e522310cddb3298eccb69"
+              "sha256": "a35208801513bde7933dda34821dcab26df6a3c2e57cf52406d687680e9500c1"
             },
             "prepared_region": {
               "path": "mandibular/regions/inner_right/perception_region.json",
-              "sha256": "4fb18a7373c01420329871fdbf468e4dc92ce18b58777f8c42ba61fb7aa4a732"
+              "sha256": "195006c07ccc5dc91d9c2e99aaf0efc622bc78f1e6adc78989c7b22e34fc0294"
             },
             "coordinate_metadata": {
               "path": "mandibular/regions/inner_right/base_coordinates.json",
-              "sha256": "7cdb689cfc9305e59c20df204e758936b6aa8cfbc1b3add85c5190fcb0892e5c"
+              "sha256": "bfa7e9e790a3e5c942e026a7729ab62ef890e9adefed9a3d11546168a8349301"
             }
           }
         },
@@ -170,19 +178,19 @@
           "files": {
             "points_csv": {
               "path": "mandibular/regions/inner_front/points_controller_base_nominal_m.csv",
-              "sha256": "39079dbb29fa3d0d9fdd906c3384ea5138e44ea633291de3f062cd10060fb48d"
+              "sha256": "bd0024962cb537f67b343e5fecf7cc7b208223d309743ae8fd4eb3059da0628a"
             },
             "geometry_npz": {
               "path": "mandibular/regions/inner_front/region_controller_base_nominal.npz",
-              "sha256": "45a2544626492d2bd0cab08c6e29ee627ece5b8a4a3c04bb0b52250d5bff1878"
+              "sha256": "bf1a526aefe6040e86ad3d3370f0a70101bdf24eaa0b026b994e168e6fb6bc88"
             },
             "prepared_region": {
               "path": "mandibular/regions/inner_front/perception_region.json",
-              "sha256": "7574ac5a36f0b53fe04898589b0dbf5f17c57f3a01669d720fc9fd1d282ad49c"
+              "sha256": "e3ae18dd567f4f684cc80fc834ae0755770e4727a74e18eb0650d3f6f6c692f2"
             },
             "coordinate_metadata": {
               "path": "mandibular/regions/inner_front/base_coordinates.json",
-              "sha256": "01e2708a007a638f3d9bed9e23254758271454884ff838039d40bb60582cbccc"
+              "sha256": "b78bd16bc60265ce7a678d6d3ee5029f6f1fcd144c367df446448903c4017116"
             }
           }
         },
@@ -195,19 +203,19 @@
           "files": {
             "points_csv": {
               "path": "mandibular/regions/inner_left/points_controller_base_nominal_m.csv",
-              "sha256": "0325aaa1d950f468c41f7928ddb69501d509a416985727558181d12e106c8717"
+              "sha256": "903ad1299edd88f3f1af0c6cfb3d022e37841675465d41cdbbe1274b4b9a7754"
             },
             "geometry_npz": {
               "path": "mandibular/regions/inner_left/region_controller_base_nominal.npz",
-              "sha256": "c4eb296e450d11ab7b334fc54d7f57cff90e2da3f2247af71b63f830d0bf08f7"
+              "sha256": "83b703f1ec849a52cadcfd2824209f01ed6dee83e64d4536e2f09065a728cb4a"
             },
             "prepared_region": {
               "path": "mandibular/regions/inner_left/perception_region.json",
-              "sha256": "91360ee9c11ed9e8a1d27f1dfabbbba14ebfcd14a416c164ce7115ffe128f84a"
+              "sha256": "2d3087b7f24a419330c2e94f8f1c5f56cda6052a919922dad56c84413c3a83e1"
             },
             "coordinate_metadata": {
               "path": "mandibular/regions/inner_left/base_coordinates.json",
-              "sha256": "8cd415b605c8c804fec2fc37a1b7f860cd4009279ee87023059a8d88f3432259"
+              "sha256": "5da9baed4980051eedc2298ba673224f73f1061d9af4ee0e239c3d8613412eb0"
             }
           }
         }
@@ -239,19 +247,19 @@
           "files": {
             "points_csv": {
               "path": "maxillary/regions/outer_left/points_controller_base_nominal_m.csv",
-              "sha256": "0ec8a5531e6ce769dd11075d50b2772b28616ba59df3b06b9c76364d67124565"
+              "sha256": "3d5e548ca8ab0aaf05e97eca3b6c05462627103cb0ff2cdb7e967271cd5836f3"
             },
             "geometry_npz": {
               "path": "maxillary/regions/outer_left/region_controller_base_nominal.npz",
-              "sha256": "fdf88a657920daa45308d2e930f662b5cb23c963301752acea878a96f78c4082"
+              "sha256": "e5de063947f34a1c1cbb03e49efa8191f0ea803f3cdd054e9d061de732b4b6e7"
             },
             "prepared_region": {
               "path": "maxillary/regions/outer_left/perception_region.json",
-              "sha256": "088e905e3374010c6cc9232fe0f9288d7b2e58c2d55650ddbb5ab71e3815f849"
+              "sha256": "14d3f03c41e2dd4f52170f101031aa433f1c4300104cdff8cacf5b39a926c611"
             },
             "coordinate_metadata": {
               "path": "maxillary/regions/outer_left/base_coordinates.json",
-              "sha256": "5d07a0d406e667f6950ba214f2eb9237a14b8289e9e4f76e6872396396b87113"
+              "sha256": "27557acc33499d10ce4c706f9bc25a8e9b4452e8843b2ce8477342a71fded8e1"
             }
           }
         },
@@ -264,19 +272,19 @@
           "files": {
             "points_csv": {
               "path": "maxillary/regions/outer_front/points_controller_base_nominal_m.csv",
-              "sha256": "6a951e1d626e188ad17ab20d5e00090fe40ad4dac7635db425004ca962aa6664"
+              "sha256": "b7737f8e18b7f491d288e1e0522144289743da8153d48e791c73dd20aeeb508f"
             },
             "geometry_npz": {
               "path": "maxillary/regions/outer_front/region_controller_base_nominal.npz",
-              "sha256": "9c260d5d40373116c463ddaad736be13c0ca17998b02f82ca2d8c982db95bb22"
+              "sha256": "2309eaf706710f9cd162e00918e704735123c8d10241b7bc67b80ae1f3898ba7"
             },
             "prepared_region": {
               "path": "maxillary/regions/outer_front/perception_region.json",
-              "sha256": "1c705a2e7ae1861e771fccb6f71c988d6d76b2a8e6ee7460dcbf25606f6662f7"
+              "sha256": "cbba9f326f1f502fa3ecfe8ca1a34a3bf0074ebc3959efd7bd4e109c1ca7ec31"
             },
             "coordinate_metadata": {
               "path": "maxillary/regions/outer_front/base_coordinates.json",
-              "sha256": "a28362cd5c35f91292fe5a36859d3a67e4e95fb5b2db490d9f25264dec868df4"
+              "sha256": "9eed9057e8d2260371a49604051af6f75517586498af47aafa0630921b4a986a"
             }
           }
         },
@@ -289,19 +297,19 @@
           "files": {
             "points_csv": {
               "path": "maxillary/regions/outer_right/points_controller_base_nominal_m.csv",
-              "sha256": "ec0b3bda7ea57e465d64e8a448a31038674d6ea4c83c3d873a6af2e022392c28"
+              "sha256": "e3c8b29eb3aadc5531a6eb88e9dee2ba7d6e97ae4499084964be0d6400c04931"
             },
             "geometry_npz": {
               "path": "maxillary/regions/outer_right/region_controller_base_nominal.npz",
-              "sha256": "8ae5e9748e45f8532950bd1fa9d718ac8c44a961f3dd5686a85a3f4a0710557e"
+              "sha256": "6c0e401565a201e9ac79be30d6008ca7e579bb23e45103193fa224573764fba8"
             },
             "prepared_region": {
               "path": "maxillary/regions/outer_right/perception_region.json",
-              "sha256": "372fc7bb3ddecfa9716c90e08819cca40978d27ef08a7e0c4144ae57c9565414"
+              "sha256": "b8d7349555db66120c43a81a9f796510f58a468be0ca19f7db788d974ed16699"
             },
             "coordinate_metadata": {
               "path": "maxillary/regions/outer_right/base_coordinates.json",
-              "sha256": "77f72ea1da03f34dd1f2d358d1d76207c01e4823a4985b14d41faa8f8957094e"
+              "sha256": "d0ba9913c34fa293f08bbd020bbcc74f5e673a609bdee2da7d5eed803f142269"
             }
           }
         },
@@ -314,19 +322,19 @@
           "files": {
             "points_csv": {
               "path": "maxillary/regions/inner_right/points_controller_base_nominal_m.csv",
-              "sha256": "0c28015c73fdaaf35b1ead88d7fb5383570b22f6359c83e9fc1d857a15bc00d3"
+              "sha256": "6e1c93dc72ba2b623099f12a0a6650b7e53076211e2214ab2c2b2f988cd5b66d"
             },
             "geometry_npz": {
               "path": "maxillary/regions/inner_right/region_controller_base_nominal.npz",
-              "sha256": "8cc54b20ee651eb68ededbae4b42e9716aa5f7ba8b58098018339906dd24c1be"
+              "sha256": "feb3564b5880f0b89c99796eb4db10f72106662424ab7835a440bea01d585fdb"
             },
             "prepared_region": {
               "path": "maxillary/regions/inner_right/perception_region.json",
-              "sha256": "205d6b5f431eba35bfb70c5d03596c89b11b871ad8c407c39c771cefb52f21af"
+              "sha256": "75e3327eed564716366d6ca21881d5e46a1774f9798097a47cb21a31dd31ec10"
             },
             "coordinate_metadata": {
               "path": "maxillary/regions/inner_right/base_coordinates.json",
-              "sha256": "28e3c06159d6fe1313cef3445a2b81c423303e414785082f0deaed30aaec094d"
+              "sha256": "339ba4dfc9a9bdc32a87bb75a90fc2fc25faecebaddefdb2a58ac3ce0f96556d"
             }
           }
         },
@@ -339,19 +347,19 @@
           "files": {
             "points_csv": {
               "path": "maxillary/regions/inner_front/points_controller_base_nominal_m.csv",
-              "sha256": "a531cae1fe4b834a4694738c01380cc51ad2ab3b6d92be0219cc4043e325fbd7"
+              "sha256": "9409d1a417fd74c20eef141beaceee2ca4c555842114dc8e5cc197c6bd1adde7"
             },
             "geometry_npz": {
               "path": "maxillary/regions/inner_front/region_controller_base_nominal.npz",
-              "sha256": "a9bfd13ab092432ca53c29e7e04e733fce064c937c47c87cd8cf908e916ad08e"
+              "sha256": "f45965c97f59bb50d2eb6ca6d9c7d29a45b2f04a07acd0319bc75685de2173dc"
             },
             "prepared_region": {
               "path": "maxillary/regions/inner_front/perception_region.json",
-              "sha256": "0ab533a19f8c842ced9bec1958c15b7adbcc3aaf29e8bc82fbf3b2aa7c4bf8e0"
+              "sha256": "6c8426956d8357f45920955fdf9c2bbf421f07999030c6b104ab1ba0c6d5f5b5"
             },
             "coordinate_metadata": {
               "path": "maxillary/regions/inner_front/base_coordinates.json",
-              "sha256": "aad7a61891e0f69af92c90cd2dedbe874a229c1d29a85a98ca07bc104b5b2d2e"
+              "sha256": "e8f92af5f4f2a42fefcd604e5a633558b56e4f71b9c89c3c4cc6f579899493e3"
             }
           }
         },
@@ -364,19 +372,19 @@
           "files": {
             "points_csv": {
               "path": "maxillary/regions/inner_left/points_controller_base_nominal_m.csv",
-              "sha256": "8159f22aeee5b5c4d4b28a0cead5581c715eb4e1e5590b98dd4410b128edd5cb"
+              "sha256": "021afa6a6219353fc2f95d8b270d7e2b9ef126d7fc23b9cb97d5ef187cbe8a3f"
             },
             "geometry_npz": {
               "path": "maxillary/regions/inner_left/region_controller_base_nominal.npz",
-              "sha256": "108a2501f0048816b452a4252b4a666918f9c49dc92bc2f870121868d342a244"
+              "sha256": "dea5fff154373a24d994e5f21a245fc0187d6fb426f2f6a04da0b77b02e3cb99"
             },
             "prepared_region": {
               "path": "maxillary/regions/inner_left/perception_region.json",
-              "sha256": "0443a07575f55dbbdf65dd271c6a10137ae1510c81c558748cb55ef61027242d"
+              "sha256": "1d8b857591a4a6b729675ff6cca572b4aa41dc4868a1e46e9256c5120207af36"
             },
             "coordinate_metadata": {
               "path": "maxillary/regions/inner_left/base_coordinates.json",
-              "sha256": "c1e21dfe067a2ce64eb7334e937ba0d8792ee3654415507892908b0f39435596"
+              "sha256": "feb6ef5ce1f9a8f333895d19867b248e67addbf85f7d9921eb7369dd62e0450a"
             }
           }
         }
@@ -393,7 +401,32 @@
   "status": "stable_planning_input_snapshot",
   "raw_capture_included": false,
   "source_conversion_id": "20261113_225327_457663",
-  "documentation_sha256": "ae7a054f4834e4d5d9549bc90e4b7810320aacabb413f7ad1dc5bc2523595fb6",
   "canonical_documentation": "../../../../docs/integration/2026-11-13-perception-handoff.md",
-  "storage": "compact_planning_only_shared_jaw_mesh"
+  "storage": "compact_planning_only_shared_jaw_mesh",
+  "handeye_frame_interpretation": {
+    "mode": "color_optical",
+    "declared_camera_frame": "camera_color_frame",
+    "effective_camera_frame": "color_optical",
+    "effective_parent_frame": "wrist_3_link",
+    "raw_calibration_modified": false,
+    "ros_optical_to_stream_rotation_applied": false,
+    "evidence": "User confirmed the color_optical result; original calibration TF has not been independently verified.",
+    "handeye_matrix_name": "T_wrist3_color_optical_m",
+    "depth_matrix_name": "T_color_optical_depth_optical_m",
+    "formula": "T_base_wrist3 @ T_wrist3_color_optical @ T_color_optical_depth_optical @ T_depth_optical_scan"
+  },
+  "handeye_label": "25",
+  "coordinate_revision": "color_optical_v1",
+  "coordinate_revision_utc": "2026-11-16T14:18:57.145983+00:00",
+  "frame_correction_files": {
+    "handeye_frame_interpretation.json": {
+      "path": "handeye_frame_interpretation.json",
+      "sha256": "1894e9c66aa77d4fab203e21b785748fbf7f153bcf123191204b1cbab3643f19"
+    },
+    "frame_correction_report.json": {
+      "path": "frame_correction_report.json",
+      "sha256": "40fb3f4712877b5401a287aa846c57d5c99401e6f0edffa2a6c71d02d0eea4d7"
+    }
+  },
+  "documentation_sha256": "b07c58863a4a6cd9108fcfd8ebafae23c2b28f7ad89eb0d4b97cce9153ab4c0f"
 }

@@ -16,22 +16,22 @@
   },
   "world_from_scan_m": [
     [
-      0.4302071071918947,
-      0.7532575808729794,
-      0.49751870495386324,
-      0.09932287469941914
+      -0.01794713438638141,
+      0.8339157970250175,
+      -0.5515998040603779,
+      0.32728158333477847
     ],
     [
-      -0.05470377779941333,
-      -0.5283606757473243,
-      0.8472558604213395,
-      -0.781117704973688
+      -0.9992280355938673,
+      -0.0342421630515509,
+      -0.019256353568952833,
+      -0.5731688031105937
     ],
     [
-      0.9010712189477893,
-      -0.3917116454500921,
-      -0.18609848253741185,
-      0.35624710116007996
+      -0.03494614786408776,
+      0.5508283922799195,
+      0.8338865924139688,
+      0.18158993484713262
     ],
     [
       0.0,
@@ -51,5 +51,17 @@
   },
   "artifact_paths": {
     "region_mesh.npz": "../../shared/region_mesh.npz"
+  },
+  "handeye_frame_interpretation": {
+    "mode": "color_optical",
+    "declared_camera_frame": "camera_color_frame",
+    "effective_camera_frame": "color_optical",
+    "effective_parent_frame": "wrist_3_link",
+    "raw_calibration_modified": false,
+    "ros_optical_to_stream_rotation_applied": false,
+    "evidence": "User confirmed the color_optical result; original calibration TF has not been independently verified.",
+    "handeye_matrix_name": "T_wrist3_color_optical_m",
+    "depth_matrix_name": "T_color_optical_depth_optical_m",
+    "formula": "T_base_wrist3 @ T_wrist3_color_optical @ T_color_optical_depth_optical @ T_depth_optical_scan"
   }
 }

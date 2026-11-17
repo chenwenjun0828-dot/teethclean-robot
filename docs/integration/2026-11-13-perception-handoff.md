@@ -1,8 +1,12 @@
 # 感知模块交接说明：上下颌六区域规划输入
 
+完整操作步骤、重算命令、配准/正运动学/坐标链及分区原理见[真机感知：操作流程与计算原理](perception-workflow-and-principles.md)。本文集中记录本批交付文件、实际矩阵与接口边界。
+
 采集与交付日期：2026-11-13。源码整理日期：2026-11-14。交付对象：路径规划、运动控制同事。
 
 正式规划输入已迁入 assets/perception/sessions/20261113_220209/，固定标定记录在 assets/calibration/ur7e_d405/20261113/；规划读取不再依赖 outputs/。三个可复用计算入口已迁入 `perception/coordinate_conversion/`，详见该目录 README；`outputs/` 中对应的旧计算脚本已移除，生成数据保留。
+
+**坐标已修订为 `color_optical_v1`。** 正式 session 路径不变，十二区的位置、法向、切向和矩阵已统一重算。历史 outputs 中的 Base 坐标仍是旧版本；备份在 `outputs/perception/frame_correction/20261116_before_color_optical/`，仅供追溯。
 
 ## 1. 交付内容与接口边界
 
@@ -119,7 +123,7 @@ PreparedRegion 读取会核对源文件及产物指纹。交付给另一台电�
 
 上颌源线生成方法：XZ 牙弓模板转移、牙龈线锚点选取、上颌网格边加权最短路、重复顶点回环清除。它包含新生成的表面路线，**不是简单复制下颌坐标，也不是只保留原始提取线的所有边**。边界状态仍为 `region_boundaries_approved=false`；下颌源快照本身也没有边界已批准标记。
 
-上颌预览：[regions_overview.png](../../assets/perception/sessions/20261113_220209/maxillary/regions/regions_overview.png)。表面检查：[surface_qa.json](../../assets/perception/sessions/20261113_220209/maxillary/regions/surface_qa.json)。本批上颌采样曲线到网格的最大距离约 0.176 mm；此数值仅为几何贴合检查，不是配准绝对精度、接触精度或执行精度。
+旧坐标预览与 QA 文件保留在本地修正前备份，不再作为当前预览。原上颌采样曲线到网格最大距离约 0.176 mm，此次仅修改整体坐标变换，局部曲线和网格未变；该数值是几何贴合检查，不是配准绝对精度或执行精度。
 
 ## 4. 坐标转换的完整逻辑
 
@@ -132,17 +136,16 @@ PreparedRegion 读取会核对源文件及产物指纹。交付给另一台电�
 | S | 对应颌的原始口扫局部坐标 |
 | D | D405 深度光学坐标：X 右、Y 下、Z 前 |
 | Co | 彩色光学坐标 |
-| C | 手眼 YAML 的 `camera_color_frame`，按标准 ROS stream-frame 约定 |
+| C | 原 YAML 声明的 `camera_color_frame`，仅作为历史声明，不参与当前有效链 |
 | E | 手眼 YAML 的末端 `wrist_3_link` |
 | B | 机器人控制器/示教器 Base，文件命名为 `controller_base` |
 | L | ROS `base_link`；与 B 存在绕 Z 轴 180° 的固定转换 |
 
 ```text
 口扫 S --配准--> 深度光学 D --设备外参--> 彩色光学 Co
-       --标准 ROS 轴变换--> camera_color_frame C
-       --手眼标定--> wrist_3_link E --拍摄位姿--> 控制器 Base B
+       --手眼数值按光学帧解释--> wrist_3_link E --拍摄位姿--> 控制器 Base B
 
-T_B_S = T_B_E @ T_E_C @ T_C_Co @ T_Co_D @ T_D_S
+T_B_S = T_B_E @ T_E_Co @ T_Co_D @ T_D_S
 ```
 
 本批上下颌来自**同一张原始 RGB-D 帧**，只分别框选 ROI 并与各自口扫配准，因此共用 `T_B_E`、手眼标定和相机内部外参；两颌的 `T_D_S` 不同，必须分别使用。
@@ -159,16 +162,17 @@ T_B_S = T_B_E @ T_E_C @ T_C_Co @ T_Co_D @ T_D_S
 
 ```text
 assets/calibration/ur7e_d405/20261113/handeye_25.yaml
-交付根目录/transforms/T_wrist3_color_frame_m.npy
-交付根目录/transforms/T_wrist3_color_frame_m.txt
+交付根目录/transforms/T_wrist3_color_optical_m.npy
+交付根目录/transforms/T_wrist3_color_optical_m.txt
 assets/calibration/ur7e_d405/20261113/handeye_25.yaml
 ```
 
 原始 YAML：`eye_on_hand=true`，parent=`wrist_3_link`，child=`camera_color_frame`。
+当前按用户确认，将原数值解释为 `color_optical → wrist_3_link`；没有重做标定或更改原始 YAML，原标定现场 TF 尚未独立核实。
 平移 `[x,y,z]`（米）：`[0.052784734483046124, -0.00890095396872504, 0.0611502459188928]`。
 四元数 `[qx,qy,qz,qw]`：`[0.0039010393200360908, 0.002449858713323372, 0.7098233556560035, 0.7043646668095719]`。
 
-`T_E_C`（显示精度 12 位；实际计算用 NPY）：
+`T_E_Co`（显示精度 12 位；实际计算用 NPY）：
 
 ```text
 [[-0.007710396085, -0.999929868810,  0.008989285474,  0.052784734483],
@@ -194,7 +198,7 @@ SDK 的 `T_color_optical_depth_optical_m` 与两颌原始采集元数据中的 `
  [ 0,  0, 0, 1]]
 ```
 
-SDK 读取的是 optical 到 optical；上面的 ROS 轴转换不是从 Windows SDK 实测出的 ROS TF。本批按感知提供者已确认 `camera_color_frame` 定义正确使用该约定，保留原始报告中的“未与现场 live TF 核对”标记作为来源事实。
+当前默认 `color_optical` 模式不乘上面的 ROS 轴转换。只有历史 `declared` 模式才使用它。原 SDK 报告保留，实际有效解释见 session 中的 `handeye_frame_interpretation.json`。
 
 ### 机器人拍摄位姿
 
@@ -213,9 +217,9 @@ SDK 读取的是 optical 到 optical；上面的 ROS 轴转换不是从 Windows 
 
 矩阵文件选择：
 
-- 下颌六区域：`mandibular/T_controller_base_scan_nominal_m.npy`。
+- 下颌六区域：`mandibular/T_controller_base_scan_nominal_rigid_m.npy`。
 - 上颌六区域：`maxillary/T_controller_base_scan_nominal_rigid_m.npy`。
-- 上颌完整点集初次转换使用非 `_rigid` 版本；区域版将约 `1.66e-8` 的旋转元素数值误差投影回正交旋转，平移不变；详情在 `maxillary/regional_transform_normalization.json`。两者差别是浮点数级别，不是新标定。
+- 两颌区域均使用 `_rigid` 版消除 SDK 浮点旋转误差，平移不变；具体修正量见各颌 `regional_transform_normalization.json`。非 `_rigid` 版保留原始数值链。
 - 名称包含 `base_link` 的其他矩阵和点云是 ROS 坐标版本，不要与上述 `controller_base` 文件混用。
 
 ## 5. 原始结果、源线与相关代码

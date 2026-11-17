@@ -1,5 +1,8 @@
 # Perception Results
 
+
+完整流程与计算原理见[真机感知说明](../../docs/integration/perception-workflow-and-principles.md)，本批详细交接见[感知交接说明](../../docs/integration/2026-11-13-perception-handoff.md)。
+
 ## 正式规划输入入口
 
 本批上下颌六区域读取 [sessions/20261113_220209/README.md](sessions/20261113_220209/README.md)，

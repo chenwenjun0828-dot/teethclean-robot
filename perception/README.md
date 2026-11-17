@@ -1,10 +1,15 @@
 # 感知模块 Perception
 
+当前真机基座转换默认 `color_optical`：手眼数值直接解释为彩色光学帧到末端，不额外乘 ROS 轴转换。正式 session 已修订为 `color_optical_v1`，历史 outputs 的 Base 数据不可混用。
+
+
 本目录负责把口扫、相机点云和牙龈源线转换为配准结果、连续区域及可供规划使用的坐标数据。
 本文件是感知总入口；各分类目录保留自己的算法、参数和接口说明。
 
 | 要了解的内容 | 文档 |
 | --- | --- |
+| 真机从拍摄到六区交付的完整流程、命令与计算原理 | [流程与原理](../docs/integration/perception-workflow-and-principles.md) |
+| 本批规划输入位置、矩阵数值与交接边界 | [感知交接说明](../docs/integration/2026-11-13-perception-handoff.md) |
 | 点云配准算法与参数 | [配准说明](registration/README.md) |
 | 真机人工选点、PLY 输入与外参接口 | [人工配准说明](registration/MANUAL_REAL.md) |
 | 相机采集、数据格式、回放与评价 | [真机详细指南](REAL_CAMERA.md) |

@@ -14,6 +14,18 @@
   "points_file": "points_controller_base_nominal_m.csv",
   "geometry_file": "region_controller_base_nominal.npz",
   "transform_source": "../../T_controller_base_scan_nominal_rigid_m.npy",
-  "transform_sha256": "fc52952b2cf2fce8e68558f6be7da3a2ba3092c72ba814f9176a9fc90bd3e875",
-  "note": "Different regions are independent. No TCP offset or executable robot poses included."
+  "transform_sha256": "47e07b24bb12695b5c888398a4cc244f8b64ffeef3f7d4dd7342ca3576fd284d",
+  "note": "Different regions are independent. No TCP offset or executable robot poses included.",
+  "handeye_frame_interpretation": {
+    "mode": "color_optical",
+    "declared_camera_frame": "camera_color_frame",
+    "effective_camera_frame": "color_optical",
+    "effective_parent_frame": "wrist_3_link",
+    "raw_calibration_modified": false,
+    "ros_optical_to_stream_rotation_applied": false,
+    "evidence": "User confirmed the color_optical result; original calibration TF has not been independently verified.",
+    "handeye_matrix_name": "T_wrist3_color_optical_m",
+    "depth_matrix_name": "T_color_optical_depth_optical_m",
+    "formula": "T_base_wrist3 @ T_wrist3_color_optical @ T_color_optical_depth_optical @ T_depth_optical_scan"
+  }
 }

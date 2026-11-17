@@ -1,0 +1,36 @@
+{
+  "previous_mode": "declared",
+  "mode": "color_optical",
+  "jaws": {
+    "mandibular": {
+      "previous_region_mean_m": [
+        0.08178409961265685,
+        -0.7841268790294094,
+        0.366607228927568
+      ],
+      "corrected_region_mean_m": [
+        0.3214541488444661,
+        -0.5743306663428268,
+        0.161874786182288
+      ],
+      "region_mean_shift_m": 0.378644366746504
+    },
+    "maxillary": {
+      "previous_region_mean_m": [
+        0.11911701348767671,
+        -0.7827611256209536,
+        0.3558411337829449
+      ],
+      "corrected_region_mean_m": [
+        0.3357184195252808,
+        -0.5821121273054819,
+        0.19719475201183143
+      ],
+      "region_mean_shift_m": 0.33517885385497553
+    }
+  },
+  "original_registration_unchanged": true,
+  "local_curve_geometry_unchanged": true,
+  "raw_calibration_modified": false,
+  "robot_execution_allowed": false
+}

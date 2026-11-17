@@ -46,6 +46,14 @@ def publish(conversion, output, calibration_output):
                     sha256=hashlib.sha256(path.read_bytes()).hexdigest())
 
     result = copy.deepcopy(manifest)
+    conversion_report = conversion / 'conversion_report.json'
+    if conversion_report.exists():
+        interpretation = read(conversion_report).get('handeye_frame_interpretation')
+        if interpretation is not None:
+            if ('handeye_frame_interpretation' in result and
+                    result['handeye_frame_interpretation'] != interpretation):
+                raise ValueError('Manifest and conversion report frame interpretations differ')
+            result['handeye_frame_interpretation'] = interpretation
     result.update(status='stable_planning_input_snapshot', documentation='README.md',
                   raw_capture_included=False, source_conversion_id=conversion.name)
     result['calibration_sources'] = {}
@@ -106,7 +114,10 @@ def publish(conversion, output, calibration_output):
         status='provided_handeye_and_device_sdk_extrinsics', camera_serial=sdk['device']['serial'],
         robot_effector_frame='wrist_3_link', tracking_base_frame='camera_color_frame',
         translation_unit='m', selected_handeye_label='25',
-        robot_execution_allowed=False, sources=manifest['calibration_sources']))
+        robot_execution_allowed=False, sources=manifest['calibration_sources'],
+        frame_declaration_is_archival=True,
+        handeye_frame_interpretation=result.get('handeye_frame_interpretation',
+            dict(mode='declared', effective_camera_frame='camera_color_frame'))))
     from .compact_session import compact
     compact(output)
     return output

@@ -47,6 +47,7 @@ class PreparedRegion:
     reference: SweepPath
     world_from_scan: np.ndarray | None = None
     output_dir: Path | None = None
+    handeye_frame_interpretation: dict | None = None
 
     @property
     def region(self):
@@ -104,6 +105,8 @@ class PreparedRegion:
             'inputs': {'jaw': self.inputs.jaw, **{key: relative_path(getattr(self.inputs, key), output)
                                                 for key in ('scan', 'topology', 'prediction')}},
             'world_from_scan_m': self.world_from_scan,
+            **({'handeye_frame_interpretation': self.handeye_frame_interpretation}
+               if self.handeye_frame_interpretation is not None else {}),
             'files': {name: fingerprint(output/name)['sha256'] for name in (
                 'geometry.json', 'geometry.npz', 'tooth_planes.json', 'tooth_lookup.npz',
                 'region_mesh.npz', 'continuous_gingival_line.json', 'continuous_gingival_line.npz')},
@@ -153,7 +156,8 @@ class PreparedRegion:
         reference = SweepPath(json.loads((folder/'continuous_gingival_line.json').read_text(encoding='utf-8')))
         world = record.get('world_from_scan_m')
         return cls(inputs, geometry, lookup, reference,
-                   None if world is None else validate_transform(world), folder).validate(record['region'])
+                   None if world is None else validate_transform(world), folder,
+                   record.get('handeye_frame_interpretation')).validate(record['region'])
 
     @classmethod
     def load_from_manifest(cls, path, region):

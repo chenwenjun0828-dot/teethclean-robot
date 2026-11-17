@@ -1,5 +1,6 @@
 # 真机人工选点配准：相机采集或现存 PLY
 
+
 主入口：`python -m perception.real manual`。
 兼容入口：`python -m perception.registration.manual_real`，参数和实现相同。
 所有输入统一走“人工至少六对对应点 → 鲁棒刚体初始化 → 三尺度鲁棒 Point-to-Plane ICP”。
@@ -108,6 +109,8 @@ Python 文件接口为 `register_manual_clouds(camera_path, scan_path, output_di
 程序核对口扫和处理后相机点云的哈希，输入或裁剪改变后必须重新选点。
 
 ## 5. 导入外参并输出基座路径
+
+本批离线坐标组合默认 `color_optical`，见 `perception/coordinate_conversion/README.md`。这里的 `--extrinsics` 需要完整的“深度光学帧 → Base”矩阵，不能直接填手眼矩阵，也不要再次加入 ROS 轴转换。
 
 ```bash
 python -m perception.real manual --source sample \

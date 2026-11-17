@@ -1,5 +1,9 @@
 # 离线基座坐标转换
 
+默认 `--handeye-frame color_optical`：手眼原数值按彩色光学帧到末端解释，不额外加入 optical → ROS stream 轴转换。历史 `--handeye-frame declared` 仅用于复核旧结果。有效链为 `T_B_E @ T_E_color_optical @ T_color_optical_depth_optical @ T_depth_optical_scan`。
+
+已有资产修正入口：`python -m perception.coordinate_conversion.correct_session --session <session目录> --backup-dir <新的备份目录>`。它先校验来源，在同级临时目录重算并验证十二区，再备份和替换；重复同一模式不会再次移动点。原始标定和口扫配准保持不变。
+
 本目录保存可提交 Git 的计算源码，不依赖 `outputs/` 中的 Python 脚本。
 无需 ROS 或 MuJoCo；需要项目感知依赖（NumPy、SciPy、Open3D）。
 
@@ -21,7 +25,7 @@ python -m perception.coordinate_conversion.convert_points `
   --mandibular-run <下颌采集配准目录> `
   --maxillary-run <上颌采集配准目录> `
   --fk-report <fk_report.json> `
-  --handeye-inventory <handeye_inventory.json> --handeye-label 25 `
+  --handeye-inventory <handeye_inventory.json> --handeye-label 25 --handeye-frame color_optical `
   --camera-extrinsics <camera_extrinsics.json> --out <新的转换目录>
 
 python -m perception.coordinate_conversion.export_regions --conversion-dir <含regions的转换目录>
